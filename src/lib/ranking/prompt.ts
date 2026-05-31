@@ -3,11 +3,28 @@ import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/types/database";
 
 import { pairKey } from "./canonical-pair";
+import { resolvedComparisonsFromRows } from "./preference-graph";
+import {
+  shouldSkipComparisonByRankDistance,
+  type RankContext,
+} from "./prompt-skip";
 
 export type SeriesComparisonPair = {
   left: Tables<"series"> & { entryCount: number };
   right: Tables<"series"> & { entryCount: number };
 };
+
+function scoreCandidatePair(
+  leftId: string,
+  rightId: string,
+  scoreMap: Map<string, { score: number; count: number }>,
+): number {
+  const leftMeta = scoreMap.get(leftId) ?? { score: 1500, count: 0 };
+  const rightMeta = scoreMap.get(rightId) ?? { score: 1500, count: 0 };
+  const scoreDiff = Math.abs(leftMeta.score - rightMeta.score);
+  const lowComparisonBonus = (10 - leftMeta.count) + (10 - rightMeta.count);
+  return lowComparisonBonus * 10 - scoreDiff;
+}
 
 export async function getNextComparisonPair(
   userId: string,
@@ -20,7 +37,7 @@ export async function getNextComparisonPair(
 
   const { data: comparisons } = await supabase
     .from("pairwise_series_comparisons")
-    .select("left_series_id, right_series_id")
+    .select("left_series_id, right_series_id, winner_series_id")
     .eq("user_id", userId);
 
   const seenPairs = new Set(
@@ -29,9 +46,11 @@ export async function getNextComparisonPair(
     ),
   );
 
+  const resolved = resolvedComparisonsFromRows(comparisons ?? []);
+
   const { data: rankings } = await supabase
     .from("derived_series_rankings")
-    .select("series_id, score, comparison_count")
+    .select("series_id, rank, score, comparison_count")
     .eq("user_id", userId);
 
   const scoreMap = new Map(
@@ -40,6 +59,25 @@ export async function getNextComparisonPair(
       { score: Number(r.score), count: r.comparison_count },
     ]),
   );
+
+  const rankContext: RankContext = {
+    rankBySeriesId: new Map(
+      (rankings ?? []).map((r) => [r.series_id, r.rank]),
+    ),
+    comparisonCountBySeriesId: new Map(
+      (rankings ?? []).map((r) => [r.series_id, r.comparison_count]),
+    ),
+  };
+
+  const fallbackRank = seriesList.length;
+  for (const series of seriesList) {
+    if (!rankContext.rankBySeriesId.has(series.id)) {
+      rankContext.rankBySeriesId.set(series.id, fallbackRank);
+    }
+    if (!rankContext.comparisonCountBySeriesId.has(series.id)) {
+      rankContext.comparisonCountBySeriesId.set(series.id, 0);
+    }
+  }
 
   let bestPair: SeriesComparisonPair | null = null;
   let bestScore = -Infinity;
@@ -50,11 +88,13 @@ export async function getNextComparisonPair(
       const right = seriesList[j];
       if (seenPairs.has(pairKey(left.id, right.id))) continue;
 
-      const leftMeta = scoreMap.get(left.id) ?? { score: 1500, count: 0 };
-      const rightMeta = scoreMap.get(right.id) ?? { score: 1500, count: 0 };
-      const scoreDiff = Math.abs(leftMeta.score - rightMeta.score);
-      const lowComparisonBonus = (10 - leftMeta.count) + (10 - rightMeta.count);
-      const pairScore = lowComparisonBonus * 10 - scoreDiff;
+      if (
+        shouldSkipComparisonByRankDistance(left.id, right.id, resolved, rankContext)
+      ) {
+        continue;
+      }
+
+      const pairScore = scoreCandidatePair(left.id, right.id, scoreMap);
 
       if (pairScore > bestScore) {
         bestScore = pairScore;
