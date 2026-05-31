@@ -26,24 +26,27 @@ export function confidenceFromComparisonCount(count: number): Enums<"ranking_con
   return "low";
 }
 
-export type EloAnimeState = {
-  animeId: string;
+export type EloEntityState = {
+  entityId: string;
   score: number;
   comparisonCount: number;
 };
 
+/** @deprecated Use EloEntityState */
+export type EloAnimeState = EloEntityState & { animeId: string };
+
 export function applyComparison(
-  scores: Map<string, EloAnimeState>,
+  scores: Map<string, EloEntityState>,
   winnerId: string,
   loserId: string,
 ) {
   const winner = scores.get(winnerId) ?? {
-    animeId: winnerId,
+    entityId: winnerId,
     score: ELO_INITIAL_SCORE,
     comparisonCount: 0,
   };
   const loser = scores.get(loserId) ?? {
-    animeId: loserId,
+    entityId: loserId,
     score: ELO_INITIAL_SCORE,
     comparisonCount: 0,
   };
@@ -51,12 +54,12 @@ export function applyComparison(
   const updated = updateElo(winner.score, loser.score);
 
   scores.set(winnerId, {
-    animeId: winnerId,
+    entityId: winnerId,
     score: updated.winner,
     comparisonCount: winner.comparisonCount + 1,
   });
   scores.set(loserId, {
-    animeId: loserId,
+    entityId: loserId,
     score: updated.loser,
     comparisonCount: loser.comparisonCount + 1,
   });

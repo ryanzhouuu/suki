@@ -43,6 +43,7 @@ The remote Supabase project should already have migrations applied:
 
 - `initial_schema` — tables, enums, indexes
 - `row_level_security` — RLS policies
+- `series_layer` / `series_rls` — franchise grouping (`series`, `anime_series_map`) and series-level rankings
 
 SQL files are mirrored in [`supabase/migrations/`](./supabase/migrations/) for version control.
 
@@ -90,7 +91,7 @@ docs/
 
 1. **Foundation** — Auth, onboarding, profiles, AniList search ✓
 2. **Tracking** — Library, statuses, progress, anime detail ✓
-3. **Ranking** — Pairwise comparisons, Elo recompute, ranked list ✓ (requires `SUPABASE_SECRET_KEY`)
+3. **Ranking** — Pairwise comparisons by **series** (not individual seasons), Elo recompute, ranked list ✓ (requires `SUPABASE_SECRET_KEY`)
 4. **Social** — Public profiles ✓ · Friends *(placeholder)*
 5. **Recommendation readiness** — User event logging ✓ · Analytics *(later)*
 
@@ -103,11 +104,14 @@ docs/
 | `npm run lint` | ESLint |
 | `npm run db:generate` | Generate Drizzle migrations from schema |
 | `npm run db:studio` | Drizzle Studio (requires `DATABASE_URL`) |
+| `npm run backfill:series` | Map existing anime → series via AniList relations, recompute rankings |
+| `npm run test` | Unit tests (series grouping, ranking helpers) |
 
 ## Security notes
 
 - Never commit `.env.local` or expose `SUPABASE_SECRET_KEY` to the client.
-- `derived_rankings` has no client INSERT policy — writes use the secret key on the server.
+- `derived_series_rankings` has no client INSERT policy — writes use the secret key on the server.
+- Rankings compare **series** (e.g. all Jujutsu Kaisen seasons/movies grouped). Override grouping via `series_group_overrides` if needed.
 - Public profiles and lists are readable by default per MVP design; account data stays private.
 
 ## License

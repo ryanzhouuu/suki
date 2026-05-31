@@ -2,6 +2,7 @@ import { anilistQuery } from "@/lib/anilist/client";
 import { mapAniListMediaToAnimeRow } from "@/lib/anilist/map";
 import { ANIME_DETAIL_QUERY } from "@/lib/anilist/queries";
 import type { AniListMediaResult } from "@/lib/anilist/types";
+import { ensureAnimeSeriesMapping } from "@/lib/series/resolver";
 import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/types/database";
 
@@ -21,6 +22,11 @@ export async function syncAnimeFromAnilist(
   if (existing?.metadata_updated_at) {
     const age = Date.now() - new Date(existing.metadata_updated_at).getTime();
     if (age < staleMs) {
+      try {
+        await ensureAnimeSeriesMapping(existing);
+      } catch {
+        // repaired on ranking page if secret key / AniList unavailable
+      }
       return existing;
     }
   }
@@ -43,6 +49,12 @@ export async function syncAnimeFromAnilist(
 
   if (error || !data) {
     throw new Error(error?.message ?? "Failed to cache anime metadata");
+  }
+
+  try {
+    await ensureAnimeSeriesMapping(data);
+  } catch {
+    // Series mapping is best-effort during sync; ranking backfill can repair.
   }
 
   return data;

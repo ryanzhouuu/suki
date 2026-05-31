@@ -6,34 +6,35 @@ import { requireAuthUser } from "@/lib/auth/session";
 import { USER_EVENT_TYPES } from "@/lib/constants";
 import { logUserEvent } from "@/lib/events/log";
 import { canonicalPairIds } from "@/lib/ranking/canonical-pair";
-import { recomputeUserRanking } from "@/lib/ranking/recompute";
+import { recomputeUserRanking } from "@/lib/ranking/recompute-series";
+import { userHasCompletedSeries } from "@/lib/series/queries";
 import { createClient } from "@/lib/supabase/server";
 
 export type RankingActionState = {
   error?: string;
 };
 
-async function upsertComparison(
+async function upsertSeriesComparison(
   userId: string,
-  animeIdA: string,
-  animeIdB: string,
+  seriesIdA: string,
+  seriesIdB: string,
   values: {
-    winner_anime_id: string | null;
+    winner_series_id: string | null;
     skipped_reason: string | null;
   },
 ): Promise<RankingActionState> {
-  const [leftAnimeId, rightAnimeId] = canonicalPairIds(animeIdA, animeIdB);
+  const [leftSeriesId, rightSeriesId] = canonicalPairIds(seriesIdA, seriesIdB);
   const supabase = await createClient();
 
-  const { error } = await supabase.from("pairwise_comparisons").upsert(
+  const { error } = await supabase.from("pairwise_series_comparisons").upsert(
     {
       user_id: userId,
-      left_anime_id: leftAnimeId,
-      right_anime_id: rightAnimeId,
-      winner_anime_id: values.winner_anime_id,
+      left_series_id: leftSeriesId,
+      right_series_id: rightSeriesId,
+      winner_series_id: values.winner_series_id,
       skipped_reason: values.skipped_reason,
     },
-    { onConflict: "user_id,left_anime_id,right_anime_id" },
+    { onConflict: "user_id,left_series_id,right_series_id" },
   );
 
   if (error) return { error: error.message };
@@ -41,37 +42,41 @@ async function upsertComparison(
 }
 
 export async function submitComparison(
-  leftAnimeId: string,
-  rightAnimeId: string,
-  winnerAnimeId: string,
+  leftSeriesId: string,
+  rightSeriesId: string,
+  winnerSeriesId: string,
 ): Promise<RankingActionState> {
   const user = await requireAuthUser();
 
-  if (winnerAnimeId !== leftAnimeId && winnerAnimeId !== rightAnimeId) {
+  if (winnerSeriesId !== leftSeriesId && winnerSeriesId !== rightSeriesId) {
     return { error: "Invalid winner." };
   }
 
-  const supabase = await createClient();
-  const animeIds = [leftAnimeId, rightAnimeId];
-  const { data: entries } = await supabase
-    .from("user_anime_entries")
-    .select("anime_id")
-    .eq("user_id", user.id)
-    .eq("status", "completed")
-    .in("anime_id", animeIds);
+  const eligible = await userHasCompletedSeries(user.id, [
+    leftSeriesId,
+    rightSeriesId,
+  ]);
 
-  if ((entries ?? []).length < 2) {
-    return { error: "Both anime must be completed in your library." };
+  if (!eligible) {
+    return {
+      error:
+        "Both series must include at least one completed anime in your library.",
+    };
   }
 
-  const saveResult = await upsertComparison(user.id, leftAnimeId, rightAnimeId, {
-    winner_anime_id: winnerAnimeId,
-    skipped_reason: null,
-  });
+  const saveResult = await upsertSeriesComparison(
+    user.id,
+    leftSeriesId,
+    rightSeriesId,
+    {
+      winner_series_id: winnerSeriesId,
+      skipped_reason: null,
+    },
+  );
   if (saveResult.error) return saveResult;
 
-  await logUserEvent(user.id, USER_EVENT_TYPES.comparisonCreated, {
-    metadata: { leftAnimeId, rightAnimeId, winnerAnimeId },
+  await logUserEvent(user.id, USER_EVENT_TYPES.seriesComparisonCreated, {
+    metadata: { leftSeriesId, rightSeriesId, winnerSeriesId },
   });
 
   try {
@@ -91,16 +96,21 @@ export async function submitComparison(
 }
 
 export async function skipComparison(
-  leftAnimeId: string,
-  rightAnimeId: string,
+  leftSeriesId: string,
+  rightSeriesId: string,
   reason: string,
 ): Promise<RankingActionState> {
   const user = await requireAuthUser();
 
-  const saveResult = await upsertComparison(user.id, leftAnimeId, rightAnimeId, {
-    winner_anime_id: null,
-    skipped_reason: reason,
-  });
+  const saveResult = await upsertSeriesComparison(
+    user.id,
+    leftSeriesId,
+    rightSeriesId,
+    {
+      winner_series_id: null,
+      skipped_reason: reason,
+    },
+  );
   if (saveResult.error) return saveResult;
 
   revalidatePath("/ranking");

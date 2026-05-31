@@ -44,6 +44,54 @@ export const ANIME_DETAIL_QUERY = `
       averageScore
       popularity
       source
+      relations {
+        edges {
+          relationType
+          node {
+            id
+            type
+            format
+            seasonYear
+            title {
+              romaji
+              english
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+/** Lightweight fetch for series graph traversal */
+export const ANIME_RELATIONS_QUERY = `
+  query AnimeRelations($id: Int) {
+    Media(id: $id, type: ANIME) {
+      id
+      format
+      seasonYear
+      title {
+        romaji
+        english
+      }
+      coverImage {
+        large
+      }
+      relations {
+        edges {
+          relationType
+          node {
+            id
+            type
+            format
+            seasonYear
+            title {
+              romaji
+              english
+            }
+          }
+        }
+      }
     }
   }
 `;

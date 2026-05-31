@@ -4,13 +4,14 @@ import { AnimePoster } from "@/components/anime/anime-poster";
 import { requireProfile } from "@/lib/auth/session";
 import { getUserLibraryEntries } from "@/lib/library/queries";
 import { getNextComparisonPair } from "@/lib/ranking/prompt";
+import { getCompletedSeriesForUser } from "@/lib/series/queries";
 
 export default async function HomePage() {
   const { user, profile } = await requireProfile();
 
-  const [watching, completed, pair] = await Promise.all([
+  const [watching, completedSeries, pair] = await Promise.all([
     getUserLibraryEntries(user.id, "watching"),
-    getUserLibraryEntries(user.id, "completed"),
+    getCompletedSeriesForUser(user.id),
     getNextComparisonPair(user.id),
   ]);
 
@@ -44,13 +45,13 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {pair && completed.length >= 2 ? (
+      {pair && completedSeries.length >= 2 ? (
         <section className="overflow-hidden rounded-card border border-accent/30 bg-accent-soft p-6 sm:p-7">
           <p className="eyebrow">Ranking prompt</p>
           <p className="mt-2 font-display text-2xl font-medium leading-snug text-ink">
-            {pair.left.english_title || pair.left.romaji_title}{" "}
+            {pair.left.canonical_title}{" "}
             <span className="text-accent">vs</span>{" "}
-            {pair.right.english_title || pair.right.romaji_title}
+            {pair.right.canonical_title}
           </p>
           <p className="mt-2 text-sm text-muted">
             Which did you enjoy more? It only takes a tap.
@@ -62,10 +63,10 @@ export default async function HomePage() {
             Decide now
           </Link>
         </section>
-      ) : completed.length < 2 ? (
+      ) : completedSeries.length < 2 ? (
         <section className="rounded-card border border-dashed border-line-strong p-6">
           <p className="text-sm text-muted">
-            Complete at least two anime to unlock pairwise rankings.
+            Complete anime in at least two series to unlock pairwise rankings.
           </p>
         </section>
       ) : null}

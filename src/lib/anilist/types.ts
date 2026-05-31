@@ -14,6 +14,38 @@ export type AniListMediaSummary = {
   status: string | null;
 };
 
+export type AniListRelationType =
+  | "ADAPTATION"
+  | "PREQUEL"
+  | "SEQUEL"
+  | "PARENT"
+  | "SIDE_STORY"
+  | "CHARACTER"
+  | "SUMMARY"
+  | "ALTERNATIVE"
+  | "SPIN_OFF"
+  | "OTHER"
+  | "SOURCE"
+  | "COMPILATION"
+  | "CONTAINS";
+
+export type AniListRelationNode = {
+  id: number;
+  type: string;
+  format: string | null;
+  seasonYear: number | null;
+  title: AniListMediaTitle;
+};
+
+export type AniListRelationEdge = {
+  relationType: AniListRelationType | string;
+  node: AniListRelationNode | null;
+};
+
+export type AniListMediaRelations = {
+  edges: AniListRelationEdge[] | null;
+} | null;
+
 export type AniListMediaDetail = AniListMediaSummary & {
   description: string | null;
   bannerImage: string | null;
@@ -23,6 +55,20 @@ export type AniListMediaDetail = AniListMediaSummary & {
   averageScore: number | null;
   popularity: number | null;
   source: string | null;
+  relations?: AniListMediaRelations;
+};
+
+export type AniListMediaRelationsOnly = {
+  id: number;
+  format: string | null;
+  seasonYear: number | null;
+  title: AniListMediaTitle;
+  coverImage: { large: string | null } | null;
+  relations: AniListMediaRelations;
+};
+
+export type AniListRelationsResult = {
+  Media: AniListMediaRelationsOnly | null;
 };
 
 export type AniListSearchResult = {

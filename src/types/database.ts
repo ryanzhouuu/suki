@@ -78,6 +78,45 @@ export type Database = {
         };
         Relationships: [];
       };
+      anime_series_map: {
+        Row: {
+          anime_id: string;
+          confidence: number;
+          created_at: string;
+          series_id: string;
+          source: Database["public"]["Enums"]["series_map_source"];
+        };
+        Insert: {
+          anime_id: string;
+          confidence?: number;
+          created_at?: string;
+          series_id: string;
+          source?: Database["public"]["Enums"]["series_map_source"];
+        };
+        Update: {
+          anime_id?: string;
+          confidence?: number;
+          created_at?: string;
+          series_id?: string;
+          source?: Database["public"]["Enums"]["series_map_source"];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "anime_series_map_anime_id_fkey";
+            columns: ["anime_id"];
+            isOneToOne: true;
+            referencedRelation: "anime";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "anime_series_map_series_id_fkey";
+            columns: ["series_id"];
+            isOneToOne: false;
+            referencedRelation: "series";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       derived_rankings: {
         Row: {
           algorithm_version: string;
@@ -118,6 +157,50 @@ export type Database = {
             columns: ["anime_id"];
             isOneToOne: false;
             referencedRelation: "anime";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      derived_series_rankings: {
+        Row: {
+          algorithm_version: string;
+          comparison_count: number;
+          computed_at: string;
+          confidence: Database["public"]["Enums"]["ranking_confidence"];
+          id: string;
+          rank: number;
+          score: number;
+          series_id: string;
+          user_id: string;
+        };
+        Insert: {
+          algorithm_version?: string;
+          comparison_count?: number;
+          computed_at?: string;
+          confidence?: Database["public"]["Enums"]["ranking_confidence"];
+          id?: string;
+          rank: number;
+          score: number;
+          series_id: string;
+          user_id: string;
+        };
+        Update: {
+          algorithm_version?: string;
+          comparison_count?: number;
+          computed_at?: string;
+          confidence?: Database["public"]["Enums"]["ranking_confidence"];
+          id?: string;
+          rank?: number;
+          score?: number;
+          series_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "derived_series_rankings_series_id_fkey";
+            columns: ["series_id"];
+            isOneToOne: false;
+            referencedRelation: "series";
             referencedColumns: ["id"];
           },
         ];
@@ -204,6 +287,61 @@ export type Database = {
           },
         ];
       };
+      pairwise_series_comparisons: {
+        Row: {
+          comparison_context: Json | null;
+          created_at: string;
+          id: string;
+          left_series_id: string;
+          right_series_id: string;
+          skipped_reason: string | null;
+          user_id: string;
+          winner_series_id: string | null;
+        };
+        Insert: {
+          comparison_context?: Json | null;
+          created_at?: string;
+          id?: string;
+          left_series_id: string;
+          right_series_id: string;
+          skipped_reason?: string | null;
+          user_id: string;
+          winner_series_id?: string | null;
+        };
+        Update: {
+          comparison_context?: Json | null;
+          created_at?: string;
+          id?: string;
+          left_series_id?: string;
+          right_series_id?: string;
+          skipped_reason?: string | null;
+          user_id?: string;
+          winner_series_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "pairwise_series_comparisons_left_series_id_fkey";
+            columns: ["left_series_id"];
+            isOneToOne: false;
+            referencedRelation: "series";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "pairwise_series_comparisons_right_series_id_fkey";
+            columns: ["right_series_id"];
+            isOneToOne: false;
+            referencedRelation: "series";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "pairwise_series_comparisons_winner_series_id_fkey";
+            columns: ["winner_series_id"];
+            isOneToOne: false;
+            referencedRelation: "series";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       profiles: {
         Row: {
           avatar_url: string | null;
@@ -236,6 +374,74 @@ export type Database = {
           username?: string;
         };
         Relationships: [];
+      };
+      series: {
+        Row: {
+          anilist_primary_id: number;
+          canonical_title: string;
+          cover_image_url: string | null;
+          created_at: string;
+          id: string;
+          slug: string;
+          updated_at: string;
+        };
+        Insert: {
+          anilist_primary_id: number;
+          canonical_title: string;
+          cover_image_url?: string | null;
+          created_at?: string;
+          id?: string;
+          slug: string;
+          updated_at?: string;
+        };
+        Update: {
+          anilist_primary_id?: number;
+          canonical_title?: string;
+          cover_image_url?: string | null;
+          created_at?: string;
+          id?: string;
+          slug?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      series_group_overrides: {
+        Row: {
+          action: Database["public"]["Enums"]["series_override_action"];
+          anilist_id: number;
+          created_at: string;
+          id: string;
+          notes: string | null;
+          target_anilist_primary_id: number | null;
+          target_series_id: string | null;
+        };
+        Insert: {
+          action: Database["public"]["Enums"]["series_override_action"];
+          anilist_id: number;
+          created_at?: string;
+          id?: string;
+          notes?: string | null;
+          target_anilist_primary_id?: number | null;
+          target_series_id?: string | null;
+        };
+        Update: {
+          action?: Database["public"]["Enums"]["series_override_action"];
+          anilist_id?: number;
+          created_at?: string;
+          id?: string;
+          notes?: string | null;
+          target_anilist_primary_id?: number | null;
+          target_series_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "series_group_overrides_target_series_id_fkey";
+            columns: ["target_series_id"];
+            isOneToOne: false;
+            referencedRelation: "series";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       user_anime_entries: {
         Row: {
@@ -345,6 +551,11 @@ export type Database = {
       friendship_status: "pending" | "accepted" | "declined" | "blocked";
       profile_visibility: "public" | "friends_only" | "private";
       ranking_confidence: "low" | "medium" | "high";
+      series_map_source: "anilist_auto" | "manual_override" | "singleton";
+      series_override_action:
+        | "force_series"
+        | "force_singleton"
+        | "exclude_from_auto_group";
       watchlist_priority: "low" | "medium" | "high";
     };
     CompositeTypes: {
@@ -378,6 +589,12 @@ export const Constants = {
       friendship_status: ["pending", "accepted", "declined", "blocked"],
       profile_visibility: ["public", "friends_only", "private"],
       ranking_confidence: ["low", "medium", "high"],
+      series_map_source: ["anilist_auto", "manual_override", "singleton"],
+      series_override_action: [
+        "force_series",
+        "force_singleton",
+        "exclude_from_auto_group",
+      ],
       watchlist_priority: ["low", "medium", "high"],
     },
   },

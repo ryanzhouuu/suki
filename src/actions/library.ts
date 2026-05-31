@@ -7,9 +7,10 @@ import { syncAnimeFromAnilist } from "@/lib/anime/sync";
 import type { AnimeEntryStatus } from "@/lib/constants";
 import { USER_EVENT_TYPES } from "@/lib/constants";
 import { logUserEvent } from "@/lib/events/log";
-import { recomputeUserRanking } from "@/lib/ranking/recompute";
+import { recomputeUserRanking } from "@/lib/ranking/recompute-series";
+import { ensureAnimeSeriesMapping } from "@/lib/series/resolver";
 import { createClient } from "@/lib/supabase/server";
-import type { TablesUpdate } from "@/types/database";
+import type { Tables, TablesUpdate } from "@/types/database";
 
 export type LibraryActionState = {
   error?: string;
@@ -67,6 +68,7 @@ export async function addAnimeEntry(
           animeId: anime.id,
         });
         try {
+          await ensureAnimeSeriesMapping(anime);
           await recomputeUserRanking(user.id);
         } catch {
           // Secret key may be unset during local dev
@@ -98,6 +100,7 @@ export async function addAnimeEntry(
         animeId: anime.id,
       });
       try {
+        await ensureAnimeSeriesMapping(anime);
         await recomputeUserRanking(user.id);
       } catch {
         // ranking optional without secret key
@@ -128,7 +131,7 @@ export async function updateAnimeEntry(
 
   const { data: existing } = await supabase
     .from("user_anime_entries")
-    .select("*, anime(anilist_id)")
+    .select("*, anime(*)")
     .eq("id", entryId)
     .eq("user_id", user.id)
     .single();
@@ -170,6 +173,17 @@ export async function updateAnimeEntry(
         animeId: existing.anime_id,
       });
       try {
+        const animeRow = existing.anime as Tables<"anime"> | null;
+        if (animeRow && !Array.isArray(animeRow)) {
+          await ensureAnimeSeriesMapping(animeRow);
+        } else {
+          const { data: animeData } = await supabase
+            .from("anime")
+            .select("*")
+            .eq("id", existing.anime_id)
+            .single();
+          if (animeData) await ensureAnimeSeriesMapping(animeData);
+        }
         await recomputeUserRanking(user.id);
       } catch {
         /* optional */

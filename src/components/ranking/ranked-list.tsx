@@ -2,14 +2,16 @@ import { AnimePoster } from "@/components/anime/anime-poster";
 import { CONFIDENCE_LABELS } from "@/lib/constants";
 import type { Tables } from "@/types/database";
 
-type RankedRow = Tables<"derived_rankings"> & { anime: Tables<"anime"> | null };
+type RankedSeriesRow = Tables<"derived_series_rankings"> & {
+  series: Tables<"series"> | null;
+};
 
-export function RankedList({ rankings }: { rankings: RankedRow[] }) {
+export function RankedList({ rankings }: { rankings: RankedSeriesRow[] }) {
   if (rankings.length === 0) {
     return (
       <div className="rounded-card border border-dashed border-line-strong p-8 text-center">
         <p className="text-sm text-muted">
-          Complete anime and compare them to build your ranking.
+          Complete anime and compare series to build your ranking.
         </p>
       </div>
     );
@@ -18,9 +20,8 @@ export function RankedList({ rankings }: { rankings: RankedRow[] }) {
   return (
     <ol className="space-y-2">
       {rankings.map((row) => {
-        const anime = row.anime;
-        if (!anime) return null;
-        const title = anime.english_title || anime.romaji_title;
+        const series = row.series;
+        if (!series) return null;
         const top = row.rank <= 3;
         return (
           <li
@@ -36,9 +37,15 @@ export function RankedList({ rankings }: { rankings: RankedRow[] }) {
             >
               {row.rank}
             </span>
-            <AnimePoster src={anime.cover_image_url} alt={title} size="sm" />
+            <AnimePoster
+              src={series.cover_image_url}
+              alt={series.canonical_title}
+              size="sm"
+            />
             <div className="min-w-0 flex-1">
-              <p className="truncate font-medium text-ink">{title}</p>
+              <p className="truncate font-medium text-ink">
+                {series.canonical_title}
+              </p>
               <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted">
                 <span
                   aria-hidden

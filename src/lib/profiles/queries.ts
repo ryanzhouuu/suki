@@ -1,3 +1,4 @@
+import { RANKING_ALGORITHM_VERSION } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/types/database";
 
@@ -27,9 +28,10 @@ export async function getPublicProfileData(username: string) {
       .eq("user_id", profile.user_id)
       .order("updated_at", { ascending: false }),
     supabase
-      .from("derived_rankings")
-      .select("*, anime(*)")
+      .from("derived_series_rankings")
+      .select("*, series(*)")
       .eq("user_id", profile.user_id)
+      .eq("algorithm_version", RANKING_ALGORITHM_VERSION)
       .order("rank", { ascending: true })
       .limit(10),
   ]);

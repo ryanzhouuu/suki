@@ -34,7 +34,9 @@ export const NAV_ITEMS = [
   { href: "/friends", label: "Friends" },
 ] as const;
 
-export const RANKING_ALGORITHM_VERSION = "elo_v1";
+export const RANKING_ALGORITHM_VERSION = "elo_series_v1";
+/** @deprecated Season-level rankings; kept for audit only */
+export const LEGACY_ANIME_RANKING_ALGORITHM_VERSION = "elo_v1";
 export const ELO_INITIAL_SCORE = 1500;
 
 export const USER_EVENT_TYPES = {
@@ -43,6 +45,7 @@ export const USER_EVENT_TYPES = {
   progressUpdated: "progress_updated",
   animeCompleted: "anime_completed",
   comparisonCreated: "comparison_created",
+  seriesComparisonCreated: "series_comparison_created",
   rankingViewed: "ranking_viewed",
   friendRequestSent: "friend_request_sent",
   friendProfileViewed: "friend_profile_viewed",

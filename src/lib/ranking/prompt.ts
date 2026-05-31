@@ -1,60 +1,53 @@
+import { getCompletedSeriesForUser } from "@/lib/series/queries";
 import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/types/database";
 
 import { pairKey } from "./canonical-pair";
 
-export type ComparisonPair = {
-  left: Tables<"anime">;
-  right: Tables<"anime">;
+export type SeriesComparisonPair = {
+  left: Tables<"series"> & { entryCount: number };
+  right: Tables<"series"> & { entryCount: number };
 };
 
 export async function getNextComparisonPair(
   userId: string,
-): Promise<ComparisonPair | null> {
+): Promise<SeriesComparisonPair | null> {
+  const seriesList = await getCompletedSeriesForUser(userId);
+
+  if (seriesList.length < 2) return null;
+
   const supabase = await createClient();
 
-  const { data: completed } = await supabase
-    .from("user_anime_entries")
-    .select("anime_id, anime(*)")
-    .eq("user_id", userId)
-    .eq("status", "completed");
-
-  const animeList = (completed ?? [])
-    .map((row) => row.anime)
-    .filter((a): a is Tables<"anime"> => a !== null);
-
-  if (animeList.length < 2) return null;
-
   const { data: comparisons } = await supabase
-    .from("pairwise_comparisons")
-    .select("left_anime_id, right_anime_id")
+    .from("pairwise_series_comparisons")
+    .select("left_series_id, right_series_id")
     .eq("user_id", userId);
 
   const seenPairs = new Set(
     (comparisons ?? []).map((c) =>
-      pairKey(c.left_anime_id, c.right_anime_id),
+      pairKey(c.left_series_id, c.right_series_id),
     ),
   );
 
   const { data: rankings } = await supabase
-    .from("derived_rankings")
-    .select("anime_id, score, comparison_count")
+    .from("derived_series_rankings")
+    .select("series_id, score, comparison_count")
     .eq("user_id", userId);
 
   const scoreMap = new Map(
     (rankings ?? []).map((r) => [
-      r.anime_id,
+      r.series_id,
       { score: Number(r.score), count: r.comparison_count },
     ]),
   );
 
-  let bestPair: ComparisonPair | null = null;
+  let bestPair: SeriesComparisonPair | null = null;
   let bestScore = -Infinity;
 
-  for (let i = 0; i < animeList.length; i++) {
-    for (let j = i + 1; j < animeList.length; j++) {
-      const left = animeList[i];
-      const right = animeList[j];
+  for (let i = 0; i < seriesList.length; i++) {
+    for (let j = i + 1; j < seriesList.length; j++) {
+      const left = seriesList[i];
+      const right = seriesList[j];
       if (seenPairs.has(pairKey(left.id, right.id))) continue;
 
       const leftMeta = scoreMap.get(left.id) ?? { score: 1500, count: 0 };

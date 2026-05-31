@@ -5,7 +5,7 @@ import type { Database } from "@/types/database";
 import { getSupabaseSecretKey } from "./env-keys";
 
 /**
- * Secret-key client for server-only operations (e.g. writing derived_rankings).
+ * Secret-key client for server-only operations (e.g. series mappings, derived_series_rankings).
  * Uses Supabase secret key (`sb_secret_...`), not the publishable key.
  * Never import this from client components.
  */

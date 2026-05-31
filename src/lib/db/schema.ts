@@ -44,6 +44,18 @@ export const rankingConfidenceEnum = pgEnum("ranking_confidence", [
   "high",
 ]);
 
+export const seriesMapSourceEnum = pgEnum("series_map_source", [
+  "anilist_auto",
+  "manual_override",
+  "singleton",
+]);
+
+export const seriesOverrideActionEnum = pgEnum("series_override_action", [
+  "force_series",
+  "force_singleton",
+  "exclude_from_auto_group",
+]);
+
 export const profiles = pgTable(
   "profiles",
   {
@@ -120,51 +132,6 @@ export const userAnimeEntries = pgTable(
   ],
 );
 
-export const pairwiseComparisons = pgTable("pairwise_comparisons", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id").notNull(),
-  leftAnimeId: uuid("left_anime_id")
-    .notNull()
-    .references(() => anime.id, { onDelete: "cascade" }),
-  rightAnimeId: uuid("right_anime_id")
-    .notNull()
-    .references(() => anime.id, { onDelete: "cascade" }),
-  winnerAnimeId: uuid("winner_anime_id").references(() => anime.id, {
-    onDelete: "cascade",
-  }),
-  comparisonContext: jsonb("comparison_context"),
-  skippedReason: text("skipped_reason"),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
-
-export const derivedRankings = pgTable(
-  "derived_rankings",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    userId: uuid("user_id").notNull(),
-    animeId: uuid("anime_id")
-      .notNull()
-      .references(() => anime.id, { onDelete: "cascade" }),
-    rank: integer("rank").notNull(),
-    score: numeric("score", { precision: 10, scale: 4 }).notNull(),
-    confidence: rankingConfidenceEnum("confidence").notNull().default("low"),
-    comparisonCount: integer("comparison_count").notNull().default(0),
-    algorithmVersion: text("algorithm_version").notNull().default("elo_v1"),
-    computedAt: timestamp("computed_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-  },
-  (table) => [
-    uniqueIndex("derived_rankings_unique_user_anime_version").on(
-      table.userId,
-      table.animeId,
-      table.algorithmVersion,
-    ),
-  ],
-);
-
 export const friendships = pgTable("friendships", {
   id: uuid("id").primaryKey().defaultRandom(),
   requesterId: uuid("requester_id").notNull(),
@@ -175,6 +142,95 @@ export const friendships = pgTable("friendships", {
     .defaultNow(),
   respondedAt: timestamp("responded_at", { withTimezone: true }),
 });
+
+export const series = pgTable("series", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  canonicalTitle: text("canonical_title").notNull(),
+  slug: text("slug").notNull().unique(),
+  anilistPrimaryId: integer("anilist_primary_id").notNull().unique(),
+  coverImageUrl: text("cover_image_url"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const animeSeriesMap = pgTable("anime_series_map", {
+  animeId: uuid("anime_id")
+    .primaryKey()
+    .references(() => anime.id, { onDelete: "cascade" }),
+  seriesId: uuid("series_id")
+    .notNull()
+    .references(() => series.id, { onDelete: "cascade" }),
+  source: seriesMapSourceEnum("source").notNull().default("anilist_auto"),
+  confidence: numeric("confidence", { precision: 4, scale: 3 })
+    .notNull()
+    .default("1.0"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const seriesGroupOverrides = pgTable("series_group_overrides", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  anilistId: integer("anilist_id").notNull().unique(),
+  action: seriesOverrideActionEnum("action").notNull(),
+  targetSeriesId: uuid("target_series_id").references(() => series.id, {
+    onDelete: "set null",
+  }),
+  targetAnilistPrimaryId: integer("target_anilist_primary_id"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const pairwiseSeriesComparisons = pgTable("pairwise_series_comparisons", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull(),
+  leftSeriesId: uuid("left_series_id")
+    .notNull()
+    .references(() => series.id, { onDelete: "cascade" }),
+  rightSeriesId: uuid("right_series_id")
+    .notNull()
+    .references(() => series.id, { onDelete: "cascade" }),
+  winnerSeriesId: uuid("winner_series_id").references(() => series.id, {
+    onDelete: "cascade",
+  }),
+  comparisonContext: jsonb("comparison_context"),
+  skippedReason: text("skipped_reason"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const derivedSeriesRankings = pgTable(
+  "derived_series_rankings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull(),
+    seriesId: uuid("series_id")
+      .notNull()
+      .references(() => series.id, { onDelete: "cascade" }),
+    rank: integer("rank").notNull(),
+    score: numeric("score", { precision: 10, scale: 4 }).notNull(),
+    confidence: rankingConfidenceEnum("confidence").notNull().default("low"),
+    comparisonCount: integer("comparison_count").notNull().default(0),
+    algorithmVersion: text("algorithm_version").notNull().default("elo_series_v1"),
+    computedAt: timestamp("computed_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("derived_series_rankings_unique_user_series_version").on(
+      table.userId,
+      table.seriesId,
+      table.algorithmVersion,
+    ),
+  ],
+);
 
 export const userEvents = pgTable("user_events", {
   id: uuid("id").primaryKey().defaultRandom(),

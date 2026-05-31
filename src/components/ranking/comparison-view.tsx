@@ -6,15 +6,15 @@ import { useState, useTransition } from "react";
 import { skipComparison, submitComparison } from "@/actions/ranking";
 import { AnimePoster } from "@/components/anime/anime-poster";
 import { Button } from "@/components/ui/button";
-import type { ComparisonPair } from "@/lib/ranking/prompt";
-import type { Tables } from "@/types/database";
+import type { SeriesComparisonPair } from "@/lib/ranking/prompt";
 
-function animeTitle(anime: Tables<"anime">) {
-  return anime.english_title || anime.romaji_title || "Unknown";
+function seriesSubtitle(entryCount: number) {
+  if (entryCount <= 1) return "Series";
+  return `Series · ${entryCount} entries in your library`;
 }
 
 type ComparisonViewProps = {
-  pair: ComparisonPair;
+  pair: SeriesComparisonPair;
 };
 
 export function ComparisonView({ pair }: ComparisonViewProps) {
@@ -55,6 +55,10 @@ export function ComparisonView({ pair }: ComparisonViewProps) {
 
   return (
     <div className="space-y-7">
+      <p className="text-center text-sm text-muted">
+        Rankings are by series — seasons and movies in the same franchise count
+        as one title.
+      </p>
       <p className="text-center font-display text-2xl font-medium sm:text-3xl">
         Which did you enjoy more?
       </p>
@@ -64,18 +68,22 @@ export function ComparisonView({ pair }: ComparisonViewProps) {
         </p>
       ) : null}
       <div className="relative grid gap-4 sm:grid-cols-2">
-        {([pair.left, pair.right] as const).map((anime) => (
+        {([pair.left, pair.right] as const).map((series) => (
           <button
-            key={anime.id}
+            key={series.id}
             type="button"
             disabled={pending}
-            onClick={() => pick(anime.id)}
+            onClick={() => pick(series.id)}
             className="flex flex-col items-center gap-3 rounded-card border border-line bg-surface p-5 text-center transition-all hover:-translate-y-1 hover:border-accent hover:shadow-[0_18px_40px_-26px_rgb(var(--shadow-color)/0.5)] disabled:opacity-50"
           >
-            <AnimePoster src={anime.cover_image_url} alt={animeTitle(anime)} size="lg" />
-            <span className="font-medium text-ink">{animeTitle(anime)}</span>
+            <AnimePoster
+              src={series.cover_image_url}
+              alt={series.canonical_title}
+              size="lg"
+            />
+            <span className="font-medium text-ink">{series.canonical_title}</span>
             <span className="text-xs uppercase tracking-wide text-faint">
-              {[anime.format, anime.season_year].filter(Boolean).join(" · ")}
+              {seriesSubtitle(series.entryCount)}
             </span>
           </button>
         ))}
