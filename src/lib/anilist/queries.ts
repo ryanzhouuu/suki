@@ -1,3 +1,32 @@
+export const ANIME_DISCOVER_QUERY = `
+  query AnimeDiscover(
+    $sort: [MediaSort]
+    $status: MediaStatus
+    $perPage: Int
+  ) {
+    Page(page: 1, perPage: $perPage) {
+      media(
+        type: ANIME
+        sort: $sort
+        status: $status
+        isAdult: false
+      ) {
+        id
+        title {
+          romaji
+          english
+          native
+        }
+        coverImage {
+          large
+        }
+        format
+        seasonYear
+      }
+    }
+  }
+`;
+
 export const ANIME_SEARCH_QUERY = `
   query SearchAnime($search: String, $page: Int, $perPage: Int) {
     Page(page: $page, perPage: $perPage) {

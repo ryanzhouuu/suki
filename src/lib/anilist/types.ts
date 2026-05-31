@@ -77,6 +77,12 @@ export type AniListSearchResult = {
   } | null;
 };
 
+export type AniListDiscoverResult = {
+  Page: {
+    media: AniListMediaSummary[] | null;
+  } | null;
+};
+
 export type AniListMediaResult = {
   Media: AniListMediaDetail | null;
 };

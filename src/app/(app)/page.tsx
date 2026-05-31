@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 import { AnimePoster } from "@/components/anime/anime-poster";
+import { DiscoverRow } from "@/components/home/discover-row";
+import { getLatestAnime, getPopularAnime } from "@/lib/anilist/discover";
 import { requireProfile } from "@/lib/auth/session";
 import { getUserLibraryEntries } from "@/lib/library/queries";
 import { getNextComparisonPair } from "@/lib/ranking/prompt";
@@ -9,10 +11,12 @@ import { getCompletedSeriesForUser } from "@/lib/series/queries";
 export default async function HomePage() {
   const { user, profile } = await requireProfile();
 
-  const [watching, completedSeries, pair] = await Promise.all([
+  const [watching, completedSeries, pair, latest, popular] = await Promise.all([
     getUserLibraryEntries(user.id, "watching"),
     getCompletedSeriesForUser(user.id),
     getNextComparisonPair(user.id),
+    getLatestAnime().catch(() => []),
+    getPopularAnime().catch(() => []),
   ]);
 
   const greetingName = profile.display_name || profile.username;
@@ -44,6 +48,22 @@ export default async function HomePage() {
           </Link>
         </div>
       </section>
+
+      {latest.length > 0 ? (
+        <DiscoverRow
+          eyebrow="Discover"
+          title="Latest"
+          items={latest}
+        />
+      ) : null}
+
+      {popular.length > 0 ? (
+        <DiscoverRow
+          eyebrow="Discover"
+          title="Popular"
+          items={popular}
+        />
+      ) : null}
 
       {pair && completedSeries.length >= 2 ? (
         <section className="overflow-hidden rounded-card border border-accent/30 bg-accent-soft p-6 sm:p-7">
