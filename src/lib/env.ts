@@ -34,4 +34,5 @@ export const env = {
   databaseUrl: () => process.env.DATABASE_URL,
   siteUrl: () =>
     process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+  openAiApiKey: () => process.env.OPENAI_API_KEY,
 };

@@ -29,6 +29,7 @@ cp .env.example .env.local
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Project Settings → API → **Publishable** key (`sb_publishable_...`) |
 | `SUPABASE_SECRET_KEY` | Project Settings → API → **Secret** key (`sb_secret_...`, server only) |
 | `DATABASE_URL` | Project Settings → Database → Connection string (pooler URI recommended) |
+| `OPENAI_API_KEY` | [OpenAI API keys](https://platform.openai.com/api-keys) — server only, for recommendations |
 
 Supabase has two key *types*, not one replacing the other:
 
@@ -93,7 +94,7 @@ docs/
 2. **Tracking** — Library, statuses, progress, anime detail ✓
 3. **Ranking** — Pairwise comparisons by **series** (not individual seasons), Elo recompute, ranked list ✓ (requires `SUPABASE_SECRET_KEY`)
 4. **Social** — Public profiles ✓ · Friends *(placeholder)*
-5. **Recommendation readiness** — User event logging ✓ · Analytics *(later)*
+5. **Recommendation readiness** — Embeddings + pgvector recommendations ✓ · Analytics *(later)*
 
 ## Scripts
 
@@ -105,6 +106,7 @@ docs/
 | `npm run db:generate` | Generate Drizzle migrations from schema |
 | `npm run db:studio` | Drizzle Studio (requires `DATABASE_URL`) |
 | `npm run backfill:series` | Map existing anime → series via AniList relations, recompute rankings |
+| `npm run backfill:embeddings` | Embed cached anime for vector search (requires `OPENAI_API_KEY`) |
 | `npm run test` | Unit tests (series grouping, ranking helpers) |
 
 ## Security notes

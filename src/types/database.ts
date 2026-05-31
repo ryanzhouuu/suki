@@ -78,6 +78,41 @@ export type Database = {
         };
         Relationships: [];
       };
+      anime_embeddings: {
+        Row: {
+          anime_id: string;
+          embedding: string;
+          embedding_model: string;
+          metadata_hash: string;
+          metadata_text: string;
+          updated_at: string;
+        };
+        Insert: {
+          anime_id: string;
+          embedding: string | number[];
+          embedding_model: string;
+          metadata_hash: string;
+          metadata_text: string;
+          updated_at?: string;
+        };
+        Update: {
+          anime_id?: string;
+          embedding?: string | number[];
+          embedding_model?: string;
+          metadata_hash?: string;
+          metadata_text?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "anime_embeddings_anime_id_fkey";
+            columns: ["anime_id"];
+            isOneToOne: true;
+            referencedRelation: "anime";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       anime_series_map: {
         Row: {
           anime_id: string;
@@ -198,6 +233,100 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "derived_series_rankings_series_id_fkey";
+            columns: ["series_id"];
+            isOneToOne: false;
+            referencedRelation: "series";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      recommendation_runs: {
+        Row: {
+          algorithm_version: string;
+          created_at: string;
+          embedding_model: string;
+          id: string;
+          input_hash: string;
+          user_id: string;
+        };
+        Insert: {
+          algorithm_version: string;
+          created_at?: string;
+          embedding_model: string;
+          id?: string;
+          input_hash: string;
+          user_id: string;
+        };
+        Update: {
+          algorithm_version?: string;
+          created_at?: string;
+          embedding_model?: string;
+          id?: string;
+          input_hash?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      recommendations: {
+        Row: {
+          algorithm_version: string;
+          anime_id: string;
+          created_at: string;
+          explanation: string;
+          final_score: number;
+          id: string;
+          reason_codes: string[];
+          rerank_score: number;
+          run_id: string;
+          series_id: string | null;
+          similarity_score: number;
+          user_id: string;
+        };
+        Insert: {
+          algorithm_version: string;
+          anime_id: string;
+          created_at?: string;
+          explanation: string;
+          final_score: number;
+          id?: string;
+          reason_codes?: string[];
+          rerank_score: number;
+          run_id: string;
+          series_id?: string | null;
+          similarity_score: number;
+          user_id: string;
+        };
+        Update: {
+          algorithm_version?: string;
+          anime_id?: string;
+          created_at?: string;
+          explanation?: string;
+          final_score?: number;
+          id?: string;
+          reason_codes?: string[];
+          rerank_score?: number;
+          run_id?: string;
+          series_id?: string | null;
+          similarity_score?: number;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "recommendations_anime_id_fkey";
+            columns: ["anime_id"];
+            isOneToOne: false;
+            referencedRelation: "anime";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "recommendations_run_id_fkey";
+            columns: ["run_id"];
+            isOneToOne: false;
+            referencedRelation: "recommendation_runs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "recommendations_series_id_fkey";
             columns: ["series_id"];
             isOneToOne: false;
             referencedRelation: "series";
@@ -499,6 +628,36 @@ export type Database = {
           },
         ];
       };
+      user_taste_profiles: {
+        Row: {
+          algorithm_version: string;
+          embedding: string;
+          embedding_model: string;
+          input_hash: string;
+          profile_text: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          algorithm_version: string;
+          embedding: string | number[];
+          embedding_model: string;
+          input_hash: string;
+          profile_text: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          algorithm_version?: string;
+          embedding?: string | number[];
+          embedding_model?: string;
+          input_hash?: string;
+          profile_text?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       user_events: {
         Row: {
           anime_id: string | null;
@@ -539,7 +698,18 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      match_anime_embeddings: {
+        Args: {
+          excluded_anime_ids?: string[];
+          excluded_series_ids?: string[];
+          match_count?: number;
+          query_embedding: string | number[];
+        };
+        Returns: {
+          anime_id: string;
+          similarity: number;
+        }[];
+      };
     };
     Enums: {
       anime_entry_status:

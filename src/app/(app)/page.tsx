@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AnimePoster } from "@/components/anime/anime-poster";
 import { DiscoverRow } from "@/components/home/discover-row";
 import { HomeHero } from "@/components/home/home-hero";
+import { RecommendationsPreview } from "@/components/home/recommendations-preview";
 import { getLatestAnime, getPopularAnime } from "@/lib/anilist/discover";
 import { requireProfile } from "@/lib/auth/session";
 import { getUserLibraryEntries } from "@/lib/library/queries";
@@ -83,6 +84,8 @@ export default async function HomePage() {
           </p>
         </section>
       ) : null}
+
+      <RecommendationsPreview userId={user.id} />
 
       <section className="animate-rise [animation-delay:240ms]">
         <div className="mb-4 flex items-baseline justify-between gap-4">

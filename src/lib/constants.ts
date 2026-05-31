@@ -31,6 +31,7 @@ export const NAV_ITEMS = [
   { href: "/search", label: "Search" },
   { href: "/library", label: "Library" },
   { href: "/ranking", label: "Ranking" },
+  { href: "/recommendations", label: "For you" },
   { href: "/friends", label: "Friends" },
 ] as const;
 
@@ -49,4 +50,9 @@ export const USER_EVENT_TYPES = {
   rankingViewed: "ranking_viewed",
   friendRequestSent: "friend_request_sent",
   friendProfileViewed: "friend_profile_viewed",
+  recommendationViewed: "recommendation_viewed",
+  recommendationClicked: "recommendation_clicked",
+  recommendationAdded: "recommendation_added",
+  recommendationDismissed: "recommendation_dismissed",
+  recommendationRefreshed: "recommendation_refreshed",
 } as const;

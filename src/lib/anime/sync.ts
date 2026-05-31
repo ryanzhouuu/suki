@@ -2,6 +2,7 @@ import { anilistQuery } from "@/lib/anilist/client";
 import { mapAniListMediaToAnimeRow } from "@/lib/anilist/map";
 import { ANIME_DETAIL_QUERY } from "@/lib/anilist/queries";
 import type { AniListMediaResult } from "@/lib/anilist/types";
+import { syncAnimeEmbedding } from "@/lib/recommendations/sync-anime-embedding";
 import { ensureAnimeSeriesMapping } from "@/lib/series/resolver";
 import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/types/database";
@@ -24,6 +25,7 @@ export async function syncAnimeFromAnilist(
     if (age < staleMs) {
       try {
         await ensureAnimeSeriesMapping(existing);
+        await syncAnimeEmbedding(existing).catch(() => undefined);
       } catch {
         // repaired on ranking page if secret key / AniList unavailable
       }
@@ -53,6 +55,7 @@ export async function syncAnimeFromAnilist(
 
   try {
     await ensureAnimeSeriesMapping(data);
+    await syncAnimeEmbedding(data).catch(() => undefined);
   } catch {
     // Series mapping is best-effort during sync; ranking backfill can repair.
   }
