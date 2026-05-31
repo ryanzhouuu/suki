@@ -8,12 +8,17 @@ type GraphQLResponse<T> = {
 export async function anilistQuery<T>(
   query: string,
   variables?: Record<string, unknown>,
+  options?: { cache?: RequestCache; revalidate?: number },
 ): Promise<T> {
   const response = await fetch(ANILIST_GRAPHQL_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ query, variables }),
-    next: { revalidate: 3600 },
+    cache: options?.cache ?? "default",
+    next:
+      options?.revalidate !== undefined
+        ? { revalidate: options.revalidate }
+        : undefined,
   });
 
   if (!response.ok) {
@@ -32,26 +37,3 @@ export async function anilistQuery<T>(
 
   return json.data;
 }
-
-/** Minimal search query — expand in Milestone 1 implementation. */
-export const ANIME_SEARCH_QUERY = `
-  query SearchAnime($search: String, $page: Int, $perPage: Int) {
-    Page(page: $page, perPage: $perPage) {
-      media(search: $search, type: ANIME, sort: SEARCH_MATCH) {
-        id
-        title {
-          romaji
-          english
-          native
-        }
-        coverImage {
-          large
-        }
-        format
-        episodes
-        seasonYear
-        status
-      }
-    }
-  }
-`;

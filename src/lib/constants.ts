@@ -12,6 +12,20 @@ export const ANIME_ENTRY_STATUSES: AnimeEntryStatus[] = [
   "plan_to_watch",
 ];
 
+export const STATUS_LABELS: Record<AnimeEntryStatus, string> = {
+  watching: "Watching",
+  completed: "Completed",
+  paused: "Paused",
+  dropped: "Dropped",
+  plan_to_watch: "Plan to watch",
+};
+
+export const CONFIDENCE_LABELS = {
+  low: "Needs more comparisons",
+  medium: "Getting clearer",
+  high: "Well established",
+} as const;
+
 export const NAV_ITEMS = [
   { href: "/", label: "Home" },
   { href: "/search", label: "Search" },

@@ -1,11 +1,5 @@
-import { PlaceholderPage } from "@/components/ui/placeholder-page";
+import { SearchPanel } from "@/components/search/search-panel";
 
 export default function SearchPage() {
-  return (
-    <PlaceholderPage
-      title="Search"
-      description="AniList-powered anime search with quick-add status actions."
-      milestone="Milestone 1"
-    />
-  );
+  return <SearchPanel />;
 }

@@ -88,11 +88,11 @@ docs/
 
 ## Milestones (from design doc)
 
-1. **Foundation** — Auth, profiles, AniList search *(in progress)*
-2. **Tracking** — Library, watchlist, progress
-3. **Ranking** — Pairwise UI, Elo scoring, derived rankings cache
-4. **Social** — Public profiles, friends
-5. **Recommendation readiness** — Event logging, analytics
+1. **Foundation** — Auth, onboarding, profiles, AniList search ✓
+2. **Tracking** — Library, statuses, progress, anime detail ✓
+3. **Ranking** — Pairwise comparisons, Elo recompute, ranked list ✓ (requires `SUPABASE_SECRET_KEY`)
+4. **Social** — Public profiles ✓ · Friends *(placeholder)*
+5. **Recommendation readiness** — User event logging ✓ · Analytics *(later)*
 
 ## Scripts
 
