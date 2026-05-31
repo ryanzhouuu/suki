@@ -1,0 +1,42 @@
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+
+import { remapComparisonRow } from "./consolidate";
+
+describe("remapComparisonRow", () => {
+  const base = {
+    id: "1",
+    user_id: "u1",
+    left_series_id: "a",
+    right_series_id: "b",
+    winner_series_id: "a",
+    skipped_reason: null,
+    created_at: "2026-01-01T00:00:00Z",
+  };
+
+  it("remaps winner and sides when merging into target", () => {
+    const remapped = remapComparisonRow(
+      {
+        ...base,
+        left_series_id: "aaa",
+        right_series_id: "ccc",
+        winner_series_id: "aaa",
+      },
+      "aaa",
+      "bbb",
+    );
+    assert.ok(remapped);
+    assert.equal(remapped.left_series_id, "bbb");
+    assert.equal(remapped.right_series_id, "ccc");
+    assert.equal(remapped.winner_series_id, "bbb");
+  });
+
+  it("drops self-pair comparisons", () => {
+    const remapped = remapComparisonRow(
+      { ...base, left_series_id: "aaa", right_series_id: "zzz" },
+      "aaa",
+      "zzz",
+    );
+    assert.equal(remapped, null);
+  });
+});

@@ -107,13 +107,14 @@ docs/
 | `npm run db:studio` | Drizzle Studio (requires `DATABASE_URL`) |
 | `npm run backfill:series` | Map existing anime → series via AniList relations, recompute rankings |
 | `npm run backfill:embeddings` | Embed cached anime for vector search (requires `OPENAI_API_KEY`) |
+| `npm run seed:catalog` | Cache + embed popular/trending AniList titles to grow the recommendation pool |
 | `npm run test` | Unit tests (series grouping, ranking helpers) |
 
 ## Security notes
 
 - Never commit `.env.local` or expose `SUPABASE_SECRET_KEY` to the client.
 - `derived_series_rankings` has no client INSERT policy — writes use the secret key on the server.
-- Rankings compare **series** (e.g. all Jujutsu Kaisen seasons/movies grouped). Override grouping via `series_group_overrides` if needed.
+- Rankings compare **series** (e.g. all Jujutsu Kaisen seasons/movies grouped). Set `SERIES_ADMIN_EMAILS` in `.env.local` to use `/admin/series` for overrides (or insert into `series_group_overrides` manually).
 - Public profiles and lists are readable by default per MVP design; account data stays private.
 
 ## License

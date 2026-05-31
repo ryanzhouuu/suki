@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { AppShell } from "@/components/layout/app-shell";
+import { isSeriesAdminEmail } from "@/lib/admin/access";
 import { getAuthUser, getCurrentProfile } from "@/lib/auth/session";
 
 export default async function AppLayout({
@@ -18,5 +19,9 @@ export default async function AppLayout({
     redirect("/onboarding");
   }
 
-  return <AppShell profile={profile}>{children}</AppShell>;
+  return (
+    <AppShell profile={profile} isSeriesAdmin={isSeriesAdminEmail(user.email)}>
+      {children}
+    </AppShell>
+  );
 }

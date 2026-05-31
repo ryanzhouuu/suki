@@ -8,9 +8,10 @@ import type { Tables } from "@/types/database";
 type AppShellProps = {
   children: React.ReactNode;
   profile: Tables<"profiles">;
+  isSeriesAdmin?: boolean;
 };
 
-export function AppShell({ children, profile }: AppShellProps) {
+export function AppShell({ children, profile, isSeriesAdmin }: AppShellProps) {
   const initial =
     (profile.display_name || profile.username || "?")[0]?.toUpperCase() ?? "?";
 
@@ -30,6 +31,14 @@ export function AppShell({ children, profile }: AppShellProps) {
           <DesktopNav />
 
           <div className="flex items-center gap-1.5">
+            {isSeriesAdmin ? (
+              <Link
+                href="/admin/series"
+                className="hidden rounded-full px-3 py-2 text-sm font-medium text-muted transition-colors hover:text-ink sm:inline-block"
+              >
+                Series admin
+              </Link>
+            ) : null}
             <Link
               href="/settings"
               className="hidden rounded-full px-3 py-2 text-sm font-medium text-muted transition-colors hover:text-ink sm:inline-block"
