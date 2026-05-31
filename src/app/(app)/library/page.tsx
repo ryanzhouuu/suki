@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import { EntryCard } from "@/components/library/entry-card";
+import { LibraryPanel } from "@/components/library/library-panel";
 import { LibraryTabs } from "@/components/library/library-tabs";
 import { requireProfile } from "@/lib/auth/session";
 import type { AnimeEntryStatus } from "@/lib/constants";
@@ -47,11 +47,9 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
           </p>
         </div>
       ) : (
-        <ul className="space-y-3">
-          {entries.map((entry) => (
-            <EntryCard key={entry.id} entry={entry} />
-          ))}
-        </ul>
+        <Suspense fallback={null}>
+          <LibraryPanel entries={entries} />
+        </Suspense>
       )}
     </div>
   );

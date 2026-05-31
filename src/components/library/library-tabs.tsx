@@ -22,10 +22,14 @@ export function LibraryTabs() {
   return (
     <div className="flex gap-1.5 overflow-x-auto pb-1">
       {TABS.map((tab) => {
-        const href =
-          tab.key === "all"
-            ? pathname
-            : `${pathname}?status=${tab.key}`;
+        const params = new URLSearchParams(searchParams.toString());
+        if (tab.key === "all") {
+          params.delete("status");
+        } else {
+          params.set("status", tab.key);
+        }
+        const qs = params.toString();
+        const href = qs ? `${pathname}?${qs}` : pathname;
         const active = current === tab.key;
         return (
           <Link

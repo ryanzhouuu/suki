@@ -6,7 +6,6 @@ import { useTransition } from "react";
 import { removeAnimeEntry, updateAnimeEntry } from "@/actions/library";
 import { AnimePoster } from "@/components/anime/anime-poster";
 import { Button } from "@/components/ui/button";
-import { getAniListDisplayTitle } from "@/lib/anilist/display";
 import { STATUS_LABELS, type AnimeEntryStatus } from "@/lib/constants";
 import type { LibraryEntry } from "@/lib/library/queries";
 
@@ -22,6 +21,11 @@ export function EntryCard({ entry }: EntryCardProps) {
     anime.romaji_title ||
     anime.native_title ||
     "Unknown";
+  const total = anime.episodes;
+  const progressPct =
+    total && entry.progress_episodes > 0
+      ? Math.min(100, Math.round((entry.progress_episodes / total) * 100))
+      : 0;
 
   function setStatus(status: AnimeEntryStatus) {
     startTransition(async () => {
@@ -37,59 +41,82 @@ export function EntryCard({ entry }: EntryCardProps) {
   }
 
   return (
-    <li className="group flex gap-4 rounded-card border border-line bg-surface p-3.5 transition-colors hover:border-accent">
-      <Link href={`/anime/${anime.anilist_id}`} className="shrink-0">
-        <AnimePoster src={anime.cover_image_url} alt={title} size="sm" />
+    <li className="group flex flex-col overflow-hidden rounded-lg border border-line bg-surface transition-colors hover:border-accent">
+      <Link
+        href={`/anime/${anime.anilist_id}`}
+        className="block overflow-hidden"
+      >
+        <AnimePoster
+          src={anime.cover_image_url}
+          alt={title}
+          fill
+          className="rounded-none transition-transform duration-300 group-hover:scale-[1.03]"
+        />
       </Link>
-      <div className="min-w-0 flex-1">
+
+      <div className="flex flex-1 flex-col p-2.5">
         <Link
           href={`/anime/${anime.anilist_id}`}
-          className="font-medium text-ink transition-colors hover:text-accent"
+          className="line-clamp-2 text-sm font-medium leading-snug text-ink transition-colors hover:text-accent"
         >
           {title}
         </Link>
-        <p className="mt-1 flex items-center gap-2 text-xs text-muted">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-2 py-0.5 font-medium text-ink">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+
+        <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] text-muted">
+          <span className="inline-flex items-center gap-1 rounded-full bg-surface-2 px-1.5 py-0.5 font-medium text-ink">
+            <span className="h-1 w-1 rounded-full bg-accent" />
             {STATUS_LABELS[entry.status]}
           </span>
-          {entry.progress_episodes > 0
-            ? `${entry.progress_episodes}${anime.episodes ? `/${anime.episodes}` : ""} eps`
-            : null}
+          {entry.progress_episodes > 0 ? (
+            <span>
+              {entry.progress_episodes}
+              {total ? ` / ${total}` : ""} eps
+            </span>
+          ) : null}
         </p>
-        {entry.status === "watching" && anime.episodes ? (
-          <div className="mt-2 flex items-center gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              disabled={pending}
-              onClick={() =>
-                startTransition(async () => {
-                  await updateAnimeEntry(entry.id, {
-                    progressEpisodes: Math.min(
-                      entry.progress_episodes + 1,
-                      anime.episodes ?? entry.progress_episodes + 1,
-                    ),
-                  });
-                })
-              }
-            >
-              +1 ep
-            </Button>
-            {entry.progress_episodes >= (anime.episodes ?? 0) ? (
+
+        {entry.status === "watching" && total ? (
+          <div className="mt-2">
+            <div className="h-0.5 overflow-hidden rounded-full bg-surface-2">
+              <div
+                className="h-full rounded-full bg-accent transition-[width]"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+            <div className="mt-1.5 flex flex-wrap gap-1">
               <Button
                 type="button"
                 size="sm"
+                variant="secondary"
                 disabled={pending}
-                onClick={() => setStatus("completed")}
+                onClick={() =>
+                  startTransition(async () => {
+                    await updateAnimeEntry(entry.id, {
+                      progressEpisodes: Math.min(
+                        entry.progress_episodes + 1,
+                        anime.episodes ?? entry.progress_episodes + 1,
+                      ),
+                    });
+                  })
+                }
               >
-                Mark completed
+                +1 ep
               </Button>
-            ) : null}
+              {entry.progress_episodes >= total ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={pending}
+                  onClick={() => setStatus("completed")}
+                >
+                  Done
+                </Button>
+              ) : null}
+            </div>
           </div>
         ) : null}
-        <div className="mt-2 flex flex-wrap gap-1">
+
+        <div className="mt-auto flex flex-wrap gap-1 pt-2">
           {entry.status !== "completed" ? (
             <Button
               type="button"
