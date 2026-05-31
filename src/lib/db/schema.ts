@@ -1,0 +1,188 @@
+import {
+  date,
+  integer,
+  jsonb,
+  numeric,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
+
+export const animeEntryStatusEnum = pgEnum("anime_entry_status", [
+  "watching",
+  "completed",
+  "paused",
+  "dropped",
+  "plan_to_watch",
+]);
+
+export const watchlistPriorityEnum = pgEnum("watchlist_priority", [
+  "low",
+  "medium",
+  "high",
+]);
+
+export const profileVisibilityEnum = pgEnum("profile_visibility", [
+  "public",
+  "friends_only",
+  "private",
+]);
+
+export const friendshipStatusEnum = pgEnum("friendship_status", [
+  "pending",
+  "accepted",
+  "declined",
+  "blocked",
+]);
+
+export const rankingConfidenceEnum = pgEnum("ranking_confidence", [
+  "low",
+  "medium",
+  "high",
+]);
+
+export const profiles = pgTable(
+  "profiles",
+  {
+    userId: uuid("user_id").primaryKey(),
+    username: text("username").notNull(),
+    displayName: text("display_name"),
+    avatarUrl: text("avatar_url"),
+    bio: text("bio"),
+    profileVisibility: profileVisibilityEnum("profile_visibility")
+      .notNull()
+      .default("public"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [uniqueIndex("profiles_username_lower_idx").on(table.username)],
+);
+
+export const anime = pgTable("anime", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  anilistId: integer("anilist_id").notNull().unique(),
+  romajiTitle: text("romaji_title").notNull(),
+  englishTitle: text("english_title"),
+  nativeTitle: text("native_title"),
+  description: text("description"),
+  coverImageUrl: text("cover_image_url"),
+  bannerImageUrl: text("banner_image_url"),
+  format: text("format"),
+  episodes: integer("episodes"),
+  durationMinutes: integer("duration_minutes"),
+  season: text("season"),
+  seasonYear: integer("season_year"),
+  status: text("status"),
+  genres: text("genres").array().notNull().default([]),
+  averageScore: numeric("average_score", { precision: 5, scale: 2 }),
+  popularity: integer("popularity"),
+  source: text("source"),
+  metadataUpdatedAt: timestamp("metadata_updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const userAnimeEntries = pgTable(
+  "user_anime_entries",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull(),
+    animeId: uuid("anime_id")
+      .notNull()
+      .references(() => anime.id, { onDelete: "cascade" }),
+    status: animeEntryStatusEnum("status").notNull(),
+    progressEpisodes: integer("progress_episodes").notNull().default(0),
+    rewatchCount: integer("rewatch_count").notNull().default(0),
+    priority: watchlistPriorityEnum("priority"),
+    notes: text("notes"),
+    personalScore: numeric("personal_score", { precision: 4, scale: 2 }),
+    startedAt: date("started_at"),
+    completedAt: date("completed_at"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("user_anime_entries_unique_user_anime").on(
+      table.userId,
+      table.animeId,
+    ),
+  ],
+);
+
+export const pairwiseComparisons = pgTable("pairwise_comparisons", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull(),
+  leftAnimeId: uuid("left_anime_id")
+    .notNull()
+    .references(() => anime.id, { onDelete: "cascade" }),
+  rightAnimeId: uuid("right_anime_id")
+    .notNull()
+    .references(() => anime.id, { onDelete: "cascade" }),
+  winnerAnimeId: uuid("winner_anime_id").references(() => anime.id, {
+    onDelete: "cascade",
+  }),
+  comparisonContext: jsonb("comparison_context"),
+  skippedReason: text("skipped_reason"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const derivedRankings = pgTable(
+  "derived_rankings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull(),
+    animeId: uuid("anime_id")
+      .notNull()
+      .references(() => anime.id, { onDelete: "cascade" }),
+    rank: integer("rank").notNull(),
+    score: numeric("score", { precision: 10, scale: 4 }).notNull(),
+    confidence: rankingConfidenceEnum("confidence").notNull().default("low"),
+    comparisonCount: integer("comparison_count").notNull().default(0),
+    algorithmVersion: text("algorithm_version").notNull().default("elo_v1"),
+    computedAt: timestamp("computed_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("derived_rankings_unique_user_anime_version").on(
+      table.userId,
+      table.animeId,
+      table.algorithmVersion,
+    ),
+  ],
+);
+
+export const friendships = pgTable("friendships", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  requesterId: uuid("requester_id").notNull(),
+  recipientId: uuid("recipient_id").notNull(),
+  status: friendshipStatusEnum("status").notNull().default("pending"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  respondedAt: timestamp("responded_at", { withTimezone: true }),
+});
+
+export const userEvents = pgTable("user_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull(),
+  eventType: text("event_type").notNull(),
+  animeId: uuid("anime_id").references(() => anime.id, { onDelete: "set null" }),
+  metadata: jsonb("metadata").notNull().default({}),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});

@@ -1,36 +1,115 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Suki
 
-## Getting Started
+Anime tracking with pairwise rankings, public taste profiles, and friends — built with Next.js, Supabase, and AniList.
 
-First, run the development server:
+Product and architecture details: [`docs/design.md`](./docs/design.md).
+
+## Stack
+
+- **Frontend:** Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS
+- **Backend:** Next.js server components, route handlers, and server actions (to be added)
+- **Database:** Supabase Postgres with Row Level Security
+- **Auth:** Supabase Auth
+- **Metadata:** AniList GraphQL API
+- **ORM:** Drizzle (typed queries alongside Supabase client)
+
+## Getting started
+
+### 1. Environment variables
+
+Copy the example file and fill in values from your [Supabase dashboard](https://supabase.com/dashboard):
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| Variable | Where to find it |
+|----------|------------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Project Settings → API → Project URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Project Settings → API → **Publishable** key (`sb_publishable_...`) |
+| `SUPABASE_SECRET_KEY` | Project Settings → API → **Secret** key (`sb_secret_...`, server only) |
+| `DATABASE_URL` | Project Settings → Database → Connection string (pooler URI recommended) |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Supabase has two key *types*, not one replacing the other:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Publishable** — safe in the browser; Row Level Security applies (replaces legacy `anon`).
+- **Secret** — server/backend only; full access, bypasses RLS (replaces legacy `service_role`).
 
-## Learn More
+Legacy env names (`NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`) still work if your project has not migrated yet.
 
-To learn more about Next.js, take a look at the following resources:
+### 2. Database
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The remote Supabase project should already have migrations applied:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `initial_schema` — tables, enums, indexes
+- `row_level_security` — RLS policies
 
-## Deploy on Vercel
+SQL files are mirrored in [`supabase/migrations/`](./supabase/migrations/) for version control.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+To apply on another project:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+# With Supabase CLI linked to your project
+supabase db push
+```
+
+Or run the SQL files in order via the SQL editor.
+
+### 3. Run the app
+
+```bash
+npm install
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+## Project structure
+
+```
+src/
+  app/
+    (app)/          # Main app shell (home, search, library, ranking, friends)
+    auth/           # Login & signup (Milestone 1)
+    u/[username]/   # Public profiles (Milestone 4)
+    anime/[anilistId]/
+  components/
+  lib/
+    anilist/        # AniList GraphQL client
+    db/             # Drizzle schema & connection
+    supabase/       # Browser, server, admin, middleware clients
+  types/
+    database.ts     # Supabase-generated types
+supabase/
+  migrations/       # Postgres schema + RLS
+docs/
+  design.md         # Full product & technical design
+```
+
+## Milestones (from design doc)
+
+1. **Foundation** — Auth, profiles, AniList search *(in progress)*
+2. **Tracking** — Library, watchlist, progress
+3. **Ranking** — Pairwise UI, Elo scoring, derived rankings cache
+4. **Social** — Public profiles, friends
+5. **Recommendation readiness** — Event logging, analytics
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start dev server |
+| `npm run build` | Production build |
+| `npm run lint` | ESLint |
+| `npm run db:generate` | Generate Drizzle migrations from schema |
+| `npm run db:studio` | Drizzle Studio (requires `DATABASE_URL`) |
+
+## Security notes
+
+- Never commit `.env.local` or expose `SUPABASE_SECRET_KEY` to the client.
+- `derived_rankings` has no client INSERT policy — writes use the secret key on the server.
+- Public profiles and lists are readable by default per MVP design; account data stays private.
+
+## License
+
+Private — not published.

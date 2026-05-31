@@ -32,9 +32,23 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
+
+# supabase CLI (local state — commit supabase/migrations/ and config.toml)
+supabase/.temp/
+supabase/.branches/
+
+# drizzle
+.drizzle/
+
+# editors
+.idea/
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
 
 # typescript
 *.tsbuildinfo
