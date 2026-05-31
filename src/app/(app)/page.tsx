@@ -2,11 +2,27 @@ import Link from "next/link";
 
 import { AnimePoster } from "@/components/anime/anime-poster";
 import { DiscoverRow } from "@/components/home/discover-row";
+import { HomeHero } from "@/components/home/home-hero";
 import { getLatestAnime, getPopularAnime } from "@/lib/anilist/discover";
 import { requireProfile } from "@/lib/auth/session";
 import { getUserLibraryEntries } from "@/lib/library/queries";
 import { getNextComparisonPair } from "@/lib/ranking/prompt";
 import { getCompletedSeriesForUser } from "@/lib/series/queries";
+
+function uniqueCoverUrls(
+  items: { coverUrl: string | null }[],
+  limit: number,
+): string[] {
+  const seen = new Set<string>();
+  const urls: string[] = [];
+  for (const item of items) {
+    if (!item.coverUrl || seen.has(item.coverUrl)) continue;
+    seen.add(item.coverUrl);
+    urls.push(item.coverUrl);
+    if (urls.length >= limit) break;
+  }
+  return urls;
+}
 
 export default async function HomePage() {
   const { user, profile } = await requireProfile();
@@ -20,55 +36,32 @@ export default async function HomePage() {
   ]);
 
   const greetingName = profile.display_name || profile.username;
+  const heroBackdropUrls = uniqueCoverUrls([...latest, ...popular], 6);
 
   return (
-    <div className="space-y-12 pb-24 sm:pb-10">
-      <section className="animate-rise">
-        <p className="eyebrow">Welcome back, {greetingName}</p>
-        <h1 className="mt-2 max-w-2xl text-balance text-4xl font-semibold leading-[1.05] sm:text-6xl">
-          Pick up right where you{" "}
-          <span className="italic text-accent">left off</span>.
-        </h1>
-        <p className="mt-4 max-w-md text-muted">
-          Track what you watch, build a watchlist, and shape a ranking you
-          actually trust — one quick comparison at a time.
-        </p>
-        <div className="mt-6 flex flex-wrap gap-2.5">
-          <Link
-            href="/search"
-            className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-on-accent shadow-sm transition-colors hover:bg-accent-strong"
-          >
-            Search anime
-          </Link>
-          <Link
-            href="/ranking"
-            className="inline-flex items-center gap-2 rounded-full border border-line-strong bg-surface px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:border-accent hover:text-accent"
-          >
-            Open ranking
-          </Link>
-        </div>
-      </section>
+    <div className="space-y-14 pb-24 sm:pb-12">
+      <HomeHero
+        greetingName={greetingName}
+        watchingCount={watching.length}
+        backdropUrls={heroBackdropUrls}
+      />
 
       {latest.length > 0 ? (
-        <DiscoverRow
-          eyebrow="Discover"
-          title="Latest"
-          items={latest}
-        />
+        <div className="animate-rise [animation-delay:60ms]">
+          <DiscoverRow eyebrow="Discover" title="Latest" items={latest} />
+        </div>
       ) : null}
 
       {popular.length > 0 ? (
-        <DiscoverRow
-          eyebrow="Discover"
-          title="Popular"
-          items={popular}
-        />
+        <div className="animate-rise [animation-delay:120ms]">
+          <DiscoverRow eyebrow="Discover" title="Popular" items={popular} />
+        </div>
       ) : null}
 
       {pair && completedSeries.length >= 2 ? (
-        <section className="overflow-hidden rounded-card border border-accent/30 bg-accent-soft p-6 sm:p-7">
+        <section className="animate-rise overflow-hidden rounded-card border border-accent/35 bg-linear-to-br from-accent-soft via-surface to-surface p-6 shadow-[0_16px_48px_-28px_rgb(var(--shadow-color)/0.4)] sm:p-7 [animation-delay:180ms]">
           <p className="eyebrow">Ranking prompt</p>
-          <p className="mt-2 font-display text-2xl font-medium leading-snug text-ink">
+          <p className="mt-2 font-display text-2xl font-medium leading-snug text-ink sm:text-3xl">
             {pair.left.canonical_title}{" "}
             <span className="text-accent">vs</span>{" "}
             {pair.right.canonical_title}
@@ -78,34 +71,40 @@ export default async function HomePage() {
           </p>
           <Link
             href="/ranking"
-            className="mt-4 inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-on-accent transition-colors hover:bg-accent-strong"
+            className="mt-5 inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-on-accent shadow-sm transition-colors hover:bg-accent-strong"
           >
-            Decide now
+            Decide now →
           </Link>
         </section>
       ) : completedSeries.length < 2 ? (
-        <section className="rounded-card border border-dashed border-line-strong p-6">
+        <section className="animate-rise rounded-card border border-dashed border-line-strong bg-surface/50 p-6 [animation-delay:180ms]">
           <p className="text-sm text-muted">
             Complete anime in at least two series to unlock pairwise rankings.
           </p>
         </section>
       ) : null}
 
-      <section>
-        <div className="mb-4 flex items-baseline justify-between">
-          <h2 className="text-2xl font-semibold">Continue watching</h2>
+      <section className="animate-rise [animation-delay:240ms]">
+        <div className="mb-4 flex items-baseline justify-between gap-4">
+          <div>
+            <p className="eyebrow">Your queue</p>
+            <h2 className="mt-1 text-2xl font-semibold">Continue watching</h2>
+          </div>
           <Link
             href="/library?status=watching"
-            className="text-sm font-medium text-muted transition-colors hover:text-accent"
+            className="shrink-0 text-sm font-medium text-muted transition-colors hover:text-accent"
           >
             See all →
           </Link>
         </div>
         {watching.length === 0 ? (
-          <div className="rounded-card border border-dashed border-line-strong p-8 text-center">
+          <div className="rounded-card border border-dashed border-line-strong bg-surface/40 p-8 text-center">
             <p className="text-sm text-muted">
               Nothing in progress yet.{" "}
-              <Link href="/search" className="font-semibold text-accent hover:underline">
+              <Link
+                href="/search"
+                className="font-semibold text-accent hover:underline"
+              >
                 Search for anime
               </Link>{" "}
               to start watching.
@@ -118,13 +117,16 @@ export default async function HomePage() {
                 entry.anime.english_title || entry.anime.romaji_title;
               const total = entry.anime.episodes;
               const pct = total
-                ? Math.min(100, Math.round((entry.progress_episodes / total) * 100))
+                ? Math.min(
+                    100,
+                    Math.round((entry.progress_episodes / total) * 100),
+                  )
                 : 0;
               return (
                 <li key={entry.id}>
                   <Link
                     href={`/anime/${entry.anime.anilist_id}`}
-                    className="group flex items-center gap-3 rounded-card border border-line bg-surface p-3 transition-colors hover:border-accent"
+                    className="group flex items-center gap-3 rounded-card border border-line bg-surface p-3 transition-all hover:border-accent hover:shadow-[0_8px_24px_-16px_rgb(var(--shadow-color)/0.35)]"
                   >
                     <AnimePoster
                       src={entry.anime.cover_image_url}
@@ -142,7 +144,7 @@ export default async function HomePage() {
                       {total ? (
                         <div className="mt-2 h-1 overflow-hidden rounded-full bg-surface-2">
                           <div
-                            className="h-full rounded-full bg-accent"
+                            className="h-full rounded-full bg-accent transition-[width]"
                             style={{ width: `${pct}%` }}
                           />
                         </div>

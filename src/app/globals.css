@@ -193,3 +193,177 @@ select {
 @utility animate-rise {
   animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
+/* —— Home hero: drifting vermilion atmosphere —— */
+@keyframes hero-drift-1 {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(-6%, 10%) scale(1.06);
+  }
+}
+
+@keyframes hero-drift-2 {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(8%, -8%) scale(1.1);
+  }
+}
+
+@keyframes hero-drift-3 {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(-4%, -6%) scale(0.95);
+  }
+}
+
+@keyframes hero-shimmer {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes hero-cover-drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-12%);
+  }
+}
+
+.home-hero {
+  position: relative;
+  isolation: isolate;
+}
+
+.home-hero__bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.home-hero__orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(72px);
+  will-change: transform;
+}
+
+.home-hero__orb--1 {
+  width: 58%;
+  height: 75%;
+  top: -28%;
+  right: -12%;
+  background: color-mix(in srgb, var(--accent) 38%, transparent);
+  animation: hero-drift-1 24s ease-in-out infinite alternate;
+}
+
+.home-hero__orb--2 {
+  width: 45%;
+  height: 55%;
+  bottom: -20%;
+  left: -8%;
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface-2));
+  animation: hero-drift-2 20s ease-in-out infinite alternate-reverse;
+}
+
+.home-hero__orb--3 {
+  width: 35%;
+  height: 40%;
+  top: 35%;
+  left: 38%;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  animation: hero-drift-3 18s ease-in-out infinite alternate;
+}
+
+.home-hero__mesh {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      ellipse 80% 50% at 20% 80%,
+      color-mix(in srgb, var(--accent) 12%, transparent),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 60% 40% at 90% 20%,
+      color-mix(in srgb, var(--surface-2) 90%, transparent),
+      transparent 50%
+    );
+  animation: hero-shimmer 10s ease-in-out infinite;
+}
+
+.home-hero__hatch {
+  position: absolute;
+  inset: 0;
+  opacity: 0.28;
+  background-image: repeating-linear-gradient(
+    -14deg,
+    transparent,
+    transparent 10px,
+    color-mix(in srgb, var(--ink) 5%, transparent) 10px,
+    color-mix(in srgb, var(--ink) 5%, transparent) 11px
+  );
+}
+
+@media (prefers-color-scheme: dark) {
+  .home-hero__hatch {
+    opacity: 0.18;
+  }
+}
+
+.home-hero__mark {
+  position: absolute;
+  right: 0.02em;
+  bottom: -0.12em;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: clamp(7rem, 20vw, 13rem);
+  font-weight: 600;
+  line-height: 0.85;
+  color: color-mix(in srgb, var(--accent) 10%, transparent);
+  user-select: none;
+}
+
+.home-hero__covers {
+  position: absolute;
+  inset: -15% -5%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  opacity: 0.2;
+  filter: blur(40px) saturate(1.2);
+  animation: hero-cover-drift 48s linear infinite;
+}
+
+@media (prefers-color-scheme: dark) {
+  .home-hero__covers {
+    opacity: 0.14;
+  }
+}
+
+.home-hero__cover {
+  height: 11rem;
+  width: 7.5rem;
+  flex-shrink: 0;
+  border-radius: 0.65rem;
+  object-fit: cover;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero__orb,
+  .home-hero__mesh,
+  .home-hero__covers {
+    animation: none !important;
+  }
+}
