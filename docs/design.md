@@ -1,15 +1,17 @@
-# Anime Tracker Full-Stack App Design
+# Suki — Full-Stack App Design
 
-Date: 2026-05-31
+Date: 2026-05-31  
 Status: Draft
 
 ## 1. Executive Summary
 
-This document designs a full-stack web application for tracking anime, building a watchlist, ranking watched anime through Beli-style pairwise comparisons, and discovering friends' lists and rankings through public profiles.
+This document designs **Suki**, a full-stack web application for tracking anime, building a watchlist, ranking finished franchises through Beli-style pairwise comparisons, and discovering other users' lists and rankings through public profiles.
 
 The recommended MVP stack is Next.js App Router, TypeScript, Tailwind CSS, Supabase Postgres/Auth/Storage/Realtime, and AniList GraphQL for anime metadata. This stack optimizes for a fast MVP while preserving a relational data model that can support rankings, friendships, and future recommendations.
 
 The core product bet is that anime tracking should feel lighter than a spreadsheet and more social than a private checklist. Users should be able to add an anime in seconds, keep watching progress up to date, and gradually build a trusted personal ranking through small comparison prompts instead of maintaining a large manual ordered list.
+
+Tracking is per **anime** (season, movie, OVA). Rankings are per **series** (franchise): multiple completed entries in the same franchise count as one rankable title.
 
 ## 2. Goals
 
@@ -17,7 +19,7 @@ The core product bet is that anime tracking should feel lighter than a spreadshe
 
 - Make it easy for users to add anime they are watching, completed, paused, dropped, or planning to watch.
 - Provide a watchlist flow for bookmarking future watches without forcing a full rating decision.
-- Create a distinctive ranking system inspired by Beli, where pairwise comparisons produce ranked lists.
+- Create a distinctive ranking system inspired by Beli, where pairwise **series** comparisons produce ranked franchise lists.
 - Let users browse public profiles, lists, and rankings.
 - Support friend relationships so users can follow people whose taste they care about.
 - Capture enough structured preference data to enable future recommendations.
@@ -26,7 +28,7 @@ The core product bet is that anime tracking should feel lighter than a spreadshe
 
 - Keep anime metadata separate from user-specific tracking data.
 - Model rankings, comparisons, friendships, and recommendation signals relationally.
-- Keep profile and ranking pages fast through cached derived rankings.
+- Keep profile and ranking pages fast through cached `derived_series_rankings`.
 - Preserve clear authorization boundaries for public data, friend data, and private account data.
 
 ### Non-Goals For MVP
@@ -67,6 +69,14 @@ This user wants the app to suggest anime they are likely to enjoy. They care les
 - Analytics: PostHog or Vercel Analytics
 - Error tracking: Sentry
 
+### Implementation Notes
+
+- Runtime data access uses the Supabase JS client (browser, server, middleware, and a secret-key admin client for ranking writes).
+- Drizzle mirrors the Postgres schema for tooling; migrations live in `supabase/migrations/`.
+- `derived_series_rankings` and series mapping writes use the Supabase secret key server-side; clients do not INSERT derived rows directly.
+- Ranking recomputes on demand after completions and comparisons (scheduled jobs optional later).
+- Avatars are external URLs on `profiles.avatar_url` unless Storage upload is added later.
+
 ### Why This Stack
 
 Supabase keeps the app close to a normal Postgres architecture while providing hosted auth and useful managed services. That matters because this product has relational data at its core: users have anime entries, entries produce comparisons, comparisons produce rankings, rankings are visible on profiles, and friends connect users into a social graph.
@@ -80,17 +90,19 @@ AniList avoids building a custom anime catalog. The app should cache normalized 
 ### In Scope
 
 - Email/password and OAuth authentication.
-- User profiles with username, display name, avatar, bio, and public profile URL.
-- Anime search powered by AniList.
+- User profiles with username, display name, avatar, bio, and public profile URL (`/u/:username`).
+- Anime search powered by AniList; optional discover rows on home (latest, popular).
 - Anime detail pages with metadata, cover image, genres, season/year, format, status, and description.
 - User library entries with status, progress, notes, started date, completed date, and optional personal rating.
 - Watchlist via `plan_to_watch` status.
-- Pairwise comparison prompts for completed anime.
-- Generated personal rankings from comparison history.
-- Public profile pages showing watched anime, watchlist, and ranked favorites.
+- Series grouping: map cached anime to canonical franchises for ranking.
+- Pairwise comparison prompts for completed **series** (see §11).
+- Generated personal rankings from comparison history (`derived_series_rankings`).
+- Public profile pages showing ranked series, watching list, and watchlist highlights.
 - Friend requests and accepted friend relationships.
 - Browse friends' profiles and rankings.
 - Basic privacy controls for account-level sensitive data.
+- Append-only `user_events` for recommendation readiness.
 
 ### Out Of Scope Until Later
 
@@ -143,12 +155,12 @@ Success criteria:
 2. App displays AniList results with title, cover, year, format, and episode count.
 3. User opens an anime detail page or quick-add menu.
 4. User selects status: watching, completed, paused, dropped, or plan to watch.
-5. If completed, the anime becomes eligible for pairwise ranking.
+5. If completed, the entry's **series** becomes eligible for pairwise ranking (after `anime_series_map` is ensured).
 6. App confirms the add and suggests the next useful action.
 
 Useful next actions:
 
-- "Compare this with another completed anime"
+- "Compare this with another completed series"
 - "Add another anime"
 - "View your ranking"
 - "Update progress"
@@ -169,25 +181,28 @@ MVP watchlist sorting:
 
 ### 7.4 Pairwise Ranking
 
-1. User opens the ranking page.
-2. App presents two completed anime.
-3. User answers "Which do you prefer?"
-4. App stores the comparison.
-5. Ranking updates after each comparison or after a short recalculation.
-6. App shows ranking confidence and invites more comparisons where uncertainty is high.
+Rankings operate on **series** (franchises). A user needs at least one completed library entry in each of two distinct series before comparing.
+
+1. User opens the ranking page (or follows a home prompt).
+2. App presents two completed series (canonical title, cover; may reflect multiple seasons in the user's library).
+3. User answers "Which did you enjoy more?"
+4. App stores the comparison in `pairwise_series_comparisons` (canonical `left_series_id < right_series_id`).
+5. Server recomputes `derived_series_rankings` for `algorithm_version = elo_series_v1`.
+6. Ranked list shows confidence labels (`low`, `medium`, `high`).
 
 Comparison actions:
 
-- Pick left anime.
-- Pick right anime.
-- Skip because the user cannot decide.
-- Mark as not comparable if one entry is unfamiliar or mistakenly completed.
+- Pick left or right series (winner).
+- Skip: cannot decide (`skipped_reason = cannot_decide`).
+- Skip: not comparable (`skipped_reason = not_comparable`).
+
+Skips do not affect Elo scores. Re-answering the same pair upserts the existing row.
 
 ### 7.5 View Public Profile
 
 1. Visitor opens `/u/:username`.
-2. Page shows profile info, top-ranked anime, recent activity, watched count, and watchlist highlights.
-3. Visitor can browse full rankings, completed anime, watching list, and watchlist.
+2. Page shows profile info, series ranked list, aggregate stats, watching highlights, and watchlist highlights.
+3. Visitor can browse full rankings and list sections.
 4. Authenticated visitors can send a friend request.
 
 Public profile defaults:
@@ -213,12 +228,13 @@ MVP friend value:
 
 ### Primary Navigation
 
-- Home: current watching, ranking prompts, friend highlights.
-- Search: anime search and discovery.
-- Library: all user anime entries by status.
-- Ranking: pairwise comparison and ranked list.
-- Friends: friend list, requests, and discovery.
-- Profile: public profile preview and settings.
+- Home (`/`): continue watching, ranking prompt, optional discover rows, friend highlights (later).
+- Search (`/search`): anime search and quick-add.
+- Library (`/library`): entries by status.
+- Ranking (`/ranking`): series comparison and ranked list.
+- Friends (`/friends`): friend list, requests, discovery.
+- Settings (`/settings`): account and profile appearance.
+- Public profile (`/u/:username`): visitor-facing taste page.
 
 ### Main Screens
 
@@ -228,11 +244,11 @@ Purpose: Resume the most useful action.
 
 Sections:
 
-- Continue watching.
-- Quick add/search.
-- Ranking prompt.
-- Recent friend rankings.
-- Watchlist reminders.
+- Continue watching (in-progress entries with progress).
+- Optional AniList discover (latest, popular).
+- Series ranking prompt when eligible.
+- Watchlist reminders (later).
+- Recent friend rankings (later).
 
 #### Search
 
@@ -241,9 +257,8 @@ Purpose: Find anime quickly.
 Sections:
 
 - Search input.
-- Result cards.
-- Filters for format, year, season, status, genre.
-- Quick-add status actions.
+- Result cards with quick-add status actions.
+- Filters for format, year, season, status, genre (later).
 
 #### Anime Detail
 
@@ -254,8 +269,8 @@ Sections:
 - Hero with title, cover, description, and metadata.
 - User status card.
 - Progress controls.
-- Ranking eligibility.
-- Friends who watched it.
+- Ranking eligibility when completed.
+- Friends who watched it (later).
 
 #### Library
 
@@ -263,21 +278,21 @@ Purpose: Manage tracked anime.
 
 Sections:
 
-- Tabs by status.
-- Filters and sort.
-- Entry cards with progress, notes, and dates.
-- Bulk-free MVP; keep interactions per entry.
+- Tabs by status (`all`, `watching`, `completed`, `plan_to_watch`, `paused`, `dropped`).
+- In-library title search.
+- Entry cards with status, progress, notes, and dates.
+- Sort: recently updated (default); title, year, priority (later).
 
 #### Ranking
 
-Purpose: Build and view personal rankings.
+Purpose: Build and view personal series rankings.
 
 Sections:
 
-- Pairwise comparison card.
-- Current ranked list.
-- Confidence indicators.
-- Filters by format or genre in later versions.
+- Pairwise comparison card (two series).
+- Current ranked list with confidence indicators.
+- Empty state when fewer than two completed series.
+- Filters by format or genre (later).
 
 #### Friends
 
@@ -286,8 +301,7 @@ Purpose: Browse social graph.
 Sections:
 
 - Friend search.
-- Incoming requests.
-- Outgoing requests.
+- Incoming and outgoing requests.
 - Friend list.
 - Friend ranking highlights.
 
@@ -297,12 +311,11 @@ Purpose: Let others understand a user's taste.
 
 Sections:
 
-- Profile header.
-- Top 10 ranked anime.
-- Recently completed.
-- Watching now.
-- Watchlist highlights.
-- Full public lists.
+- Profile header with friend action.
+- Series ranked list.
+- Recently completed (later).
+- Watching now and watchlist highlights.
+- Full public lists (later).
 
 ## 9. System Architecture
 
@@ -336,8 +349,8 @@ flowchart TD
 - Enforce authorization.
 - Normalize and cache anime metadata.
 - Persist user library entries.
-- Persist pairwise comparisons.
-- Compute and cache rankings.
+- Persist pairwise series comparisons.
+- Compute and cache series rankings (admin client).
 - Manage friend requests and relationships.
 - Emit analytics and event records for recommendation readiness.
 
@@ -353,16 +366,20 @@ flowchart TD
 
 ### Entity Overview
 
+Tracking is per **anime**; ranking is per **series**.
+
 ```mermaid
 erDiagram
   USERS ||--|| PROFILES : owns
   USERS ||--o{ USER_ANIME_ENTRIES : tracks
   ANIME ||--o{ USER_ANIME_ENTRIES : referenced_by
-  USERS ||--o{ PAIRWISE_COMPARISONS : creates
-  ANIME ||--o{ PAIRWISE_COMPARISONS : left_anime
-  ANIME ||--o{ PAIRWISE_COMPARISONS : right_anime
-  USERS ||--o{ DERIVED_RANKINGS : has
-  ANIME ||--o{ DERIVED_RANKINGS : ranked
+  ANIME ||--o| ANIME_SERIES_MAP : mapped_to
+  SERIES ||--o{ ANIME_SERIES_MAP : contains
+  USERS ||--o{ PAIRWISE_SERIES_COMPARISONS : creates
+  SERIES ||--o{ PAIRWISE_SERIES_COMPARISONS : left_series
+  SERIES ||--o{ PAIRWISE_SERIES_COMPARISONS : right_series
+  USERS ||--o{ DERIVED_SERIES_RANKINGS : has
+  SERIES ||--o{ DERIVED_SERIES_RANKINGS : ranked
   USERS ||--o{ FRIENDSHIPS : requester
   USERS ||--o{ FRIENDSHIPS : recipient
   USERS ||--o{ USER_EVENTS : emits
@@ -451,9 +468,42 @@ Constraints:
 - Unique `user_id`, `anime_id`.
 - `status` enum: `watching`, `completed`, `paused`, `dropped`, `plan_to_watch`.
 - `progress_episodes` cannot be negative.
-- Completed entries are eligible for ranking.
+- Completed entries make their mapped **series** eligible for ranking (not the individual season row).
+- `started_at` / `completed_at` may be set automatically on status transitions or edited by the user.
 
-### `pairwise_comparisons`
+### `series`
+
+Canonical franchise row for ranking and public lists.
+
+Fields:
+
+- `id`
+- `canonical_title`
+- `slug` (unique)
+- `anilist_primary_id` (unique)
+- `cover_image_url`
+- `created_at`, `updated_at`
+
+Created/updated when users complete or add anime, using the AniList relation graph, title heuristics, and optional `series_group_overrides`.
+
+### `anime_series_map`
+
+Links each cached `anime` row to exactly one `series`.
+
+Fields:
+
+- `anime_id` (PK, FK → `anime`)
+- `series_id` (FK → `series`)
+- `source` — `anilist_auto` | `manual_override` | `singleton`
+- `confidence` (0–1)
+
+### `series_group_overrides`
+
+Admin/manual corrections when auto-grouping is wrong.
+
+Fields include `anilist_id`, `action` (`force_series`, `force_singleton`, `exclude_from_auto_group`), optional `target_series_id` / `target_anilist_primary_id`, `notes`.
+
+### `pairwise_series_comparisons`
 
 Ranking input events.
 
@@ -461,21 +511,20 @@ Fields:
 
 - `id`
 - `user_id`
-- `left_anime_id`
-- `right_anime_id`
-- `winner_anime_id`
-- `comparison_context`
-- `skipped_reason`
+- `left_series_id`, `right_series_id` (canonical order: `left < right`)
+- `winner_series_id` (nullable if skipped)
+- `comparison_context` (jsonb, optional)
+- `skipped_reason` — e.g. `cannot_decide`, `not_comparable`
 - `created_at`
 
 Rules:
 
-- Both anime must belong to completed entries for that user.
-- `winner_anime_id` must be either left or right unless skipped.
-- Store skipped comparisons for prompt selection quality, but exclude them from ranking score calculations.
-- Do not overwrite old comparisons. Preferences can shift over time, and history is useful for recommendations.
+- Unique `(user_id, left_series_id, right_series_id)`; upsert on repeat.
+- User must have at least one completed entry in each series.
+- Skipped rows are excluded from Elo recompute.
+- RLS: users read/write own rows; anon can SELECT (public profile context).
 
-### `derived_rankings`
+### `derived_series_rankings`
 
 Cached output of ranking computation.
 
@@ -483,19 +532,21 @@ Fields:
 
 - `id`
 - `user_id`
-- `anime_id`
-- `rank`
-- `score`
-- `confidence`
+- `series_id`
+- `rank` (1-based, dense after sort)
+- `score` (Elo)
+- `confidence` — enum `low` | `medium` | `high`
 - `comparison_count`
-- `algorithm_version`
+- `algorithm_version` — current: `elo_series_v1`
 - `computed_at`
 
 Rules:
 
-- Unique `user_id`, `anime_id`, `algorithm_version`.
-- Recompute after new comparisons, completed-entry changes, or algorithm changes.
-- Public profile pages read from this table for speed.
+- Unique `(user_id, series_id, algorithm_version)`.
+- **Writes:** server admin client only (no authenticated INSERT policy).
+- **Reads:** public SELECT for profiles; users read own rows.
+- Recompute replaces all rows for `(user_id, algorithm_version)` after each winning comparison or completion mapping repair.
+- Public profile and ranking pages read this table.
 
 ### `friendships`
 
@@ -541,7 +592,7 @@ Event examples:
 - `status_changed`
 - `progress_updated`
 - `anime_completed`
-- `comparison_created`
+- `series_comparison_created`
 - `ranking_viewed`
 - `friend_request_sent`
 - `friend_profile_viewed`
@@ -552,22 +603,39 @@ Purpose: keep recommendation signals even if current state changes.
 
 ### Product Model
 
-The primary ranking input is pairwise comparison: "Which anime do you prefer?" This avoids forcing users to assign precise scores and makes ranking feel like a lightweight game.
+The primary ranking input is pairwise comparison at **series** granularity: "Which did you enjoy more?" Users track individual anime in the library; completed entries contribute eligibility to their parent **series**. Multiple completed seasons in one franchise count as one rankable entity.
+
+The comparison UI shows series title, cover, and how many library entries the user has in that franchise.
+
+### Eligibility
+
+A series enters the pool when the user has at least one `user_anime_entries` row with `status = completed` mapped via `anime_series_map`. Ranking unlock requires at least two distinct such series.
+
+On add or complete, the app ensures `anime_series_map` (AniList franchise graph and merge rules) and recomputes derived rankings.
 
 ### MVP Algorithm
 
-Use an Elo-style scoring model per user.
+Use an Elo-style scoring model per user, per series.
 
-Initial score:
-
-- Every completed anime starts at `1500`.
+| Constant | Value |
+|----------|--------|
+| Initial score | `1500` |
+| K-factor | `32` |
+| Algorithm version | `elo_series_v1` |
 
 On comparison:
 
-- Winner gains points.
-- Loser loses points.
-- Point delta depends on expected outcome.
-- Confidence increases with comparison count.
+- Winner gains points; loser loses points (standard Elo update).
+- Each series' `comparison_count` increments for resolved comparisons.
+- Skipped pairs (`winner_series_id` null) are excluded from recompute.
+
+Confidence on `derived_series_rankings`:
+
+- `low`: fewer than 3 comparisons involving the series
+- `medium`: 3 to 7
+- `high`: 8 or more
+
+Display softly: "Needs more comparisons", "Getting clearer", "Well established".
 
 Why Elo for MVP:
 
@@ -582,6 +650,7 @@ Limitations:
 - Ordering can depend on comparison sequence.
 - Sparse comparisons create low-confidence rankings.
 - It does not directly model uncertainty as well as Bayesian systems.
+- Franchise grouping quality depends on AniList relations and heuristics; `series_group_overrides` and a backfill script support repair.
 
 ### Future Algorithm Improvements
 
@@ -602,11 +671,12 @@ The comparison prompt should avoid random-only selection. It should prefer pairs
 
 MVP prompt strategy:
 
-1. Only include completed anime.
-2. Prefer anime with low comparison counts.
-3. Prefer anime with similar current scores.
-4. Avoid showing the same pair repeatedly.
-5. Allow skips without penalty.
+1. Only include completed series.
+2. Prefer series with low comparison counts.
+3. Prefer series with similar current Elo scores.
+4. Avoid pairs with very large rank distance when better candidates exist.
+5. Do not repeat the same canonical pair once compared (upsert if the user re-answers).
+6. Allow skips without affecting scores.
 
 Future prompt strategy:
 
@@ -616,21 +686,7 @@ Future prompt strategy:
 
 ### Ranking Confidence
 
-Confidence should be displayed softly, not as a technical metric.
-
-Examples:
-
-- "Needs more comparisons"
-- "Getting clearer"
-- "Well established"
-
-Suggested confidence formula for MVP:
-
-- Low: fewer than 3 comparisons involving the anime.
-- Medium: 3 to 7 comparisons.
-- High: 8 or more comparisons.
-
-This can later account for score volatility and graph connectivity.
+Confidence should be displayed softly, not as a technical metric. See the thresholds in the MVP algorithm section above. This can later account for score volatility and graph connectivity.
 
 ## 12. Recommendation Readiness
 
@@ -697,25 +753,25 @@ Example explanations:
 
 ### Anime Metadata
 
-- `searchAnime(query, filters)`
+- `searchAnime(query)` — route handler `GET /api/search`
 - `getAnimeDetails(anilistId)`
 - `syncAnimeMetadata(anilistId)`
+- `getLatestAnime`, `getPopularAnime` (home discover)
 
 ### Library
 
-- `addAnimeEntry(animeId, status)`
-- `updateAnimeEntry(entryId, patch)`
+- `addAnimeEntry(anilistId, status)` — upserts anime cache, entry, series map; recompute on complete
+- `updateAnimeEntry(entryId, patch)` — status, progress, notes, priority, dates
 - `removeAnimeEntry(entryId)`
 - `listUserAnimeEntries(userId, filters)`
-- `updateProgress(entryId, progress)`
 
 ### Ranking
 
-- `getNextComparisonPair()`
-- `submitComparison(leftAnimeId, rightAnimeId, winnerAnimeId)`
-- `skipComparison(leftAnimeId, rightAnimeId, reason)`
-- `getUserRanking(userId)`
-- `recomputeUserRanking(userId)`
+- `getNextComparisonPair(userId)`
+- `submitComparison(leftSeriesId, rightSeriesId, winnerSeriesId)`
+- `skipComparison(leftSeriesId, rightSeriesId, reason)`
+- `getUserRanking(userId)` — reads `derived_series_rankings`
+- `recomputeUserRanking(userId)` — server-only (admin client)
 
 ### Friends
 
@@ -727,9 +783,8 @@ Example explanations:
 
 ### Profiles
 
-- `getPublicProfile(username)`
-- `getPublicRanking(username)`
-- `getPublicLists(username)`
+- `getPublicProfile(username)` — profile, entries, series rankings, stats
+- `getPublicLists(username)` (later)
 - `updateProfile(patch)`
 
 ## 14. Authorization Model
@@ -757,14 +812,14 @@ Users can write:
 
 - Their own profile.
 - Their own library entries.
-- Their own pairwise comparisons.
+- Their own `pairwise_series_comparisons` rows.
 - Friend requests involving themselves.
 
 Users cannot write:
 
 - Other users' entries.
-- Other users' rankings.
-- Derived ranking rows directly.
+- Other users' ranking rows (read-only via public SELECT).
+- `derived_series_rankings` rows directly (server admin only).
 - Anime metadata except through controlled sync paths.
 
 ### Friend-Specific Reads
@@ -802,13 +857,14 @@ sequenceDiagram
   participant RankingService
 
   User->>App: Open ranking page
-  App->>Database: Fetch eligible completed anime
-  App->>Database: Fetch comparison history
-  App-->>User: Show comparison pair
+  App->>Database: Fetch eligible completed series
+  App->>Database: Fetch comparison history and derived rankings
+  App-->>User: Show comparison pair (two series)
   User->>App: Choose winner
-  App->>Database: Save comparison
-  App->>RankingService: Recompute affected ranking
-  RankingService->>Database: Write derived rankings
+  App->>Database: Upsert pairwise_series_comparisons
+  App->>Database: Write user event
+  App->>RankingService: Recompute derived_series_rankings
+  RankingService->>Database: Replace ranking rows
   App-->>User: Show updated ranking
 ```
 
@@ -822,7 +878,7 @@ sequenceDiagram
 
   Visitor->>App: Open profile URL
   App->>Database: Fetch public profile
-  App->>Database: Fetch derived ranking
+  App->>Database: Fetch derived_series_rankings
   App->>Database: Fetch public list summaries
   App-->>Visitor: Render public profile
 ```
@@ -833,40 +889,36 @@ sequenceDiagram
 
 The app should prioritize quick actions:
 
-- Search result cards should include "Watchlist", "Watching", and "Completed" actions.
+- Search result cards should include status actions (watchlist, watching, completed).
 - Anime detail pages should show the current user's status prominently.
-- Progress updates should be one tap or one small input away.
+- Progress updates should be one tap or one small input away (library cards; detail page later).
 - Completing an anime should offer, but not force, a ranking comparison.
+- Duplicate add updates status in place: "Already in your library. Status updated."
 
 ### Watchlist
 
-The watchlist should feel separate from completed rankings. Users often bookmark with less certainty than they rate. Watchlist entries should support lightweight priority without requiring notes or scores.
+The watchlist should feel separate from completed rankings. Users often bookmark with less certainty than they rate.
 
-Recommended MVP fields:
-
-- Status: `plan_to_watch`
-- Priority: low, medium, high
-- Date added
+- Status: `plan_to_watch` (library tab).
+- Priority: low, medium, high (optional field).
+- Default sort: recently updated; title, year, priority later.
 
 ### Pairwise Ranking UI
 
 The comparison UI should be simple and mobile-first:
 
-- Two large anime cards.
-- Cover image, title, year, format, and user's optional note.
+- Two large series cards (cover, canonical title, entry count in library).
 - Primary question: "Which did you enjoy more?"
-- Buttons: left, right, skip.
-- Link to open details if the user needs context.
-
-Avoid showing too much numeric scoring in the MVP. The experience should feel like expressing taste, not tuning an algorithm.
+- Whole-card tap selects winner.
+- Secondary actions: can't decide, not comparable.
+- Avoid showing numeric Elo on the comparison screen.
 
 ### Public Profiles
 
 Profiles should make taste immediately legible:
 
-- Top-ranked anime above the fold.
-- Watching now and recently completed as secondary sections.
-- Watchlist visible but less prominent.
+- Series ranked list above the fold.
+- Watching now and watchlist as secondary sections.
 - Friend action near the profile header.
 
 ### Empty States
@@ -874,7 +926,7 @@ Profiles should make taste immediately legible:
 Examples:
 
 - No library entries: "Search for an anime to start building your list."
-- No completed anime: "Complete an anime to unlock rankings."
+- Fewer than two completed series: explain how to unlock rankings.
 - Not enough comparisons: "Compare a few favorites to build your ranking."
 - No friends: "Find friends by username and compare rankings."
 
@@ -897,16 +949,20 @@ If a user adds an anime already in their library:
 
 ### Ranking Edge Cases
 
-If fewer than two completed anime exist:
+If fewer than two completed series exist:
 
 - Hide pairwise prompt.
 - Explain how to unlock ranking.
 
-If a compared anime is no longer completed:
+If a user has completed anime but missing series mappings:
+
+- Repair mappings and recompute on ranking page load.
+
+If a compared series is no longer completed:
 
 - Exclude it from future prompts.
 - Keep historical comparison records.
-- Recompute ranking without ineligible anime.
+- Recompute ranking using current completed series only.
 
 ### Friend Request Edge Cases
 
@@ -989,7 +1045,7 @@ Future:
 
 - Ensure one library entry per user/anime.
 - Ensure comparison winner is valid.
-- Ensure derived rankings are unique per user/anime/algorithm version.
+- Ensure `derived_series_rankings` are unique per user/series/algorithm version.
 - Ensure public profile queries do not include private fields.
 
 ## 21. Analytics And Observability
@@ -1030,9 +1086,9 @@ Monitor:
 ### Milestone 1: Foundation
 
 - Set up Next.js app.
-- Configure auth.
-- Create database schema.
-- Build profile creation.
+- Configure auth (email/password; OAuth).
+- Create database schema and RLS.
+- Build profile creation and settings.
 - Integrate AniList search.
 
 ### Milestone 2: Tracking
@@ -1040,29 +1096,34 @@ Monitor:
 - Add anime metadata caching.
 - Build add/update library flows.
 - Build library and watchlist pages.
-- Add progress tracking.
+- Add progress tracking (library and detail).
+- Notes, priority, and date editing.
 
 ### Milestone 3: Ranking
 
-- Build completed-anime eligibility.
-- Build pairwise comparison UI.
-- Implement Elo-style ranking.
-- Cache derived rankings.
-- Build ranking page.
+- Series grouping and `anime_series_map`.
+- Completed-series eligibility.
+- Pairwise comparison UI with skips.
+- Elo recompute and `derived_series_rankings`.
+- Ranking page and home prompt.
+- Confidence labels.
 
 ### Milestone 4: Social
 
-- Build public profile pages.
+- Build public profile pages with series rankings.
 - Build user search.
-- Build friend requests.
-- Build friends dashboard.
+- Build friend requests and friends dashboard.
 
 ### Milestone 5: Recommendation Readiness
 
 - Add event logging.
-- Add basic analytics.
+- Add basic analytics and error tracking.
 - Add recommendation signal views for internal debugging.
 - Prepare first rules-based recommendation prototype.
+
+### Maintenance
+
+- `backfill:series` script to map existing anime to series and recompute rankings.
 
 ## 23. Open Product Decisions
 
@@ -1078,7 +1139,7 @@ Recommended defaults:
 
 - Include optional `personal_score`, but do not make it prominent.
 - Include simple watchlist priority.
-- Rank only completed anime in MVP.
+- Rank only completed series in MVP.
 - Do not index public profiles until privacy settings mature.
 - Allow username changes with rate limits and reserved-name checks.
 
@@ -1125,8 +1186,8 @@ Mitigation:
 Mitigation:
 
 - Store append-only user events.
-- Preserve pairwise comparison history.
-- Cache derived ranking scores with algorithm versions.
+- Preserve `pairwise_series_comparisons` history.
+- Cache `derived_series_rankings` with algorithm versions (`elo_series_v1`).
 - Keep anime metadata structured by genres, format, source, and season.
 
 ## 25. Recommended MVP Data Access Pattern
@@ -1134,8 +1195,9 @@ Mitigation:
 Use server actions for authenticated mutations where possible:
 
 - Add entry.
-- Update status.
-- Submit comparison.
+- Update status and progress.
+- Submit series comparison.
+- Skip comparison.
 - Send friend request.
 
 Use server-rendered routes for public reads:
@@ -1155,6 +1217,8 @@ This balances performance, simplicity, and interactivity.
 
 ## 26. Summary Recommendation
 
-Build the MVP with Next.js, TypeScript, Supabase, Tailwind CSS, and AniList. Keep the first version focused on fast tracking, watchlists, pairwise rankings, public profiles, and friends. Use an Elo-style ranking model for the first implementation because it is understandable, incremental, and easy to evolve.
+Build the MVP with Next.js, TypeScript, Supabase, Tailwind CSS, and AniList. Keep the first version focused on fast tracking, watchlists, **series-level** pairwise rankings, public profiles, and friends. Use an Elo-style ranking model (`elo_series_v1`) because it is understandable, incremental, and easy to evolve.
 
-The design should preserve future recommendation flexibility by storing structured anime metadata, append-only user events, comparison history, and versioned derived rankings. This lets the product start simple while collecting the preference data needed for stronger recommendations later.
+Tracking stays per anime; ranking stays per series — an intentional split that matches how users think about individual seasons versus franchises they love.
+
+Preserve future recommendation flexibility by storing structured anime metadata, append-only `user_events`, `pairwise_series_comparisons` history, and versioned `derived_series_rankings`.
