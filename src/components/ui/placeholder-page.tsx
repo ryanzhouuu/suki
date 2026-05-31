@@ -10,18 +10,16 @@ export function PlaceholderPage({
   milestone,
 }: PlaceholderPageProps) {
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-          {title}
-        </h1>
-        <p className="mt-2 max-w-xl text-zinc-600 dark:text-zinc-400">
-          {description}
-        </p>
-      </div>
+    <div className="flex min-h-[55vh] flex-col items-center justify-center pb-24 text-center">
+      <span className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-soft font-display text-2xl font-semibold text-accent">
+        友
+      </span>
+      <h1 className="text-4xl font-semibold">{title}</h1>
+      <p className="mt-3 max-w-md text-muted">{description}</p>
       {milestone ? (
-        <p className="inline-flex rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-          Planned: {milestone}
+        <p className="mt-5 inline-flex items-center gap-2 rounded-full border border-line-strong bg-surface px-3.5 py-1.5 text-xs font-medium text-muted">
+          <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+          Coming in {milestone}
         </p>
       ) : null}
     </div>

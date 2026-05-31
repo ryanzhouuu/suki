@@ -18,7 +18,7 @@ export function OnboardingForm({ action }: OnboardingFormProps) {
   const [state, formAction, pending] = useActionState(action, {});
 
   return (
-    <form action={formAction} className="mt-8 space-y-4">
+    <form action={formAction} className="space-y-4">
       <div>
         <Label htmlFor="username">Username</Label>
         <Input
@@ -31,7 +31,7 @@ export function OnboardingForm({ action }: OnboardingFormProps) {
           autoComplete="username"
           placeholder="your_name"
         />
-        <p className="mt-1 text-xs text-zinc-500">
+        <p className="mt-1.5 text-xs text-faint">
           Letters, numbers, and underscores only.
         </p>
       </div>
@@ -44,11 +44,14 @@ export function OnboardingForm({ action }: OnboardingFormProps) {
         <Input id="bio" name="bio" maxLength={300} />
       </div>
       {state.error ? (
-        <p className="text-sm text-red-600" role="alert">
+        <p
+          className="rounded-xl border border-line bg-accent-soft px-3 py-2 text-sm text-danger"
+          role="alert"
+        >
           {state.error}
         </p>
       ) : null}
-      <Button type="submit" className="w-full" disabled={pending}>
+      <Button type="submit" size="lg" className="w-full" disabled={pending}>
         {pending ? "Saving…" : "Continue"}
       </Button>
     </form>

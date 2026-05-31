@@ -11,17 +11,33 @@ export default async function SignupPage() {
   if (user) redirect("/onboarding");
 
   return (
-    <div className="mx-auto flex min-h-full max-w-md flex-col justify-center px-4 py-16">
-      <h1 className="text-2xl font-semibold">Join {APP_NAME}</h1>
-      <div className="mt-8">
-        <AuthForm action={signUp} submitLabel="Create account" showConfirm />
-      </div>
-      <p className="mt-6 text-center text-sm text-zinc-600 dark:text-zinc-400">
-        Already have an account?{" "}
-        <Link href="/auth/login" className="font-medium text-zinc-900 dark:text-zinc-50">
-          Sign in
+    <div className="mx-auto flex min-h-full w-full max-w-md flex-col justify-center px-4 py-16">
+      <div className="animate-rise">
+        <Link href="/" className="mb-8 inline-flex items-center gap-2.5">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-lg font-semibold text-on-accent shadow-sm">
+            好
+          </span>
+          <span className="font-display text-2xl font-semibold tracking-tight">
+            {APP_NAME}
+          </span>
         </Link>
-      </p>
+        <div className="card p-7 shadow-[0_12px_40px_-24px_rgb(var(--shadow-color)/0.45)]">
+          <p className="eyebrow">Start tracking</p>
+          <h1 className="mt-1.5 text-3xl font-semibold">Create account</h1>
+          <p className="mt-1 text-sm text-muted">
+            Build your watchlist and rank favorites in seconds.
+          </p>
+          <div className="mt-7">
+            <AuthForm action={signUp} submitLabel="Create account" showConfirm />
+          </div>
+        </div>
+        <p className="mt-6 text-center text-sm text-muted">
+          Already have an account?{" "}
+          <Link href="/auth/login" className="font-semibold text-accent hover:underline">
+            Sign in
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

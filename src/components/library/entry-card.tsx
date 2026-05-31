@@ -37,19 +37,25 @@ export function EntryCard({ entry }: EntryCardProps) {
   }
 
   return (
-    <li className="flex gap-3 rounded-xl border border-zinc-200 p-3 dark:border-zinc-800">
+    <li className="group flex gap-4 rounded-card border border-line bg-surface p-3.5 transition-colors hover:border-accent">
       <Link href={`/anime/${anime.anilist_id}`} className="shrink-0">
         <AnimePoster src={anime.cover_image_url} alt={title} size="sm" />
       </Link>
       <div className="min-w-0 flex-1">
-        <Link href={`/anime/${anime.anilist_id}`} className="font-medium hover:underline">
+        <Link
+          href={`/anime/${anime.anilist_id}`}
+          className="font-medium text-ink transition-colors hover:text-accent"
+        >
           {title}
         </Link>
-        <p className="text-xs text-zinc-500">
-          {STATUS_LABELS[entry.status]}
+        <p className="mt-1 flex items-center gap-2 text-xs text-muted">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-2 py-0.5 font-medium text-ink">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+            {STATUS_LABELS[entry.status]}
+          </span>
           {entry.progress_episodes > 0
-            ? ` · ${entry.progress_episodes}${anime.episodes ? `/${anime.episodes}` : ""} eps`
-            : ""}
+            ? `${entry.progress_episodes}${anime.episodes ? `/${anime.episodes}` : ""} eps`
+            : null}
         </p>
         {entry.status === "watching" && anime.episodes ? (
           <div className="mt-2 flex items-center gap-2">

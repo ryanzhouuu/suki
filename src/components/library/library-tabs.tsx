@@ -20,7 +20,7 @@ export function LibraryTabs() {
   const current = searchParams.get("status") ?? "all";
 
   return (
-    <div className="flex gap-1 overflow-x-auto pb-2">
+    <div className="flex gap-1.5 overflow-x-auto pb-1">
       {TABS.map((tab) => {
         const href =
           tab.key === "all"
@@ -31,10 +31,11 @@ export function LibraryTabs() {
           <Link
             key={tab.key}
             href={href}
-            className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+            aria-current={active ? "page" : undefined}
+            className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
               active
-                ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300"
+                ? "bg-accent text-on-accent shadow-sm"
+                : "border border-line-strong bg-surface text-muted hover:border-accent hover:text-accent"
             }`}
           >
             {tab.label}

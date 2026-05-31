@@ -22,11 +22,12 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
   const entries = await getUserLibraryEntries(user.id, status);
 
   return (
-    <div className="space-y-6 pb-20 sm:pb-8">
+    <div className="space-y-6 pb-24 sm:pb-10">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Library</h1>
-        <p className="mt-1 text-zinc-600 dark:text-zinc-400">
-          {entries.length} {entries.length === 1 ? "entry" : "entries"}
+        <p className="eyebrow">Your collection</p>
+        <h1 className="mt-1.5 text-4xl font-semibold">Library</h1>
+        <p className="mt-2 text-muted">
+          {entries.length} {entries.length === 1 ? "entry" : "entries"} tracked.
         </p>
       </div>
 
@@ -35,13 +36,16 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
       </Suspense>
 
       {entries.length === 0 ? (
-        <p className="text-sm text-zinc-500">
-          No anime here yet. Try{" "}
-          <a href="/search" className="font-medium underline">
-            search
-          </a>
-          .
-        </p>
+        <div className="rounded-card border border-dashed border-line-strong p-10 text-center">
+          <p className="font-display text-xl text-ink">Nothing here yet</p>
+          <p className="mt-1 text-sm text-muted">
+            Head to{" "}
+            <a href="/search" className="font-semibold text-accent hover:underline">
+              search
+            </a>{" "}
+            to start building your list.
+          </p>
+        </div>
       ) : (
         <ul className="space-y-3">
           {entries.map((entry) => (

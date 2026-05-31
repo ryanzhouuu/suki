@@ -27,96 +27,93 @@ export default async function PublicProfilePage({
     .filter((e) => e.status === "plan_to_watch")
     .slice(0, 6);
 
+  const sections: { label: string; entries: typeof watching }[] = [
+    { label: "Watching now", entries: watching },
+    { label: STATUS_LABELS.plan_to_watch, entries: watchlist },
+  ];
+
   return (
-    <div className="mx-auto max-w-5xl space-y-10 px-4 py-8">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center">
-        {profile.avatar_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={profile.avatar_url}
-            alt=""
-            className="h-20 w-20 rounded-full object-cover"
-          />
-        ) : (
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-zinc-200 text-2xl font-semibold dark:bg-zinc-800">
-            {displayName[0]?.toUpperCase()}
+    <div className="mx-auto max-w-5xl space-y-12 px-4 py-10">
+      <header className="overflow-hidden rounded-card border border-line bg-surface">
+        <div className="h-24 bg-linear-to-r from-accent/25 via-accent/10 to-transparent" />
+        <div className="flex flex-col gap-5 px-6 pb-6 sm:flex-row sm:items-end">
+          {profile.avatar_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={profile.avatar_url}
+              alt=""
+              className="-mt-12 h-24 w-24 rounded-full border-4 border-surface object-cover shadow-sm"
+            />
+          ) : (
+            <div className="-mt-12 flex h-24 w-24 items-center justify-center rounded-full border-4 border-surface bg-accent font-display text-3xl font-semibold text-on-accent shadow-sm">
+              {displayName[0]?.toUpperCase()}
+            </div>
+          )}
+          <div className="min-w-0 flex-1">
+            <h1 className="text-3xl font-semibold">{displayName}</h1>
+            <p className="text-muted">@{profile.username}</p>
+            {profile.bio ? (
+              <p className="mt-3 max-w-xl text-sm leading-relaxed text-ink/85">
+                {profile.bio}
+              </p>
+            ) : null}
+            <div className="mt-4 flex flex-wrap gap-2">
+              {[
+                { n: stats.total, label: "Tracked" },
+                { n: stats.completed, label: "Completed" },
+                { n: stats.watching, label: "Watching" },
+              ].map((s) => (
+                <span
+                  key={s.label}
+                  className="inline-flex items-baseline gap-1.5 rounded-full bg-surface-2 px-3 py-1 text-sm"
+                >
+                  <span className="font-display font-semibold text-ink">{s.n}</span>
+                  <span className="text-xs uppercase tracking-wide text-muted">
+                    {s.label}
+                  </span>
+                </span>
+              ))}
+            </div>
           </div>
-        )}
-        <div>
-          <h1 className="text-2xl font-semibold">{displayName}</h1>
-          <p className="text-zinc-500">@{profile.username}</p>
-          {profile.bio ? (
-            <p className="mt-2 max-w-xl text-sm text-zinc-700 dark:text-zinc-300">
-              {profile.bio}
-            </p>
-          ) : null}
-          <p className="mt-2 text-sm text-zinc-500">
-            {stats.total} tracked · {stats.completed} completed ·{" "}
-            {stats.watching} watching
-          </p>
         </div>
       </header>
 
       <section>
-        <h2 className="mb-3 text-lg font-medium">Top ranked</h2>
+        <p className="eyebrow">Top ranked</p>
+        <h2 className="mb-4 mt-1 text-2xl font-semibold">Favorites</h2>
         <RankedList rankings={rankings} />
       </section>
 
-      {watching.length > 0 ? (
-        <section>
-          <h2 className="mb-3 text-lg font-medium">Watching now</h2>
-          <ul className="grid gap-2 sm:grid-cols-2">
-            {watching.map((entry) => (
-              <li key={entry.id}>
-                <Link
-                  href={`/anime/${entry.anime.anilist_id}`}
-                  className="flex items-center gap-2 rounded-lg border border-zinc-200 p-2 hover:bg-zinc-50 dark:border-zinc-800"
-                >
-                  <AnimePoster
-                    src={entry.anime.cover_image_url}
-                    alt={entry.anime.romaji_title}
-                    size="sm"
-                  />
-                  <span className="truncate text-sm font-medium">
-                    {entry.anime.english_title || entry.anime.romaji_title}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
+      {sections.map((section) =>
+        section.entries.length > 0 ? (
+          <section key={section.label}>
+            <h2 className="mb-4 text-2xl font-semibold">{section.label}</h2>
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {section.entries.map((entry) => (
+                <li key={entry.id}>
+                  <Link
+                    href={`/anime/${entry.anime.anilist_id}`}
+                    className="group flex items-center gap-3 rounded-card border border-line bg-surface p-3 transition-colors hover:border-accent"
+                  >
+                    <AnimePoster
+                      src={entry.anime.cover_image_url}
+                      alt={entry.anime.romaji_title}
+                      size="sm"
+                    />
+                    <span className="truncate text-sm font-medium text-ink transition-colors group-hover:text-accent">
+                      {entry.anime.english_title || entry.anime.romaji_title}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null,
+      )}
 
-      {watchlist.length > 0 ? (
-        <section>
-          <h2 className="mb-3 text-lg font-medium">
-            {STATUS_LABELS.plan_to_watch}
-          </h2>
-          <ul className="grid gap-2 sm:grid-cols-2">
-            {watchlist.map((entry) => (
-              <li key={entry.id}>
-                <Link
-                  href={`/anime/${entry.anime.anilist_id}`}
-                  className="flex items-center gap-2 rounded-lg border border-zinc-200 p-2 hover:bg-zinc-50 dark:border-zinc-800"
-                >
-                  <AnimePoster
-                    src={entry.anime.cover_image_url}
-                    alt={entry.anime.romaji_title}
-                    size="sm"
-                  />
-                  <span className="truncate text-sm font-medium">
-                    {entry.anime.english_title || entry.anime.romaji_title}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      <p className="text-center text-sm text-zinc-500">
-        <Link href="/" className="underline">
-          Back to {displayName === profile.username ? "app" : "Suki"}
+      <p className="border-t border-line pt-8 text-center text-sm text-muted">
+        <Link href="/" className="font-medium text-accent hover:underline">
+          ← Back to Suki
         </Link>
       </p>
     </div>

@@ -1,7 +1,8 @@
 import Link from "next/link";
 
 import { signOut } from "@/actions/auth";
-import { APP_NAME, NAV_ITEMS } from "@/lib/constants";
+import { DesktopNav, MobileNav } from "@/components/layout/main-nav";
+import { APP_NAME } from "@/lib/constants";
 import type { Tables } from "@/types/database";
 
 type AppShellProps = {
@@ -10,71 +11,64 @@ type AppShellProps = {
 };
 
 export function AppShell({ children, profile }: AppShellProps) {
+  const initial =
+    (profile.display_name || profile.username || "?")[0]?.toUpperCase() ?? "?";
+
   return (
     <div className="flex min-h-full flex-col">
-      <header className="border-b border-zinc-200 bg-white/80 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/80">
-        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-          <Link
-            href="/"
-            className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50"
-          >
-            {APP_NAME}
+      <header className="sticky top-0 z-30 border-b border-line bg-paper/80 backdrop-blur-md">
+        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-4 px-4">
+          <Link href="/" className="group flex items-center gap-2.5">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-base font-semibold text-on-accent shadow-sm transition-transform group-hover:-rotate-6">
+              好
+            </span>
+            <span className="font-display text-2xl font-semibold tracking-tight text-ink">
+              {APP_NAME}
+            </span>
           </Link>
-          <nav className="hidden gap-1 sm:flex" aria-label="Main">
-            {NAV_ITEMS.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="rounded-md px-3 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-          <div className="flex items-center gap-2">
-            <Link
-              href={`/u/${profile.username}`}
-              className="hidden text-sm text-zinc-600 hover:text-zinc-900 sm:inline dark:text-zinc-400"
-            >
-              @{profile.username}
-            </Link>
+
+          <DesktopNav />
+
+          <div className="flex items-center gap-1.5">
             <Link
               href="/settings"
-              className="rounded-md px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+              className="hidden rounded-full px-3 py-2 text-sm font-medium text-muted transition-colors hover:text-ink sm:inline-block"
             >
               Settings
             </Link>
-            <form action={signOut}>
+            <form action={signOut} className="hidden sm:block">
               <button
                 type="submit"
-                className="rounded-md px-2 py-2 text-sm text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                className="rounded-full px-3 py-2 text-sm font-medium text-muted transition-colors hover:text-ink"
               >
                 Sign out
               </button>
             </form>
+            <Link
+              href={`/u/${profile.username}`}
+              aria-label="Your profile"
+              className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-line-strong bg-surface-2 text-sm font-semibold text-ink transition-colors hover:border-accent"
+            >
+              {profile.avatar_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={profile.avatar_url}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                initial
+              )}
+            </Link>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">{children}</main>
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10">
+        {children}
+      </main>
 
-      <nav
-        className="fixed bottom-0 left-0 right-0 border-t border-zinc-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:hidden dark:border-zinc-800 dark:bg-zinc-950/95"
-        aria-label="Mobile"
-      >
-        <ul className="flex justify-around">
-          {NAV_ITEMS.map((item) => (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                className="flex flex-col items-center px-2 py-3 text-xs font-medium text-zinc-600 dark:text-zinc-400"
-              >
-                {item.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
+      <MobileNav />
     </div>
   );
 }

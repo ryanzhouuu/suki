@@ -45,7 +45,10 @@ export function SettingsForm({ profile, action }: SettingsFormProps) {
         <Input id="bio" name="bio" defaultValue={profile.bio ?? ""} maxLength={300} />
       </div>
       {state.error ? (
-        <p className="text-sm text-red-600" role="alert">
+        <p
+          className="rounded-xl border border-line bg-accent-soft px-3 py-2 text-sm text-danger"
+          role="alert"
+        >
           {state.error}
         </p>
       ) : null}

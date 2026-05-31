@@ -52,33 +52,48 @@ export function SearchPanel() {
   }
 
   return (
-    <div className="space-y-6 pb-20 sm:pb-8">
+    <div className="space-y-7 pb-24 sm:pb-10">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Search</h1>
-        <p className="mt-1 text-zinc-600 dark:text-zinc-400">
-          Find anime via AniList and add them to your library.
+        <p className="eyebrow">Discover</p>
+        <h1 className="mt-1.5 text-4xl font-semibold">Search</h1>
+        <p className="mt-2 text-muted">
+          Find anime via AniList and add them to your library in seconds.
         </p>
       </div>
 
-      <Input
-        type="search"
-        placeholder="Search by title…"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        autoFocus
-      />
+      <div className="sticky top-18 z-10 -mx-1 bg-paper/80 px-1 py-1 backdrop-blur-md">
+        <Input
+          type="search"
+          placeholder="Search by title…  e.g. Frieren, Cowboy Bebop"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          autoFocus
+        />
+      </div>
 
       {loading ? (
-        <p className="text-sm text-zinc-500">Searching…</p>
+        <p className="text-sm text-muted">Searching…</p>
       ) : null}
       {error ? (
-        <p className="text-sm text-red-600" role="alert">
+        <p
+          className="rounded-xl border border-line bg-accent-soft px-3 py-2 text-sm text-danger"
+          role="alert"
+        >
           {error}
         </p>
       ) : null}
 
       {!loading && query && results.length === 0 && !error ? (
-        <p className="text-sm text-zinc-500">No results.</p>
+        <p className="text-sm text-muted">No results for “{query}”.</p>
+      ) : null}
+
+      {!query && !loading ? (
+        <div className="rounded-card border border-dashed border-line-strong p-10 text-center">
+          <p className="font-display text-xl text-ink">Start typing to explore</p>
+          <p className="mt-1 text-sm text-muted">
+            Thousands of titles, powered by AniList.
+          </p>
+        </div>
       ) : null}
 
       <ul className="space-y-3">
@@ -87,7 +102,7 @@ export function SearchPanel() {
           return (
             <li
               key={media.id}
-              className="flex gap-3 rounded-xl border border-zinc-200 p-3 dark:border-zinc-800"
+              className="group flex gap-4 rounded-card border border-line bg-surface p-3.5 transition-colors hover:border-accent"
             >
               <Link href={`/anime/${media.id}`} className="shrink-0">
                 <AnimePoster
@@ -99,16 +114,16 @@ export function SearchPanel() {
               <div className="min-w-0 flex-1">
                 <Link
                   href={`/anime/${media.id}`}
-                  className="font-medium hover:underline"
+                  className="font-medium text-ink transition-colors hover:text-accent"
                 >
                   {title}
                 </Link>
-                <p className="text-xs text-zinc-500">
+                <p className="mt-0.5 text-xs uppercase tracking-wide text-faint">
                   {[media.format, media.seasonYear, media.episodes && `${media.episodes} eps`]
                     .filter(Boolean)
                     .join(" · ")}
                 </p>
-                <div className="mt-2 flex flex-wrap gap-1">
+                <div className="mt-2.5 flex flex-wrap gap-1.5">
                   <Button
                     type="button"
                     size="sm"

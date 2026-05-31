@@ -37,16 +37,22 @@ export function AuthForm({ action, submitLabel, showConfirm }: AuthFormProps) {
         />
       </div>
       {state.error ? (
-        <p className="text-sm text-red-600" role="alert">
+        <p
+          className="rounded-xl border border-line bg-accent-soft px-3 py-2 text-sm text-danger"
+          role="alert"
+        >
           {state.error}
         </p>
       ) : null}
       {state.message ? (
-        <p className="text-sm text-emerald-700 dark:text-emerald-400" role="status">
+        <p
+          className="rounded-xl border border-line bg-surface-2 px-3 py-2 text-sm text-success"
+          role="status"
+        >
           {state.message}
         </p>
       ) : null}
-      <Button type="submit" className="w-full" disabled={pending}>
+      <Button type="submit" size="lg" className="w-full" disabled={pending}>
         {pending ? "Please wait…" : submitLabel}
       </Button>
     </form>

@@ -8,21 +8,27 @@ export default async function SettingsPage() {
   const { profile } = await requireProfile();
 
   return (
-    <div className="mx-auto max-w-lg space-y-8 pb-20 sm:pb-8">
+    <div className="mx-auto max-w-lg space-y-8 pb-24 sm:pb-8">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
-        <p className="mt-1 text-zinc-600 dark:text-zinc-400">
+        <p className="eyebrow">Your account</p>
+        <h1 className="mt-1.5 text-4xl font-semibold">Settings</h1>
+        <p className="mt-2 text-muted">
           Update how you appear on your{" "}
-          <Link href={`/u/${profile.username}`} className="font-medium underline">
+          <Link
+            href={`/u/${profile.username}`}
+            className="font-medium text-accent hover:underline"
+          >
             public profile
           </Link>
           .
         </p>
       </div>
-      <SettingsForm profile={profile} action={updateProfile} />
-      <p className="text-xs text-zinc-500">
-        Username <strong>@{profile.username}</strong> cannot be changed in the
-        MVP.
+      <div className="card p-6">
+        <SettingsForm profile={profile} action={updateProfile} />
+      </div>
+      <p className="text-xs text-faint">
+        Username <strong className="text-muted">@{profile.username}</strong>{" "}
+        cannot be changed in the MVP.
       </p>
     </div>
   );

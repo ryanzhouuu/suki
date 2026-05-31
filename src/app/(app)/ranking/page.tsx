@@ -30,32 +30,37 @@ export default async function RankingPage() {
   const completedCount = completedResult.data?.length ?? 0;
 
   return (
-    <div className="space-y-10 pb-20 sm:pb-8">
+    <div className="space-y-12 pb-24 sm:pb-10">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Ranking</h1>
-        <p className="mt-1 text-zinc-600 dark:text-zinc-400">
-          Build your list by choosing which anime you enjoyed more.
+        <p className="eyebrow">Express your taste</p>
+        <h1 className="mt-1.5 text-4xl font-semibold">Ranking</h1>
+        <p className="mt-2 max-w-md text-muted">
+          Build your list by choosing which anime you enjoyed more. No numbers,
+          no pressure — just gut calls.
         </p>
       </div>
 
       {completedCount < 2 ? (
-        <p className="rounded-xl border border-dashed border-zinc-300 p-4 text-sm text-zinc-600 dark:border-zinc-700 dark:text-zinc-400">
+        <p className="rounded-card border border-dashed border-line-strong p-6 text-sm text-muted">
           Mark at least two anime as completed to start comparing.{" "}
-          <Link href="/library?status=completed" className="font-medium underline">
+          <Link
+            href="/library?status=completed"
+            className="font-semibold text-accent hover:underline"
+          >
             View completed
           </Link>
         </p>
       ) : pair ? (
         <ComparisonView pair={pair} />
       ) : (
-        <p className="text-sm text-zinc-500">
+        <p className="rounded-card border border-dashed border-line-strong p-6 text-sm text-muted">
           No more unique pairs to compare right now. Check your ranking below or
           add more completed anime.
         </p>
       )}
 
       <section>
-        <h2 className="mb-3 text-lg font-medium">Your ranking</h2>
+        <h2 className="mb-4 text-2xl font-semibold">Your ranking</h2>
         <RankedList rankings={rankings} />
       </section>
     </div>

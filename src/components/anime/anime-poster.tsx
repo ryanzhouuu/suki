@@ -18,7 +18,7 @@ export function AnimePoster({ src, alt, size = "md" }: AnimePosterProps) {
   if (!src) {
     return (
       <div
-        className={`shrink-0 rounded-md bg-zinc-200 dark:bg-zinc-800 ${dim.class}`}
+        className={`shrink-0 rounded-lg bg-surface-2 ${dim.class}`}
         aria-hidden
       />
     );
@@ -30,7 +30,7 @@ export function AnimePoster({ src, alt, size = "md" }: AnimePosterProps) {
       alt={alt}
       width={dim.w}
       height={dim.h}
-      className={`shrink-0 rounded-md object-cover ${dim.class}`}
+      className={`shrink-0 rounded-lg object-cover ${dim.class}`}
       unoptimized
     />
   );
