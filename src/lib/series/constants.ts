@@ -10,6 +10,7 @@ export const FRANCHISE_RELATION_TYPES: ReadonlySet<string> = new Set([
   "PARENT",
   "COMPILATION",
   "CONTAINS",
+  "ALTERNATIVE",
 ]);
 
 export const SERIES_GRAPH_MAX_DEPTH = 4;

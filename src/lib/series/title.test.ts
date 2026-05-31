@@ -1,21 +1,91 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { slugifySeriesTitle, stripSeasonSuffix } from "./title";
+import {
+  franchiseRootFromTitle,
+  pickConsolidatedFranchiseRoot,
+  slugifySeriesTitle,
+  stripSeasonSuffix,
+} from "./title";
 
 describe("stripSeasonSuffix", () => {
-  it("removes season and part suffixes", () => {
+  it("removes season and part suffixes with numbers", () => {
     assert.equal(stripSeasonSuffix("Jujutsu Kaisen Season 2"), "Jujutsu Kaisen");
     assert.equal(
       stripSeasonSuffix("Jujutsu Kaisen Season 3: The Culling Game Part 1"),
       "Jujutsu Kaisen",
     );
     assert.equal(stripSeasonSuffix("Frieren Part 2"), "Frieren");
+    assert.equal(stripSeasonSuffix("Show Name Cour 2"), "Show Name");
+    assert.equal(stripSeasonSuffix("Show Name S2"), "Show Name");
+  });
+
+  it("removes Roman numeral season markers", () => {
+    assert.equal(stripSeasonSuffix("Mob Psycho 100 II"), "Mob Psycho 100");
+    assert.equal(stripSeasonSuffix("Mob Psycho 100 III"), "Mob Psycho 100");
   });
 
   it("leaves base titles unchanged", () => {
     assert.equal(stripSeasonSuffix("Jujutsu Kaisen"), "Jujutsu Kaisen");
     assert.equal(stripSeasonSuffix("Jujutsu Kaisen 0"), "Jujutsu Kaisen 0");
+    assert.equal(stripSeasonSuffix("Mob Psycho 100"), "Mob Psycho 100");
+  });
+});
+
+describe("franchiseRootFromTitle", () => {
+  it("groups Demon Slayer seasons under one root", () => {
+    assert.equal(
+      franchiseRootFromTitle("Demon Slayer: Kimetsu no Yaiba"),
+      "Demon Slayer: Kimetsu no Yaiba",
+    );
+    assert.equal(
+      franchiseRootFromTitle(
+        "Demon Slayer: Kimetsu no Yaiba Hashira Training Arc",
+      ),
+      "Demon Slayer: Kimetsu no Yaiba",
+    );
+    assert.equal(
+      franchiseRootFromTitle(
+        "Demon Slayer: Kimetsu no Yaiba Swordsmith Village Arc",
+      ),
+      "Demon Slayer: Kimetsu no Yaiba",
+    );
+  });
+
+  it("groups Mob Psycho seasons under one root", () => {
+    assert.equal(franchiseRootFromTitle("Mob Psycho 100"), "Mob Psycho 100");
+    assert.equal(franchiseRootFromTitle("Mob Psycho 100 II"), "Mob Psycho 100");
+    assert.equal(franchiseRootFromTitle("Mob Psycho 100 III"), "Mob Psycho 100");
+  });
+
+  it("groups franchise movies under the main show title", () => {
+    assert.equal(
+      franchiseRootFromTitle("Black Clover: Sword of the Wizard King"),
+      "Black Clover",
+    );
+  });
+
+  it("groups prequel zero movies with the main franchise", () => {
+    assert.equal(
+      franchiseRootFromTitle("Jujutsu Kaisen 0"),
+      "Jujutsu Kaisen",
+    );
+    assert.equal(
+      franchiseRootFromTitle("JUJUTSU KAISEN 0"),
+      "JUJUTSU KAISEN",
+    );
+  });
+});
+
+describe("pickConsolidatedFranchiseRoot", () => {
+  it("prefers the shared prefix root across cluster members", () => {
+    assert.equal(
+      pickConsolidatedFranchiseRoot([
+        "Black Clover",
+        "Black Clover: Sword of the Wizard King",
+      ]),
+      "Black Clover",
+    );
   });
 });
 

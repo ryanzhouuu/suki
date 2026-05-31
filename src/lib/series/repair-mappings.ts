@@ -23,14 +23,6 @@ export async function repairSeriesMappingsForUser(userId: string): Promise<numbe
     const record = Array.isArray(anime) ? anime[0] : anime;
     if (!record) continue;
 
-    const { data: existing } = await admin
-      .from("anime_series_map")
-      .select("anime_id")
-      .eq("anime_id", record.id)
-      .maybeSingle();
-
-    if (existing) continue;
-
     await ensureAnimeSeriesMapping(record);
     repaired += 1;
     await new Promise((r) => setTimeout(r, 300));

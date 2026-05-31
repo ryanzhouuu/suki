@@ -1,8 +1,13 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Tables, TablesInsert } from "@/types/database";
 
-import { fetchFranchiseCluster, pickPrimaryMedia } from "./graph";
-import { displayTitleFromAniList, slugifySeriesTitle } from "./title";
+import { fetchFranchiseCluster, pickPrimaryMedia, type FranchiseMediaNode } from "./graph";
+import {
+  findExistingSeriesForFranchise,
+  findSeriesByFranchiseRoot,
+  franchiseRootForCluster,
+} from "./merge";
+import { displayTitleFromAniList, franchiseRootFromTitle, slugifySeriesTitle } from "./title";
 
 export type ResolvedSeries = {
   series: Tables<"series">;
@@ -51,7 +56,73 @@ async function resolveSingleton(
   title: string,
   coverImageUrl: string | null,
 ): Promise<Tables<"series">> {
-  return upsertSeriesFromPrimary(anilistId, title, coverImageUrl);
+  const root = franchiseRootFromTitle(title);
+  const admin = createAdminClient();
+
+  const existing = await findSeriesByFranchiseRoot(admin, root);
+  if (existing) return existing;
+
+  return upsertSeriesFromPrimary(anilistId, root, coverImageUrl);
+}
+
+async function syncSeriesCanonicalTitle(
+  admin: ReturnType<typeof createAdminClient>,
+  series: Tables<"series">,
+  canonicalTitle: string,
+): Promise<Tables<"series">> {
+  if (series.canonical_title === canonicalTitle) return series;
+  await admin
+    .from("series")
+    .update({ canonical_title: canonicalTitle })
+    .eq("id", series.id);
+  return { ...series, canonical_title: canonicalTitle };
+}
+
+async function resolveFromCluster(
+  cluster: FranchiseMediaNode[],
+  fallbackTitle: string,
+  fallbackCoverUrl: string | null,
+): Promise<Tables<"series">> {
+  const admin = createAdminClient();
+  const primary = pickPrimaryMedia(cluster);
+  const franchiseRoot = franchiseRootForCluster(cluster, fallbackTitle);
+  const primaryRoot = franchiseRootFromTitle(
+    primary.title.english || primary.title.romaji || fallbackTitle,
+  );
+  const canonicalTitle =
+    franchiseRoot ||
+    primaryRoot ||
+    displayTitleFromAniList(primary.title);
+
+  const byRoot = await findSeriesByFranchiseRoot(admin, franchiseRoot);
+  if (byRoot) {
+    return syncSeriesCanonicalTitle(admin, byRoot, canonicalTitle);
+  }
+
+  const existing = await findExistingSeriesForFranchise(
+    admin,
+    cluster,
+    franchiseRoot,
+  );
+  if (existing) {
+    return syncSeriesCanonicalTitle(admin, existing, canonicalTitle);
+  }
+
+  const { data: byPrimary } = await admin
+    .from("series")
+    .select("*")
+    .eq("anilist_primary_id", primary.anilistId)
+    .maybeSingle();
+
+  if (byPrimary) {
+    return syncSeriesCanonicalTitle(admin, byPrimary, canonicalTitle);
+  }
+
+  return upsertSeriesFromPrimary(
+    primary.anilistId,
+    canonicalTitle,
+    primary.coverImageUrl ?? fallbackCoverUrl,
+  );
 }
 
 async function resolveByTargetSeriesId(
@@ -69,6 +140,8 @@ async function resolveByTargetSeriesId(
 
 async function resolveByTargetAnilistPrimary(
   targetAnilistPrimaryId: number,
+  fallbackTitle: string,
+  fallbackCoverUrl: string | null,
 ): Promise<Tables<"series">> {
   const admin = createAdminClient();
   const { data } = await admin
@@ -81,19 +154,10 @@ async function resolveByTargetAnilistPrimary(
 
   const cluster = await fetchFranchiseCluster(targetAnilistPrimaryId);
   if (cluster.length === 0) {
-    return resolveSingleton(
-      targetAnilistPrimaryId,
-      `Anime ${targetAnilistPrimaryId}`,
-      null,
-    );
+    return resolveSingleton(targetAnilistPrimaryId, fallbackTitle, fallbackCoverUrl);
   }
-  const primary = pickPrimaryMedia(cluster);
-  const canonicalTitle = displayTitleFromAniList(primary.title);
-  return upsertSeriesFromPrimary(
-    primary.anilistId,
-    canonicalTitle,
-    primary.coverImageUrl,
-  );
+
+  return resolveFromCluster(cluster, fallbackTitle, fallbackCoverUrl);
 }
 
 /**
@@ -102,21 +166,20 @@ async function resolveByTargetAnilistPrimary(
 export async function resolveSeriesForAnilistId(
   anilistId: number,
   options?: {
-    /** Title/cover from already-synced anime row */
     fallbackTitle?: string;
     fallbackCoverUrl?: string | null;
   },
 ): Promise<Tables<"series">> {
+  const title = options?.fallbackTitle ?? `Anime ${anilistId}`;
+  const cover = options?.fallbackCoverUrl ?? null;
   const override = await loadOverride(anilistId);
 
   if (override?.action === "force_singleton") {
-    const title = options?.fallbackTitle ?? `Anime ${anilistId}`;
-    return resolveSingleton(anilistId, title, options?.fallbackCoverUrl ?? null);
+    return resolveSingleton(anilistId, title, cover);
   }
 
   if (override?.action === "exclude_from_auto_group") {
-    const title = options?.fallbackTitle ?? `Anime ${anilistId}`;
-    return resolveSingleton(anilistId, title, options?.fallbackCoverUrl ?? null);
+    return resolveSingleton(anilistId, title, cover);
   }
 
   if (override?.action === "force_series") {
@@ -124,27 +187,23 @@ export async function resolveSeriesForAnilistId(
       return resolveByTargetSeriesId(override.target_series_id);
     }
     if (override.target_anilist_primary_id) {
-      return resolveByTargetAnilistPrimary(override.target_anilist_primary_id);
+      return resolveByTargetAnilistPrimary(
+        override.target_anilist_primary_id,
+        title,
+        cover,
+      );
     }
   }
-
-  const title = options?.fallbackTitle ?? `Anime ${anilistId}`;
 
   try {
     const cluster = await fetchFranchiseCluster(anilistId);
     if (cluster.length === 0) {
-      return resolveSingleton(anilistId, title, options?.fallbackCoverUrl ?? null);
+      return resolveSingleton(anilistId, title, cover);
     }
 
-    const primary = pickPrimaryMedia(cluster);
-    const canonicalTitle = displayTitleFromAniList(primary.title);
-    return upsertSeriesFromPrimary(
-      primary.anilistId,
-      canonicalTitle,
-      primary.coverImageUrl ?? options?.fallbackCoverUrl ?? null,
-    );
+    return resolveFromCluster(cluster, title, cover);
   } catch {
-    return resolveSingleton(anilistId, title, options?.fallbackCoverUrl ?? null);
+    return resolveSingleton(anilistId, title, cover);
   }
 }
 
@@ -152,28 +211,10 @@ export async function ensureAnimeSeriesMapping(
   anime: Tables<"anime">,
 ): Promise<ResolvedSeries> {
   const admin = createAdminClient();
-
-  const { data: existingMap } = await admin
-    .from("anime_series_map")
-    .select("*, series(*)")
-    .eq("anime_id", anime.id)
-    .maybeSingle();
-
-  const override = await loadOverride(anime.anilist_id);
-  const forceRemap =
-    override?.action === "force_series" ||
-    override?.action === "force_singleton" ||
-    override?.action === "exclude_from_auto_group";
-
-  if (existingMap?.series && !forceRemap) {
-    return {
-      series: existingMap.series as Tables<"series">,
-      mapSource: existingMap.source,
-    };
-  }
-
   const title =
     anime.english_title || anime.romaji_title || `Anime ${anime.anilist_id}`;
+
+  const override = await loadOverride(anime.anilist_id);
   const series = await resolveSeriesForAnilistId(anime.anilist_id, {
     fallbackTitle: title,
     fallbackCoverUrl: anime.cover_image_url,
