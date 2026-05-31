@@ -1,6 +1,7 @@
 "use client";
 
-import { useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 
 import { skipComparison, submitComparison } from "@/actions/ranking";
 import { AnimePoster } from "@/components/anime/anime-poster";
@@ -17,17 +18,38 @@ type ComparisonViewProps = {
 };
 
 export function ComparisonView({ pair }: ComparisonViewProps) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  function afterAction(result: { error?: string }) {
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+    setError(null);
+    router.refresh();
+  }
 
   function pick(winnerId: string) {
     startTransition(async () => {
-      await submitComparison(pair.left.id, pair.right.id, winnerId);
+      const result = await submitComparison(
+        pair.left.id,
+        pair.right.id,
+        winnerId,
+      );
+      afterAction(result);
     });
   }
 
   function skip(reason: string) {
     startTransition(async () => {
-      await skipComparison(pair.left.id, pair.right.id, reason);
+      const result = await skipComparison(
+        pair.left.id,
+        pair.right.id,
+        reason,
+      );
+      afterAction(result);
     });
   }
 
@@ -36,6 +58,11 @@ export function ComparisonView({ pair }: ComparisonViewProps) {
       <p className="text-center font-display text-2xl font-medium sm:text-3xl">
         Which did you enjoy more?
       </p>
+      {error ? (
+        <p className="text-center text-sm text-red-600" role="alert">
+          {error}
+        </p>
+      ) : null}
       <div className="relative grid gap-4 sm:grid-cols-2">
         {([pair.left, pair.right] as const).map((anime) => (
           <button

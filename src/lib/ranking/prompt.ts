@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/types/database";
 
+import { pairKey } from "./canonical-pair";
+
 export type ComparisonPair = {
   left: Tables<"anime">;
   right: Tables<"anime">;
@@ -28,9 +30,6 @@ export async function getNextComparisonPair(
     .select("left_anime_id, right_anime_id")
     .eq("user_id", userId);
 
-  const pairKey = (a: string, b: string) =>
-    [a, b].sort().join(":");
-
   const seenPairs = new Set(
     (comparisons ?? []).map((c) =>
       pairKey(c.left_anime_id, c.right_anime_id),
@@ -56,8 +55,7 @@ export async function getNextComparisonPair(
     for (let j = i + 1; j < animeList.length; j++) {
       const left = animeList[i];
       const right = animeList[j];
-      const key = pairKey(left.id, right.id);
-      if (seenPairs.has(key)) continue;
+      if (seenPairs.has(pairKey(left.id, right.id))) continue;
 
       const leftMeta = scoreMap.get(left.id) ?? { score: 1500, count: 0 };
       const rightMeta = scoreMap.get(right.id) ?? { score: 1500, count: 0 };
@@ -72,13 +70,5 @@ export async function getNextComparisonPair(
     }
   }
 
-  if (bestPair) return bestPair;
-
-  for (let i = 0; i < animeList.length; i++) {
-    for (let j = i + 1; j < animeList.length; j++) {
-      return { left: animeList[i], right: animeList[j] };
-    }
-  }
-
-  return null;
+  return bestPair;
 }

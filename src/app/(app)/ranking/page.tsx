@@ -51,7 +51,10 @@ export default async function RankingPage() {
           </Link>
         </p>
       ) : pair ? (
-        <ComparisonView pair={pair} />
+        <ComparisonView
+          key={`${pair.left.id}:${pair.right.id}`}
+          pair={pair}
+        />
       ) : (
         <p className="rounded-card border border-dashed border-line-strong p-6 text-sm text-muted">
           No more unique pairs to compare right now. Check your ranking below or
