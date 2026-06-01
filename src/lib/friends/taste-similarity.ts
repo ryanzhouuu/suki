@@ -13,6 +13,7 @@ import {
   buildCompareHighlightsFromRankings,
   confidenceFromStats,
   emptyTasteCompareHighlights,
+  type TasteCompareHighlights,
 } from "./taste-similarity-helpers";
 import {
   cosineSimilarity,
