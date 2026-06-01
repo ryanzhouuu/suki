@@ -29,4 +29,12 @@ describe("franchiseRootForCluster", () => {
     );
     assert.equal(root, "Hunter x Hunter");
   });
+
+  it("prefers fallback root when cluster disagrees with a lone outlier", () => {
+    const root = franchiseRootForCluster(
+      [node("Spy x Family"), node("Spy x Family Season 2")],
+      "Spy x Family",
+    );
+    assert.equal(root, "Spy x Family");
+  });
 });

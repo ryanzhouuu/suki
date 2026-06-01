@@ -71,6 +71,29 @@ describe("shouldSkipComparisonByRankDistance", () => {
       true,
     );
   });
+
+  it("skips via bridge when the higher-ranked id is on the right", () => {
+    const bridgeCtx: RankContext = {
+      rankBySeriesId: new Map([
+        ["one", 4],
+        ["ten", 6],
+        ["new", 8],
+      ]),
+      comparisonCountBySeriesId: new Map([
+        ["one", 2],
+        ["ten", 5],
+        ["new", 2],
+      ]),
+    };
+    const reversed: ResolvedComparison[] = [
+      { winnerId: "one", loserId: "ten" },
+      { winnerId: "ten", loserId: "new" },
+    ];
+    assert.equal(
+      shouldSkipComparisonByRankDistance("one", "new", reversed, bridgeCtx),
+      true,
+    );
+  });
 });
 
 describe("hasOneHopBridge", () => {

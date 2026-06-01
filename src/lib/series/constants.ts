@@ -1,5 +1,3 @@
-import type { AniListRelationType } from "@/lib/anilist/types";
-
 /** Relation types used to connect franchise entries into one series. */
 export const FRANCHISE_RELATION_TYPES: ReadonlySet<string> = new Set([
   "PREQUEL",

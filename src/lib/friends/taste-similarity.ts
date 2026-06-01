@@ -10,6 +10,11 @@ import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/types/database";
 
 import {
+  buildCompareHighlightsFromRankings,
+  confidenceFromStats,
+  emptyTasteCompareHighlights,
+} from "./taste-similarity-helpers";
+import {
   cosineSimilarity,
   similarityLabel,
   similarityScorePercent,
@@ -27,20 +32,10 @@ export type TasteSimilarityResult =
       reason: "not_configured" | "insufficient_data" | "not_friends";
     };
 
-export type SeriesHighlight = {
-  seriesId: string;
-  title: string;
-  coverImageUrl: string | null;
-  viewerRank: number;
-  friendRank: number;
-  rankDelta: number;
-};
-
-export type TasteCompareHighlights = {
-  sharedFavorites: SeriesHighlight[];
-  biggestDisagreements: SeriesHighlight[];
-  sharedCompletedSeriesCount: number;
-};
+export type {
+  SeriesHighlight,
+  TasteCompareHighlights,
+} from "./taste-similarity-helpers";
 
 async function libraryStats(userId: string) {
   const entries = await getUserLibraryEntries(userId);
@@ -57,20 +52,6 @@ async function comparisonCount(userId: string): Promise<number> {
     .not("winner_series_id", "is", null);
 
   return count ?? 0;
-}
-
-function confidenceFromStats(
-  viewer: { completed: number; comparisons: number },
-  friend: { completed: number; comparisons: number },
-): "low" | "medium" | "high" {
-  const viewerRich =
-    viewer.completed >= 5 && viewer.comparisons >= 3;
-  const friendRich =
-    friend.completed >= 5 && friend.comparisons >= 3;
-
-  if (viewerRich && friendRich) return "high";
-  if (viewer.completed >= 2 && friend.completed >= 2) return "medium";
-  return "low";
 }
 
 async function ensureEmbedding(userId: string): Promise<number[] | null> {
@@ -155,12 +136,6 @@ export async function getTasteSimilarity(
   };
 }
 
-const emptyTasteCompareHighlights = (): TasteCompareHighlights => ({
-  sharedFavorites: [],
-  biggestDisagreements: [],
-  sharedCompletedSeriesCount: 0,
-});
-
 export async function getTasteCompareHighlights(
   viewerId: string,
   friendUserId: string,
@@ -196,36 +171,6 @@ export async function getTasteCompareHighlights(
   const viewerRows = viewerRankings.data ?? [];
   const friendRows = friendRankings.data ?? [];
 
-  const friendBySeries = new Map(
-    friendRows.map((r) => [r.series_id, r.rank]),
-  );
-
-  const shared: SeriesHighlight[] = [];
-
-  for (const row of viewerRows) {
-    const friendRank = friendBySeries.get(row.series_id);
-    if (friendRank === undefined) continue;
-
-    const series = row.series as Tables<"series"> | null;
-    if (!series) continue;
-
-    shared.push({
-      seriesId: series.id,
-      title: series.canonical_title,
-      coverImageUrl: series.cover_image_url,
-      viewerRank: row.rank,
-      friendRank,
-      rankDelta: Math.abs(row.rank - friendRank),
-    });
-  }
-
-  shared.sort((a, b) => a.rankDelta - b.rankDelta);
-
-  const sharedFavorites = shared.slice(0, limit);
-  const biggestDisagreements = [...shared]
-    .sort((a, b) => b.rankDelta - a.rankDelta)
-    .slice(0, limit);
-
   const [viewerCompleted, friendCompleted] = await Promise.all([
     completedSeriesIds(viewerId),
     completedSeriesIds(friendUserId),
@@ -235,11 +180,20 @@ export async function getTasteCompareHighlights(
     friendCompleted.has(id),
   );
 
-  return {
-    sharedFavorites,
-    biggestDisagreements,
-    sharedCompletedSeriesCount: intersection.length,
-  };
+  return buildCompareHighlightsFromRankings(
+    viewerRows.map((r) => ({
+      rank: r.rank,
+      series_id: r.series_id,
+      series: r.series as Tables<"series"> | null,
+    })),
+    friendRows.map((r) => ({
+      rank: r.rank,
+      series_id: r.series_id,
+      series: r.series as Tables<"series"> | null,
+    })),
+    intersection.length,
+    limit,
+  );
 }
 
 async function completedSeriesIds(userId: string): Promise<Set<string>> {

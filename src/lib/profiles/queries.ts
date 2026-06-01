@@ -1,6 +1,5 @@
 import { RANKING_ALGORITHM_VERSION } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
-import type { Tables } from "@/types/database";
 
 import type { LibraryEntry } from "../library/queries";
 

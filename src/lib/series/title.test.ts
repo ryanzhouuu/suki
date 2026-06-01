@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
+  displayTitleFromAniList,
   franchiseRootFromTitle,
   pickConsolidatedFranchiseRoot,
+  sameFranchiseTitle,
   slugifySeriesTitle,
   stripSeasonSuffix,
 } from "./title";
@@ -105,6 +107,29 @@ describe("slugifySeriesTitle", () => {
     assert.equal(
       slugifySeriesTitle("Jujutsu Kaisen", 145064),
       "jujutsu-kaisen-145064",
+    );
+  });
+});
+
+describe("sameFranchiseTitle", () => {
+  it("treats seasons as the same franchise", () => {
+    assert.equal(
+      sameFranchiseTitle("Jujutsu Kaisen", "Jujutsu Kaisen Season 2"),
+      true,
+    );
+    assert.equal(sameFranchiseTitle("Naruto", "One Piece"), false);
+  });
+});
+
+describe("displayTitleFromAniList", () => {
+  it("normalizes AniList titles to franchise root", () => {
+    assert.equal(
+      displayTitleFromAniList({
+        english: "Demon Slayer: Kimetsu no Yaiba",
+        romaji: null,
+        native: null,
+      }),
+      "Demon Slayer: Kimetsu no Yaiba",
     );
   });
 });

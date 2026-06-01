@@ -109,6 +109,8 @@ docs/
 | `npm run lint` | ESLint |
 | `npm run typecheck` | TypeScript (`tsc --noEmit`) |
 | `npm test` | Unit tests (all `src/**/*.test.ts` — pure logic in `src/lib`) |
+| `npm run test:coverage` | Unit tests + coverage report (open `coverage/index.html`; scopes `src/lib`) |
+| `npm run test:coverage:check` | Fail if coverage drops below baseline thresholds (run after `test:coverage`) |
 | `npm run db:generate` | Generate Drizzle migrations from schema |
 | `npm run db:studio` | Drizzle Studio (requires `DATABASE_URL`) |
 | `npm run backfill:series` | Map existing anime → series via AniList relations, recompute rankings |
@@ -117,7 +119,9 @@ docs/
 | `npm run backfill:popular` | Cache top 300 popular anime from AniList (`--metadata-only` skips embeddings; optional limit arg) |
 ## CI
 
-GitHub Actions runs `lint`, `test`, `typecheck`, and `build` on push/PR (see [`.github/workflows/ci.yml`](./.github/workflows/ci.yml)).
+GitHub Actions runs `lint`, `test:coverage` (with HTML/lcov artifact), `typecheck`, and `build` on push/PR (see [`.github/workflows/ci.yml`](./.github/workflows/ci.yml)).
+
+Coverage measures **`src/lib`** with `all: true`, so every lib file counts toward the denominator. Pure helpers (ranking, series titles, friends taste math, search params) can reach high coverage; modules that only call Supabase, AniList, or OpenAI stay near 0% until you add integration tests or extract logic. Run `npm run test:coverage` and open `coverage/index.html` to see per-file gaps.
 
 ## Security notes
 

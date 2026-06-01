@@ -31,4 +31,12 @@ describe("pickPrimaryMedia", () => {
     const primary = pickPrimaryMedia([node(10, "OVA", 2022), node(5, "OVA", 2022)]);
     assert.equal(primary.anilistId, 5);
   });
+
+  it("prefers TV over movie when years differ", () => {
+    const primary = pickPrimaryMedia([
+      node(99, "MOVIE", 2019),
+      node(1, "TV", 2020),
+    ]);
+    assert.equal(primary.anilistId, 1);
+  });
 });

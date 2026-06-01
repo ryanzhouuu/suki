@@ -40,6 +40,31 @@ describe("buildAnimeEmbeddingText", () => {
     assert.doesNotMatch(text, /<p>/);
     assert.match(text, /Hello world/);
   });
+
+  it("includes year-only metadata when season is missing", () => {
+    const text = buildAnimeEmbeddingText({
+      id: "1",
+      anilist_id: 2,
+      romaji_title: "Show",
+      english_title: null,
+      native_title: null,
+      description: null,
+      cover_image_url: null,
+      banner_image_url: null,
+      format: null,
+      episodes: null,
+      duration_minutes: null,
+      season: null,
+      season_year: 2019,
+      status: null,
+      genres: [],
+      average_score: null,
+      popularity: null,
+      source: null,
+      metadata_updated_at: new Date().toISOString(),
+    });
+    assert.match(text, /Year: 2019/);
+  });
 });
 
 describe("buildTasteProfileText", () => {
@@ -61,5 +86,39 @@ describe("buildTasteProfileText", () => {
     assert.match(text, /Frieren/);
     assert.match(text, /Fantasy/);
     assert.match(text, /Horror/);
+  });
+
+  it("uses newcomer copy when signals are empty", () => {
+    const text = buildTasteProfileText({
+      topRankedSeries: [],
+      comparisonWinners: [],
+      comparisonLosers: [],
+      completedTitles: [],
+      watchingTitles: [],
+      droppedTitles: [],
+      topGenres: [],
+      topFormats: [],
+      topSources: [],
+      avoidGenres: [],
+    });
+    assert.match(text, /new/i);
+  });
+
+  it("includes watching and dropped lists when present", () => {
+    const text = buildTasteProfileText({
+      topRankedSeries: [],
+      comparisonWinners: [],
+      comparisonLosers: [],
+      completedTitles: ["Done"],
+      watchingTitles: ["Now"],
+      droppedTitles: ["Gone"],
+      topGenres: [],
+      topFormats: ["TV"],
+      topSources: ["MANGA"],
+      avoidGenres: [],
+    });
+    assert.match(text, /Currently watching: Now/);
+    assert.match(text, /Dropped titles include: Gone/);
+    assert.match(text, /Preferred formats: TV/);
   });
 });

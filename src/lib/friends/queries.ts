@@ -51,6 +51,20 @@ export async function getFriendshipBetween(
   return asRecipient;
 }
 
+export function mergeFriendshipRows(
+  viewerId: string,
+  asRequester: Tables<"friendships">[],
+  asRecipient: Tables<"friendships">[],
+): Map<string, Tables<"friendships">> {
+  const map = new Map<string, Tables<"friendships">>();
+  for (const row of [...asRequester, ...asRecipient]) {
+    const otherId =
+      row.requester_id === viewerId ? row.recipient_id : row.requester_id;
+    map.set(otherId, row);
+  }
+  return map;
+}
+
 export async function getFriendshipsBetweenViewerAndUsers(
   viewerId: string,
   otherUserIds: string[],
@@ -75,14 +89,11 @@ export async function getFriendshipsBetweenViewerAndUsers(
       .in("status", [...statuses]),
   ]);
 
-  const map = new Map<string, Tables<"friendships">>();
-  for (const row of [...(asRequester.data ?? []), ...(asRecipient.data ?? [])]) {
-    const otherId =
-      row.requester_id === viewerId ? row.recipient_id : row.requester_id;
-    map.set(otherId, row);
-  }
-
-  return map;
+  return mergeFriendshipRows(
+    viewerId,
+    asRequester.data ?? [],
+    asRecipient.data ?? [],
+  );
 }
 
 async function profilesByUserIds(

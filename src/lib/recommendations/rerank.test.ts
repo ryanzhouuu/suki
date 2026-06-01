@@ -2,7 +2,11 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 
 import { REASON_CODES } from "./constants";
-import { finalizeRecommendations, rerankCandidates } from "./rerank";
+import {
+  buildExplanation,
+  finalizeRecommendations,
+  rerankCandidates,
+} from "./rerank";
 import type { CandidateAnime, TasteProfile } from "./types";
 
 const baseProfile: TasteProfile = {
@@ -61,6 +65,30 @@ describe("rerankCandidates", () => {
     assert.ok(good.finalScore > bad.finalScore);
     assert.ok(good.reasonCodes.includes(REASON_CODES.topGenre));
     assert.ok(bad.reasonCodes.includes(REASON_CODES.droppedGenrePenalty));
+  });
+});
+
+describe("buildExplanation", () => {
+  it("mentions top genre overlap", () => {
+    const rec = rerankCandidates(baseProfile, [candidate()])[0];
+    const text = buildExplanation(rec, baseProfile);
+    assert.match(text, /Action|rank/i);
+  });
+
+  it("uses semantic match copy when applicable", () => {
+    const rec = rerankCandidates(baseProfile, [
+      candidate({ genres: [], similarityScore: 0.9 }),
+    ])[0];
+    rec.reasonCodes = [REASON_CODES.semanticMatch];
+    assert.match(buildExplanation(rec, baseProfile), /mood and themes/i);
+  });
+
+  it("falls back to generic suggestion", () => {
+    const rec = rerankCandidates(baseProfile, [
+      candidate({ genres: ["Sports"], similarityScore: 0.5 }),
+    ])[0];
+    rec.reasonCodes = [];
+    assert.match(buildExplanation(rec, baseProfile), /watch history/i);
   });
 });
 

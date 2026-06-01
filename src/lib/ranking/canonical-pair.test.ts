@@ -5,14 +5,19 @@ import { canonicalPairIds, pairKey } from "./canonical-pair";
 
 describe("canonicalPairIds", () => {
   it("orders ids lexicographically", () => {
-    const a = "00000000-0000-4000-8000-000000000002";
-    const b = "00000000-0000-4000-8000-000000000001";
-    assert.deepEqual(canonicalPairIds(a, b), [b, a]);
+    assert.deepEqual(canonicalPairIds("b", "a"), ["a", "b"]);
+    assert.deepEqual(canonicalPairIds("a", "b"), ["a", "b"]);
   });
 
   it("produces stable pair keys", () => {
-    const left = "00000000-0000-4000-8000-000000000001";
-    const right = "00000000-0000-4000-8000-000000000002";
-    assert.equal(pairKey(right, left), pairKey(left, right));
+    assert.equal(pairKey("x", "y"), pairKey("y", "x"));
+  });
+});
+
+describe("pairKey", () => {
+  it("matches canonicalPairIds order", () => {
+    const [left, right] = canonicalPairIds("b-id", "a-id");
+    assert.equal(pairKey("b-id", "a-id"), `${left}:${right}`);
+    assert.equal(pairKey("a-id", "b-id"), `${left}:${right}`);
   });
 });
