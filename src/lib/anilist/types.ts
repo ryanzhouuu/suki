@@ -12,6 +12,7 @@ export type AniListMediaSummary = {
   episodes: number | null;
   seasonYear: number | null;
   status: string | null;
+  genres?: string[];
 };
 
 export type AniListRelationType =

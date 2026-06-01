@@ -144,7 +144,7 @@ export async function searchAnimeForSeriesAdmin(
   }
 
   if (hits.length < 8) {
-    const remote = await searchAniListAnime(trimmed, 10);
+    const remote = await searchAniListAnime(trimmed, { perPage: 10 });
     for (const media of remote) {
       if (seen.has(media.id)) continue;
       seen.add(media.id);

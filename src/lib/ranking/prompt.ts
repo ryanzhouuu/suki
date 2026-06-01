@@ -1,3 +1,5 @@
+import { matchesAnyGenre } from "@/lib/filters/genre";
+import { getGenresBySeriesIds } from "@/lib/series/genres";
 import { getCompletedSeriesForUser } from "@/lib/series/queries";
 import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/types/database";
@@ -26,10 +28,25 @@ function scoreCandidatePair(
   return lowComparisonBonus * 10 - scoreDiff;
 }
 
+export type GetNextComparisonPairOptions = {
+  genreFilter?: string[];
+};
+
 export async function getNextComparisonPair(
   userId: string,
+  options?: GetNextComparisonPairOptions,
 ): Promise<SeriesComparisonPair | null> {
-  const seriesList = await getCompletedSeriesForUser(userId);
+  let seriesList = await getCompletedSeriesForUser(userId);
+
+  const genreFilter = options?.genreFilter ?? [];
+  if (genreFilter.length > 0) {
+    const genresBySeries = await getGenresBySeriesIds(
+      seriesList.map((s) => s.id),
+    );
+    seriesList = seriesList.filter((s) =>
+      matchesAnyGenre(genresBySeries.get(s.id) ?? [], genreFilter),
+    );
+  }
 
   if (seriesList.length < 2) return null;
 

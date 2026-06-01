@@ -5,33 +5,57 @@ import { useCallback, useEffect, useState, useTransition } from "react";
 
 import { addAnimeEntry } from "@/actions/library";
 import { AnimePoster } from "@/components/anime/anime-poster";
+import { GenreFilter } from "@/components/filters/genre-filter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getAniListDisplayTitle } from "@/lib/anilist/display";
 import type { AniListMediaSummary } from "@/lib/anilist/types";
+import { useGenreFromUrl, useSetGenreInUrl } from "@/lib/filters/use-genre-url";
 import { STATUS_LABELS, type AnimeEntryStatus } from "@/lib/constants";
 
+function buildSearchUrl(query: string, genres: string[]): string {
+  const params = new URLSearchParams();
+  const trimmed = query.trim();
+  if (trimmed) params.set("q", trimmed);
+  for (const g of genres) {
+    params.append("genre", g);
+  }
+  const qs = params.toString();
+  return qs ? `/api/search?${qs}` : "/api/search";
+}
+
 export function SearchPanel() {
+  const genresFromUrl = useGenreFromUrl();
+  const setGenresInUrl = useSetGenreInUrl();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<AniListMediaSummary[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  const runSearch = useCallback(async (q: string) => {
-    if (!q.trim()) {
+  const runSearch = useCallback(async (q: string, genres: string[]) => {
+    if (!q.trim() && genres.length === 0) {
       setResults([]);
       return;
     }
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(q.trim())}`);
-      if (!res.ok) throw new Error("Search failed");
+      const res = await fetch(buildSearchUrl(q, genres));
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(body.error ?? "Search failed");
+      }
       const data = (await res.json()) as { media: AniListMediaSummary[] };
       setResults(data.media);
-    } catch {
-      setError("Could not reach AniList. Try again.");
+    } catch (e) {
+      setError(
+        e instanceof Error && e.message.includes("429")
+          ? "AniList is busy. Wait a moment and try again."
+          : e instanceof Error
+            ? e.message
+            : "Could not reach AniList. Try again.",
+      );
       setResults([]);
     } finally {
       setLoading(false);
@@ -40,16 +64,20 @@ export function SearchPanel() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      void runSearch(query);
+      void runSearch(query, genresFromUrl);
     }, 350);
     return () => clearTimeout(timer);
-  }, [query, runSearch]);
+  }, [query, genresFromUrl, runSearch]);
 
   function quickAdd(anilistId: number, status: AnimeEntryStatus) {
     startTransition(async () => {
       await addAnimeEntry(anilistId, status);
     });
   }
+
+  const hasQuery = query.trim().length > 0;
+  const hasGenres = genresFromUrl.length > 0;
+  const isActive = hasQuery || hasGenres;
 
   return (
     <div className="space-y-7 pb-24 sm:pb-10">
@@ -61,7 +89,7 @@ export function SearchPanel() {
         </p>
       </div>
 
-      <div className="sticky top-18 z-10 -mx-1 bg-paper/80 px-1 py-1 backdrop-blur-md">
+      <div className="sticky top-18 z-10 -mx-1 space-y-3 bg-paper/80 px-1 py-1 backdrop-blur-md">
         <Input
           type="search"
           placeholder="Search by title…  e.g. Frieren, Cowboy Bebop"
@@ -69,6 +97,7 @@ export function SearchPanel() {
           onChange={(e) => setQuery(e.target.value)}
           autoFocus
         />
+        <GenreFilter selected={genresFromUrl} onChange={setGenresInUrl} />
       </div>
 
       {loading ? (
@@ -83,15 +112,19 @@ export function SearchPanel() {
         </p>
       ) : null}
 
-      {!loading && query && results.length === 0 && !error ? (
-        <p className="text-sm text-muted">No results for “{query}”.</p>
+      {!loading && isActive && results.length === 0 && !error ? (
+        <p className="text-sm text-muted">
+          {hasQuery
+            ? `No results for “${query.trim()}”.`
+            : "No results for the selected genres."}
+        </p>
       ) : null}
 
-      {!query && !loading ? (
+      {!isActive && !loading ? (
         <div className="rounded-card border border-dashed border-line-strong p-10 text-center">
-          <p className="font-display text-xl text-ink">Start typing to explore</p>
+          <p className="font-display text-xl text-ink">Start typing or pick genres</p>
           <p className="mt-1 text-sm text-muted">
-            Thousands of titles, powered by AniList.
+            Search by title, browse by genre, or combine both.
           </p>
         </div>
       ) : null}
@@ -99,6 +132,7 @@ export function SearchPanel() {
       <ul className="space-y-3">
         {results.map((media) => {
           const title = getAniListDisplayTitle(media.title);
+          const mediaGenres = media.genres ?? [];
           return (
             <li
               key={media.id}
@@ -123,6 +157,11 @@ export function SearchPanel() {
                     .filter(Boolean)
                     .join(" · ")}
                 </p>
+                {mediaGenres.length > 0 ? (
+                  <p className="mt-1 text-xs text-muted">
+                    {mediaGenres.slice(0, 4).join(" · ")}
+                  </p>
+                ) : null}
                 <div className="mt-2.5 flex flex-wrap gap-1.5">
                   <Button
                     type="button"

@@ -6,7 +6,12 @@ type RankedSeriesRow = Tables<"derived_series_rankings"> & {
   series: Tables<"series"> | null;
 };
 
-export function RankedList({ rankings }: { rankings: RankedSeriesRow[] }) {
+type RankedListProps = {
+  rankings: RankedSeriesRow[];
+  genresBySeriesId?: Record<string, string[]>;
+};
+
+export function RankedList({ rankings, genresBySeriesId }: RankedListProps) {
   if (rankings.length === 0) {
     return (
       <div className="rounded-card border border-dashed border-line-strong p-8 text-center">
@@ -46,6 +51,11 @@ export function RankedList({ rankings }: { rankings: RankedSeriesRow[] }) {
               <p className="truncate font-medium text-ink">
                 {series.canonical_title}
               </p>
+              {genresBySeriesId?.[row.series_id]?.length ? (
+                <p className="mt-0.5 truncate text-xs text-faint">
+                  {genresBySeriesId[row.series_id]!.slice(0, 3).join(" · ")}
+                </p>
+              ) : null}
               <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted">
                 <span
                   aria-hidden

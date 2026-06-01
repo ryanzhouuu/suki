@@ -1,5 +1,11 @@
+import { Suspense } from "react";
+
 import { SearchPanel } from "@/components/search/search-panel";
 
 export default function SearchPage() {
-  return <SearchPanel />;
+  return (
+    <Suspense fallback={null}>
+      <SearchPanel />
+    </Suspense>
+  );
 }

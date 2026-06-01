@@ -6,13 +6,34 @@ import { requireAuthUser } from "@/lib/auth/session";
 import { USER_EVENT_TYPES } from "@/lib/constants";
 import { logUserEvent } from "@/lib/events/log";
 import { canonicalPairIds } from "@/lib/ranking/canonical-pair";
+import {
+  getNextComparisonPair,
+  type SeriesComparisonPair,
+} from "@/lib/ranking/prompt";
 import { recomputeUserRanking } from "@/lib/ranking/recompute-series";
+import { normalizeGenreParams } from "@/lib/anilist/genres";
 import { userHasCompletedSeries } from "@/lib/series/queries";
 import { createClient } from "@/lib/supabase/server";
 
 export type RankingActionState = {
   error?: string;
 };
+
+export async function fetchComparisonPair(
+  genres: string[],
+): Promise<{ pair: SeriesComparisonPair | null; error?: string }> {
+  try {
+    const user = await requireAuthUser();
+    const genreFilter = normalizeGenreParams(genres);
+    const pair = await getNextComparisonPair(user.id, { genreFilter });
+    return { pair };
+  } catch (e) {
+    return {
+      pair: null,
+      error: e instanceof Error ? e.message : "Could not load comparison.",
+    };
+  }
+}
 
 async function upsertSeriesComparison(
   userId: string,

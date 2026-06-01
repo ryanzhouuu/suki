@@ -4,9 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { EntryCard } from "@/components/library/entry-card";
+import { GenreFilter } from "@/components/filters/genre-filter";
 import { Input } from "@/components/ui/input";
 import { filterLibraryEntries } from "@/lib/library/filter";
 import type { LibraryEntry } from "@/lib/library/queries";
+import { useGenreFromUrl, useSetGenreInUrl } from "@/lib/filters/use-genre-url";
 
 type LibraryPanelProps = {
   entries: LibraryEntry[];
@@ -17,6 +19,8 @@ export function LibraryPanel({ entries }: LibraryPanelProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const qFromUrl = searchParams.get("q") ?? "";
+  const genresFromUrl = useGenreFromUrl();
+  const setGenresInUrl = useSetGenreInUrl();
   const [query, setQuery] = useState(qFromUrl);
 
   useEffect(() => {
@@ -42,11 +46,17 @@ export function LibraryPanel({ entries }: LibraryPanelProps) {
   }, [query, qFromUrl, pathname, router, searchParams]);
 
   const filtered = useMemo(
-    () => filterLibraryEntries(entries, qFromUrl),
-    [entries, qFromUrl],
+    () =>
+      filterLibraryEntries(entries, {
+        query: qFromUrl,
+        genres: genresFromUrl,
+      }),
+    [entries, qFromUrl, genresFromUrl],
   );
 
   const searching = qFromUrl.trim().length > 0;
+  const genreFiltering = genresFromUrl.length > 0;
+  const filtering = searching || genreFiltering;
 
   return (
     <div className="space-y-4">
@@ -58,7 +68,9 @@ export function LibraryPanel({ entries }: LibraryPanelProps) {
         aria-label="Search your library"
       />
 
-      {searching ? (
+      <GenreFilter selected={genresFromUrl} onChange={setGenresInUrl} />
+
+      {filtering ? (
         <p className="text-sm text-muted">
           {filtered.length} of {entries.length}{" "}
           {entries.length === 1 ? "entry" : "entries"} match
@@ -69,8 +81,14 @@ export function LibraryPanel({ entries }: LibraryPanelProps) {
         <div className="rounded-card border border-dashed border-line-strong p-10 text-center">
           <p className="font-display text-xl text-ink">No matches</p>
           <p className="mt-1 text-sm text-muted">
-            Nothing in your library matches &ldquo;{qFromUrl}&rdquo;. Try a
-            different title.
+            {searching ? (
+              <>
+                Nothing in your library matches &ldquo;{qFromUrl}&rdquo;.
+              </>
+            ) : (
+              <>Nothing in your library matches the selected genres.</>
+            )}{" "}
+            Try a different filter.
           </p>
         </div>
       ) : (

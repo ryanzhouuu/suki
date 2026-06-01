@@ -33,9 +33,21 @@ export const ANIME_DISCOVER_QUERY = `
 `;
 
 export const ANIME_SEARCH_QUERY = `
-  query SearchAnime($search: String, $page: Int, $perPage: Int) {
+  query SearchAnime(
+    $search: String
+    $genres: [String]
+    $sort: [MediaSort]
+    $page: Int
+    $perPage: Int
+  ) {
     Page(page: $page, perPage: $perPage) {
-      media(search: $search, type: ANIME, sort: SEARCH_MATCH) {
+      media(
+        search: $search
+        type: ANIME
+        sort: $sort
+        genre_in: $genres
+        isAdult: false
+      ) {
         id
         title {
           romaji
@@ -49,6 +61,7 @@ export const ANIME_SEARCH_QUERY = `
         episodes
         seasonYear
         status
+        genres
       }
     }
   }

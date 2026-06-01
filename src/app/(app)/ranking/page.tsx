@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { Suspense } from "react";
 
-import { ComparisonView } from "@/components/ranking/comparison-view";
-import { RankedList } from "@/components/ranking/ranked-list";
+import { RankingPanel } from "@/components/ranking/ranking-panel";
 import { requireProfile } from "@/lib/auth/session";
 import { RANKING_ALGORITHM_VERSION } from "@/lib/constants";
 import { getNextComparisonPair } from "@/lib/ranking/prompt";
+import { getGenresBySeriesIds } from "@/lib/series/genres";
 import { getCompletedSeriesForUser } from "@/lib/series/queries";
 import { createClient } from "@/lib/supabase/server";
 
@@ -27,6 +28,15 @@ export default async function RankingPage() {
   const rankings = rankingsResult.data ?? [];
   const completedSeriesCount = completedSeries.length;
   const rankingsError = rankingsResult.error?.message;
+
+  const seriesIds = [
+    ...new Set([
+      ...rankings.map((r) => r.series_id),
+      ...completedSeries.map((s) => s.id),
+    ]),
+  ];
+  const genresMap = await getGenresBySeriesIds(seriesIds);
+  const genresBySeriesId = Object.fromEntries(genresMap);
 
   return (
     <div className="space-y-12 pb-24 sm:pb-10">
@@ -57,22 +67,17 @@ export default async function RankingPage() {
             View completed
           </Link>
         </p>
-      ) : pair ? (
-        <ComparisonView
-          key={`${pair.left.id}:${pair.right.id}`}
-          pair={pair}
-        />
-      ) : (
-        <p className="rounded-card border border-dashed border-line-strong p-6 text-sm text-muted">
-          No more unique pairs to compare right now. Check your ranking below or
-          complete more series.
-        </p>
-      )}
+      ) : null}
 
-      <section>
-        <h2 className="mb-4 text-2xl font-semibold">Your ranking</h2>
-        <RankedList rankings={rankings} />
-      </section>
+      <Suspense fallback={null}>
+        <RankingPanel
+          key={`${pair?.left.id ?? "none"}:${pair?.right.id ?? "none"}`}
+          initialPair={pair}
+          rankings={rankings}
+          genresBySeriesId={genresBySeriesId}
+          completedSeriesCount={completedSeriesCount}
+        />
+      </Suspense>
     </div>
   );
 }
