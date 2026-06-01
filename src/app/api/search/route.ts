@@ -1,35 +1,25 @@
 import { NextResponse } from "next/server";
 
-import {
-  isValidAniListGenre,
-  MAX_SEARCH_GENRES,
-  normalizeGenreParams,
-} from "@/lib/anilist/genres";
 import { searchAniListAnime } from "@/lib/anilist/search";
+import { parseSearchParams } from "@/lib/search/params";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const q = searchParams.get("q") ?? "";
-  const rawGenres = searchParams.getAll("genre");
+  const { query, genres, invalidGenre } = parseSearchParams(searchParams);
 
-  const invalid = rawGenres.filter(
-    (g) => g.trim() && !isValidAniListGenre(g.trim()),
-  );
-  if (invalid.length > 0) {
+  if (invalidGenre) {
     return NextResponse.json(
-      { error: `Invalid genre: ${invalid[0]}` },
+      { error: `Invalid genre: ${invalidGenre}` },
       { status: 400 },
     );
   }
 
-  const genres = normalizeGenreParams(rawGenres).slice(0, MAX_SEARCH_GENRES);
-
-  if (!q.trim() && genres.length === 0) {
+  if (!query.trim() && genres.length === 0) {
     return NextResponse.json({ media: [] });
   }
 
   try {
-    const media = await searchAniListAnime(q, { genres });
+    const media = await searchAniListAnime(query, { genres });
     return NextResponse.json({ media });
   } catch (e) {
     return NextResponse.json(

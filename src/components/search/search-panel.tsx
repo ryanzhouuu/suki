@@ -1,103 +1,25 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useState, useTransition } from "react";
+import { useState } from "react";
 
-import { addAnimeEntry } from "@/actions/library";
-import { AnimePoster } from "@/components/anime/anime-poster";
 import { GenreFilter } from "@/components/filters/genre-filter";
-import { Button } from "@/components/ui/button";
+import { SearchResultCard } from "@/components/search/search-result-card";
 import { Input } from "@/components/ui/input";
-import { getAniListDisplayTitle } from "@/lib/anilist/display";
-import type { AniListMediaSummary } from "@/lib/anilist/types";
-import {
-  genreFilterKey,
-  useGenreFromUrl,
-  useSetGenreInUrl,
-} from "@/lib/filters/use-genre-url";
-import { STATUS_LABELS, type AnimeEntryStatus } from "@/lib/constants";
-
-function buildSearchUrl(query: string, genres: string[]): string {
-  const params = new URLSearchParams();
-  const trimmed = query.trim();
-  if (trimmed) params.set("q", trimmed);
-  for (const g of genres) {
-    params.append("genre", g);
-  }
-  const qs = params.toString();
-  return qs ? `/api/search?${qs}` : "/api/search";
-}
+import { useGenreFilters } from "@/lib/filters";
+import { useAnilistSearch } from "@/lib/search";
 
 export function SearchPanel() {
-  const genresFromUrl = useGenreFromUrl();
-  const genreKey = genreFilterKey(genresFromUrl);
-  const setGenresInUrl = useSetGenreInUrl();
+  const { genres, setGenres, genreKey } = useGenreFilters();
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<AniListMediaSummary[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [pending, startTransition] = useTransition();
 
-  useEffect(() => {
-    const trimmed = query.trim();
+  const { results, loading, error, isActive, trimmedQuery } = useAnilistSearch({
+    query,
+    genres,
+    genreKey,
+  });
 
-    if (!trimmed && genresFromUrl.length === 0) {
-      setResults([]);
-      setLoading(false);
-      setError(null);
-      return;
-    }
-
-    let cancelled = false;
-
-    const timer = setTimeout(() => {
-      setLoading(true);
-      setError(null);
-
-      void (async () => {
-        try {
-          const res = await fetch(buildSearchUrl(query, genresFromUrl));
-          if (cancelled) return;
-          if (!res.ok) {
-            const body = (await res.json().catch(() => ({}))) as {
-              error?: string;
-            };
-            throw new Error(body.error ?? "Search failed");
-          }
-          const data = (await res.json()) as { media: AniListMediaSummary[] };
-          if (cancelled) return;
-          setResults(data.media);
-        } catch (e) {
-          if (cancelled) return;
-          setError(
-            e instanceof Error && e.message.includes("429")
-              ? "AniList is busy. Wait a moment and try again."
-              : e instanceof Error
-                ? e.message
-                : "Could not reach AniList. Try again.",
-          );
-          setResults([]);
-        } finally {
-          if (!cancelled) setLoading(false);
-        }
-      })();
-    }, 350);
-
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  }, [query, genreKey, genresFromUrl]);
-
-  function quickAdd(anilistId: number, status: AnimeEntryStatus) {
-    startTransition(async () => {
-      await addAnimeEntry(anilistId, status);
-    });
-  }
-
-  const hasQuery = query.trim().length > 0;
-  const hasGenres = genresFromUrl.length > 0;
-  const isActive = hasQuery || hasGenres;
+  const hasQuery = trimmedQuery.length > 0;
+  const hasGenres = genres.length > 0;
 
   return (
     <div className="space-y-7 pb-24 sm:pb-10">
@@ -117,12 +39,10 @@ export function SearchPanel() {
           onChange={(e) => setQuery(e.target.value)}
           autoFocus
         />
-        <GenreFilter selected={genresFromUrl} onChange={setGenresInUrl} />
+        <GenreFilter selected={genres} onChange={setGenres} />
       </div>
 
-      {loading ? (
-        <p className="text-sm text-muted">Searching…</p>
-      ) : null}
+      {loading ? <p className="text-sm text-muted">Searching…</p> : null}
       {error ? (
         <p
           className="rounded-xl border border-line bg-accent-soft px-3 py-2 text-sm text-danger"
@@ -135,7 +55,7 @@ export function SearchPanel() {
       {!loading && isActive && results.length === 0 && !error ? (
         <p className="text-sm text-muted">
           {hasQuery
-            ? `No results for “${query.trim()}”.`
+            ? `No results for “${trimmedQuery}”.`
             : "No results for the selected genres."}
         </p>
       ) : null}
@@ -150,70 +70,9 @@ export function SearchPanel() {
       ) : null}
 
       <ul className="space-y-3">
-        {results.map((media) => {
-          const title = getAniListDisplayTitle(media.title);
-          const mediaGenres = media.genres ?? [];
-          return (
-            <li
-              key={media.id}
-              className="group flex gap-4 rounded-card border border-line bg-surface p-3.5 transition-colors hover:border-accent"
-            >
-              <Link href={`/anime/${media.id}`} className="shrink-0">
-                <AnimePoster
-                  src={media.coverImage?.large ?? null}
-                  alt={title}
-                  size="sm"
-                />
-              </Link>
-              <div className="min-w-0 flex-1">
-                <Link
-                  href={`/anime/${media.id}`}
-                  className="font-medium text-ink transition-colors hover:text-accent"
-                >
-                  {title}
-                </Link>
-                <p className="mt-0.5 text-xs uppercase tracking-wide text-faint">
-                  {[media.format, media.seasonYear, media.episodes && `${media.episodes} eps`]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </p>
-                {mediaGenres.length > 0 ? (
-                  <p className="mt-1 text-xs text-muted">
-                    {mediaGenres.slice(0, 4).join(" · ")}
-                  </p>
-                ) : null}
-                <div className="mt-2.5 flex flex-wrap gap-1.5">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    disabled={pending}
-                    onClick={() => quickAdd(media.id, "plan_to_watch")}
-                  >
-                    {STATUS_LABELS.plan_to_watch}
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    disabled={pending}
-                    onClick={() => quickAdd(media.id, "watching")}
-                  >
-                    {STATUS_LABELS.watching}
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    disabled={pending}
-                    onClick={() => quickAdd(media.id, "completed")}
-                  >
-                    {STATUS_LABELS.completed}
-                  </Button>
-                </div>
-              </div>
-            </li>
-          );
-        })}
+        {results.map((media) => (
+          <SearchResultCard key={media.id} media={media} />
+        ))}
       </ul>
     </div>
   );

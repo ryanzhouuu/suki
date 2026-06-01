@@ -1,4 +1,4 @@
-import { matchesAnyGenre } from "@/lib/filters/genre";
+import { filterByGenre } from "@/lib/filters/genre";
 import { getGenresBySeriesIds } from "@/lib/series/genres";
 import { getCompletedSeriesForUser } from "@/lib/series/queries";
 import { createClient } from "@/lib/supabase/server";
@@ -43,8 +43,10 @@ export async function getNextComparisonPair(
     const genresBySeries = await getGenresBySeriesIds(
       seriesList.map((s) => s.id),
     );
-    seriesList = seriesList.filter((s) =>
-      matchesAnyGenre(genresBySeries.get(s.id) ?? [], genreFilter),
+    seriesList = filterByGenre(
+      seriesList,
+      genreFilter,
+      (s) => genresBySeries.get(s.id) ?? [],
     );
   }
 

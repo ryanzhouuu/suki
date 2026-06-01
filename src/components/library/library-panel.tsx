@@ -1,62 +1,32 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useMemo } from "react";
 
 import { EntryCard } from "@/components/library/entry-card";
+import { FilterMatchCount } from "@/components/filters/filter-match-count";
 import { GenreFilter } from "@/components/filters/genre-filter";
 import { Input } from "@/components/ui/input";
+import { useGenreFilters } from "@/lib/filters";
 import { filterLibraryEntries } from "@/lib/library/filter";
 import type { LibraryEntry } from "@/lib/library/queries";
-import { useGenreFromUrl, useSetGenreInUrl } from "@/lib/filters/use-genre-url";
+import { useDebouncedUrlParam } from "@/lib/navigation/url-params";
 
 type LibraryPanelProps = {
   entries: LibraryEntry[];
 };
 
 export function LibraryPanel({ entries }: LibraryPanelProps) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const qFromUrl = searchParams.get("q") ?? "";
-  const genresFromUrl = useGenreFromUrl();
-  const setGenresInUrl = useSetGenreInUrl();
-  const [query, setQuery] = useState(qFromUrl);
-
-  useEffect(() => {
-    setQuery(qFromUrl);
-  }, [qFromUrl]);
-
-  useEffect(() => {
-    const trimmed = query.trim();
-    if (trimmed === qFromUrl) return;
-
-    const timer = setTimeout(() => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (trimmed) {
-        params.set("q", trimmed);
-      } else {
-        params.delete("q");
-      }
-      const qs = params.toString();
-      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [query, qFromUrl, pathname, router, searchParams]);
+  const { value: query, setValue: setQuery, urlValue: qFromUrl } =
+    useDebouncedUrlParam("q");
+  const { genres, setGenres, isFiltering: genreFiltering } = useGenreFilters();
 
   const filtered = useMemo(
-    () =>
-      filterLibraryEntries(entries, {
-        query: qFromUrl,
-        genres: genresFromUrl,
-      }),
-    [entries, qFromUrl, genresFromUrl],
+    () => filterLibraryEntries(entries, { query: qFromUrl, genres }),
+    [entries, qFromUrl, genres],
   );
 
-  const searching = qFromUrl.trim().length > 0;
-  const genreFiltering = genresFromUrl.length > 0;
-  const filtering = searching || genreFiltering;
+  const titleFiltering = qFromUrl.trim().length > 0;
+  const filtering = titleFiltering || genreFiltering;
 
   return (
     <div className="space-y-4">
@@ -68,23 +38,18 @@ export function LibraryPanel({ entries }: LibraryPanelProps) {
         aria-label="Search your library"
       />
 
-      <GenreFilter selected={genresFromUrl} onChange={setGenresInUrl} />
+      <GenreFilter selected={genres} onChange={setGenres} />
 
       {filtering ? (
-        <p className="text-sm text-muted">
-          {filtered.length} of {entries.length}{" "}
-          {entries.length === 1 ? "entry" : "entries"} match
-        </p>
+        <FilterMatchCount matched={filtered.length} total={entries.length} noun="entry" />
       ) : null}
 
       {filtered.length === 0 ? (
         <div className="rounded-card border border-dashed border-line-strong p-10 text-center">
           <p className="font-display text-xl text-ink">No matches</p>
           <p className="mt-1 text-sm text-muted">
-            {searching ? (
-              <>
-                Nothing in your library matches &ldquo;{qFromUrl}&rdquo;.
-              </>
+            {titleFiltering ? (
+              <>Nothing in your library matches &ldquo;{qFromUrl}&rdquo;.</>
             ) : (
               <>Nothing in your library matches the selected genres.</>
             )}{" "}

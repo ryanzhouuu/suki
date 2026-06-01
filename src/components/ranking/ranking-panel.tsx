@@ -1,20 +1,13 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useTransition,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 
 import { fetchComparisonPair } from "@/actions/ranking";
 import { ComparisonView } from "@/components/ranking/comparison-view";
 import { RankedList } from "@/components/ranking/ranked-list";
+import { FilterMatchCount } from "@/components/filters/filter-match-count";
 import { GenreFilter } from "@/components/filters/genre-filter";
-import { matchesAnyGenre } from "@/lib/filters/genre";
-import { useGenreFromUrl, useSetGenreInUrl } from "@/lib/filters/use-genre-url";
+import { filterRankingsByGenre, useGenreFilters } from "@/lib/filters";
 import type { SeriesComparisonPair } from "@/lib/ranking/prompt";
 import type { Tables } from "@/types/database";
 
@@ -35,29 +28,20 @@ export function RankingPanel({
   genresBySeriesId,
   completedSeriesCount,
 }: RankingPanelProps) {
-  const genresFromUrl = useGenreFromUrl();
-  const setGenresInUrl = useSetGenreInUrl();
+  const { genres, setGenres, genreKey, isFiltering: genreFiltering } =
+    useGenreFilters();
   const [pair, setPair] = useState<SeriesComparisonPair | null>(initialPair);
   const [pairError, setPairError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const genresMap = useMemo(
-    () => new Map(Object.entries(genresBySeriesId)),
-    [genresBySeriesId],
+  const filteredRankings = useMemo(
+    () => filterRankingsByGenre(rankings, genres, genresBySeriesId),
+    [rankings, genres, genresBySeriesId],
   );
 
-  const filteredRankings = useMemo(() => {
-    if (genresFromUrl.length === 0) return rankings;
-    return rankings.filter((row) => {
-      if (!row.series_id) return false;
-      const genres = genresMap.get(row.series_id) ?? [];
-      return matchesAnyGenre(genres, genresFromUrl);
-    });
-  }, [rankings, genresFromUrl, genresMap]);
-
-  const refreshPair = useCallback((genres: string[]) => {
+  const refreshPair = useCallback((selectedGenres: string[]) => {
     startTransition(async () => {
-      const result = await fetchComparisonPair(genres);
+      const result = await fetchComparisonPair(selectedGenres);
       if (result.error) {
         setPairError(result.error);
         setPair(null);
@@ -68,27 +52,23 @@ export function RankingPanel({
     });
   }, []);
 
-  const genresKeyRef = useRef<string | null>(null);
+  const lastGenreKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const key = genresFromUrl.join("\0");
-    if (genresKeyRef.current === null) {
-      genresKeyRef.current = key;
+    if (lastGenreKeyRef.current === null) {
+      lastGenreKeyRef.current = genreKey;
       return;
     }
-    if (genresKeyRef.current === key) return;
-    genresKeyRef.current = key;
-    refreshPair(genresFromUrl);
-  }, [genresFromUrl, refreshPair]);
+    if (lastGenreKeyRef.current === genreKey) return;
+    lastGenreKeyRef.current = genreKey;
+    refreshPair(genres);
+  }, [genreKey, genres, refreshPair]);
 
-  const genreFiltering = genresFromUrl.length > 0;
   const canCompare = completedSeriesCount >= 2;
 
   return (
     <div className="space-y-12">
-      {canCompare ? (
-        <GenreFilter selected={genresFromUrl} onChange={setGenresInUrl} />
-      ) : null}
+      {canCompare ? <GenreFilter selected={genres} onChange={setGenres} /> : null}
 
       {canCompare ? (
         <section className="space-y-4">
@@ -118,10 +98,13 @@ export function RankingPanel({
       <section>
         <h2 className="mb-4 text-2xl font-semibold">Your ranking</h2>
         {genreFiltering ? (
-          <p className="mb-3 text-sm text-muted">
-            {filteredRankings.length} of {rankings.length}{" "}
-            {rankings.length === 1 ? "series" : "series"} match
-          </p>
+          <div className="mb-3">
+            <FilterMatchCount
+              matched={filteredRankings.length}
+              total={rankings.length}
+              noun="series"
+            />
+          </div>
         ) : null}
         <RankedList
           rankings={filteredRankings}

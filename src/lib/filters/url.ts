@@ -3,19 +3,16 @@
 import { useCallback, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-import { parseGenreParams } from "@/lib/filters/parse-genre-params";
+import { normalizeGenreParams } from "@/lib/anilist/genres";
 
-/** Stable string key for genre URL params (for effect deps). */
-export function genreFilterKey(genres: string[]): string {
-  return genres.join("\0");
-}
+import { genreFilterKey } from "./genre";
 
 export function useGenreFromUrl(): string[] {
   const searchParams = useSearchParams();
   const genreKey = searchParams.getAll("genre").join("\0");
 
   return useMemo(
-    () => parseGenreParams(searchParams.getAll("genre")),
+    () => normalizeGenreParams(searchParams.getAll("genre")),
     [genreKey],
   );
 }
@@ -37,4 +34,18 @@ export function useSetGenreInUrl() {
     },
     [pathname, router, searchParams],
   );
+}
+
+/** Genre filter state synced with `?genre=` URL params. */
+export function useGenreFilters() {
+  const genres = useGenreFromUrl();
+  const setGenres = useSetGenreInUrl();
+  const genreKey = genreFilterKey(genres);
+
+  return {
+    genres,
+    setGenres,
+    genreKey,
+    isFiltering: genres.length > 0,
+  };
 }

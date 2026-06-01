@@ -10,3 +10,17 @@ export function matchesAnyGenre(
   if (itemGenres.length === 0) return false;
   return selected.some((g) => itemGenres.includes(g));
 }
+
+/** Stable string key for genre selections (use in effect dependency arrays). */
+export function genreFilterKey(genres: string[]): string {
+  return genres.join("\0");
+}
+
+export function filterByGenre<T>(
+  items: T[],
+  selected: string[],
+  getGenres: (item: T) => string[],
+): T[] {
+  if (selected.length === 0) return items;
+  return items.filter((item) => matchesAnyGenre(getGenres(item), selected));
+}
