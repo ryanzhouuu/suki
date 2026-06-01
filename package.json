@@ -15,7 +15,7 @@
     "backfill:embeddings": "npx tsx src/scripts/backfill-anime-embeddings.ts",
     "seed:catalog": "npx tsx src/scripts/seed-recommendation-catalog.ts",
     "backfill:popular": "npx tsx src/scripts/backfill-popular-catalog.ts",
-    "test": "npx tsx --test src/lib/**/*.test.ts"
+    "test": "npx tsx --test 'src/**/*.test.ts'"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",

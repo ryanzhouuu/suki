@@ -20,7 +20,8 @@ jobs:
 
       - run: npm run lint
 
-      - run: npm test
+      - name: Unit tests
+        run: npm test
 
       - run: npm run typecheck
 

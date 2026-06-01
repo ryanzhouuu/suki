@@ -108,7 +108,7 @@ docs/
 | `npm run build` | Production build |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | TypeScript (`tsc --noEmit`) |
-| `npm test` | Unit tests |
+| `npm test` | Unit tests (all `src/**/*.test.ts` — pure logic in `src/lib`) |
 | `npm run db:generate` | Generate Drizzle migrations from schema |
 | `npm run db:studio` | Drizzle Studio (requires `DATABASE_URL`) |
 | `npm run backfill:series` | Map existing anime → series via AniList relations, recompute rankings |
