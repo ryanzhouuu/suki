@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 
 import {
   cancelFriendRequest,
@@ -59,9 +59,20 @@ export function FriendRequestList({
 }: FriendRequestListProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [listError, setListError] = useState<string | null>(null);
 
   function refresh() {
     startTransition(() => router.refresh());
+  }
+
+  async function runAction(action: () => Promise<{ error?: string }>) {
+    const result = await action();
+    if (result.error) {
+      setListError(result.error);
+      return;
+    }
+    setListError(null);
+    refresh();
   }
 
   if (incoming.length === 0 && outgoing.length === 0) {
@@ -70,6 +81,11 @@ export function FriendRequestList({
 
   return (
     <div className="space-y-8">
+      {listError ? (
+        <p className="text-sm text-danger" role="alert">
+          {listError}
+        </p>
+      ) : null}
       {incoming.length > 0 ? (
         <section>
           <h2 className="text-lg font-semibold">Incoming requests</h2>
@@ -79,10 +95,11 @@ export function FriendRequestList({
                 <Button
                   size="sm"
                   disabled={pending}
-                  onClick={async () => {
-                    await respondToFriendRequest(friendship.id, "accept");
-                    refresh();
-                  }}
+                  onClick={() =>
+                    runAction(() =>
+                      respondToFriendRequest(friendship.id, "accept"),
+                    )
+                  }
                 >
                   Accept
                 </Button>
@@ -90,10 +107,11 @@ export function FriendRequestList({
                   size="sm"
                   variant="secondary"
                   disabled={pending}
-                  onClick={async () => {
-                    await respondToFriendRequest(friendship.id, "decline");
-                    refresh();
-                  }}
+                  onClick={() =>
+                    runAction(() =>
+                      respondToFriendRequest(friendship.id, "decline"),
+                    )
+                  }
                 >
                   Decline
                 </Button>
@@ -113,10 +131,9 @@ export function FriendRequestList({
                   size="sm"
                   variant="ghost"
                   disabled={pending}
-                  onClick={async () => {
-                    await cancelFriendRequest(friendship.id);
-                    refresh();
-                  }}
+                  onClick={() =>
+                    runAction(() => cancelFriendRequest(friendship.id))
+                  }
                 >
                   Cancel
                 </Button>

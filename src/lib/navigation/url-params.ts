@@ -13,10 +13,12 @@ export function useDebouncedUrlParam(param: string, delayMs = 300) {
   const searchParams = useSearchParams();
   const urlValue = searchParams.get(param) ?? "";
   const [value, setValue] = useState(urlValue);
+  const [lastUrlValue, setLastUrlValue] = useState(urlValue);
 
-  useEffect(() => {
+  if (urlValue !== lastUrlValue) {
+    setLastUrlValue(urlValue);
     setValue(urlValue);
-  }, [urlValue]);
+  }
 
   useEffect(() => {
     const trimmed = value.trim();

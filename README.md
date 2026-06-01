@@ -7,7 +7,7 @@ Product and architecture details: [`docs/design.md`](./docs/design.md).
 ## Stack
 
 - **Frontend:** Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS
-- **Backend:** Next.js server components, route handlers, and server actions (to be added)
+- **Backend:** Next.js server components, route handlers, and server actions
 - **Database:** Supabase Postgres with Row Level Security
 - **Auth:** Supabase Auth
 - **Metadata:** AniList GraphQL API
@@ -29,7 +29,9 @@ cp .env.example .env.local
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Project Settings → API → **Publishable** key (`sb_publishable_...`) |
 | `SUPABASE_SECRET_KEY` | Project Settings → API → **Secret** key (`sb_secret_...`, server only) |
 | `DATABASE_URL` | Project Settings → Database → Connection string (pooler URI recommended) |
-| `OPENAI_API_KEY` | [OpenAI API keys](https://platform.openai.com/api-keys) — server only, for recommendations |
+| `OPENAI_API_KEY` | [OpenAI API keys](https://platform.openai.com/api-keys) — server only; recommendations and friend taste comparison |
+| `NEXT_PUBLIC_SITE_URL` | App URL for auth redirects (e.g. `http://localhost:3000`) |
+| `SERIES_ADMIN_EMAILS` | Optional comma-separated emails for `/admin/series` |
 
 Supabase has two key *types*, not one replacing the other:
 
@@ -45,6 +47,8 @@ The remote Supabase project should already have migrations applied:
 - `initial_schema` — tables, enums, indexes
 - `row_level_security` — RLS policies
 - `series_layer` / `series_rls` — franchise grouping (`series`, `anime_series_map`) and series-level rankings
+- `recommendations_pgvector` — taste embeddings and vector search
+- `friendships_update_rls` — scoped friendship update policies (apply on deploy)
 
 SQL files are mirrored in [`supabase/migrations/`](./supabase/migrations/) for version control.
 
@@ -93,7 +97,7 @@ docs/
 1. **Foundation** — Auth, onboarding, profiles, AniList search ✓
 2. **Tracking** — Library, statuses, progress, anime detail ✓
 3. **Ranking** — Pairwise comparisons by **series** (not individual seasons), Elo recompute, ranked list ✓ (requires `SUPABASE_SECRET_KEY`)
-4. **Social** — Public profiles ✓ · Friends *(placeholder)*
+4. **Social** — Public profiles ✓ · Friends (requests, search, taste compare) ✓
 5. **Recommendation readiness** — Embeddings + pgvector recommendations ✓ · Analytics *(later)*
 
 ## Scripts
@@ -103,13 +107,17 @@ docs/
 | `npm run dev` | Start dev server |
 | `npm run build` | Production build |
 | `npm run lint` | ESLint |
+| `npm run typecheck` | TypeScript (`tsc --noEmit`) |
+| `npm test` | Unit tests |
 | `npm run db:generate` | Generate Drizzle migrations from schema |
 | `npm run db:studio` | Drizzle Studio (requires `DATABASE_URL`) |
 | `npm run backfill:series` | Map existing anime → series via AniList relations, recompute rankings |
 | `npm run backfill:embeddings` | Embed cached anime for vector search (requires `OPENAI_API_KEY`) |
 | `npm run seed:catalog` | Cache + embed ~60 popular/trending titles (quick catalog boost) |
 | `npm run backfill:popular` | Cache top 300 popular anime from AniList (`--metadata-only` skips embeddings; optional limit arg) |
-| `npm run test` | Unit tests (series grouping, ranking helpers) |
+## CI
+
+GitHub Actions runs `lint`, `test`, `typecheck`, and `build` on push/PR (see [`.github/workflows/ci.yml`](./.github/workflows/ci.yml)).
 
 ## Security notes
 

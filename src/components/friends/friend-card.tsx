@@ -1,16 +1,12 @@
 import Link from "next/link";
 
 import type { FriendWithProfile } from "@/lib/friends/queries";
-import type { TasteSimilarityResult } from "@/lib/friends/taste-similarity";
-
-import { TasteSimilarityBadge } from "./taste-similarity-badge";
 
 type FriendCardProps = {
   friend: FriendWithProfile;
-  similarity?: TasteSimilarityResult;
 };
 
-export function FriendCard({ friend, similarity }: FriendCardProps) {
+export function FriendCard({ friend }: FriendCardProps) {
   const { profile } = friend;
   const displayName = profile.display_name || profile.username;
 
@@ -37,15 +33,12 @@ export function FriendCard({ friend, similarity }: FriendCardProps) {
           <p className="truncate text-sm text-muted">@{profile.username}</p>
         </div>
       </Link>
-      <div className="flex shrink-0 flex-col items-end gap-2">
-        {similarity ? <TasteSimilarityBadge similarity={similarity} /> : null}
-        <Link
-          href={`/friends/compare/${profile.username}`}
-          className="text-xs font-medium text-accent hover:underline"
-        >
-          Compare taste
-        </Link>
-      </div>
+      <Link
+        href={`/friends/compare/${profile.username}`}
+        className="shrink-0 text-sm font-medium text-accent hover:underline"
+      >
+        Compare taste
+      </Link>
     </li>
   );
 }

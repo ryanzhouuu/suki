@@ -27,13 +27,17 @@ export function useAnilistSearch({
   const trimmedQuery = query.trim();
   const isActive = trimmedQuery.length > 0 || genres.length > 0;
 
+  if (
+    !isActive &&
+    (results.length > 0 || loading || error !== null)
+  ) {
+    setResults([]);
+    setLoading(false);
+    setError(null);
+  }
+
   useEffect(() => {
-    if (!isActive) {
-      setResults([]);
-      setLoading(false);
-      setError(null);
-      return;
-    }
+    if (!isActive) return;
 
     let cancelled = false;
 

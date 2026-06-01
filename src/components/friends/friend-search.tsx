@@ -1,21 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, useTransition } from "react";
 
-import { searchUsers, sendFriendRequest } from "@/actions/friends";
-import { Button } from "@/components/ui/button";
+import { searchUsers } from "@/actions/friends";
+import { FriendActionButton } from "@/components/friends/friend-action-button";
 import { Input } from "@/components/ui/input";
-import type { FriendProfile } from "@/lib/friends/queries";
+import type { FriendSearchResult } from "@/lib/friends/queries";
 
 export function FriendSearch() {
-  const router = useRouter();
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<FriendProfile[]>([]);
+  const [results, setResults] = useState<FriendSearchResult[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [searching, startSearch] = useTransition();
-  const [acting, startAct] = useTransition();
 
   const runSearch = useCallback((q: string) => {
     startSearch(async () => {
@@ -42,7 +39,7 @@ export function FriendSearch() {
       </div>
       <Input
         type="search"
-        placeholder="Search username…"
+        placeholder="Search username or name…"
         value={query}
         onChange={(e) => {
           const next = e.target.value;
@@ -69,7 +66,7 @@ export function FriendSearch() {
             return (
               <li
                 key={profile.user_id}
-                className="flex items-center gap-3 rounded-card border border-line bg-surface p-3"
+                className="flex flex-wrap items-center gap-3 rounded-card border border-line bg-surface p-3"
               >
                 <Link
                   href={`/u/${profile.username}`}
@@ -92,24 +89,14 @@ export function FriendSearch() {
                     <p className="text-sm text-muted">@{profile.username}</p>
                   </div>
                 </Link>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  disabled={acting}
-                  onClick={() => {
-                    startAct(async () => {
-                      const result = await sendFriendRequest(profile.user_id);
-                      if (result.error) {
-                        setError(result.error);
-                      } else {
-                        setError(null);
-                        router.refresh();
-                      }
-                    });
-                  }}
-                >
-                  Add friend
-                </Button>
+                <FriendActionButton
+                  targetUserId={profile.user_id}
+                  targetUsername={profile.username}
+                  friendshipId={profile.friendshipId}
+                  status={profile.status}
+                  isOwnProfile={false}
+                  onSuccess={() => runSearch(query)}
+                />
               </li>
             );
           })}

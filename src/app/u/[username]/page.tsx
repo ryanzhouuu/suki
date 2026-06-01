@@ -5,8 +5,7 @@ import { AnimePoster } from "@/components/anime/anime-poster";
 import { FriendActionButton } from "@/components/friends/friend-action-button";
 import { RankedList } from "@/components/ranking/ranked-list";
 import { getAuthUser } from "@/lib/auth/session";
-import { STATUS_LABELS, USER_EVENT_TYPES } from "@/lib/constants";
-import { logUserEvent } from "@/lib/events/log";
+import { STATUS_LABELS } from "@/lib/constants";
 import { getFriendshipBetween } from "@/lib/friends/queries";
 import { friendshipStatusForViewer } from "@/lib/friends/relationship";
 import { getPublicProfileData } from "@/lib/profiles/queries";
@@ -45,12 +44,6 @@ export default async function PublicProfilePage({
     const friendship = await getFriendshipBetween(viewer.id, profile.user_id);
     friendshipId = friendship?.id ?? null;
     friendshipStatus = friendshipStatusForViewer(friendship, viewer.id);
-
-    if (friendshipStatus === "friends") {
-      await logUserEvent(viewer.id, USER_EVENT_TYPES.friendProfileViewed, {
-        metadata: { viewed_user_id: profile.user_id, username },
-      });
-    }
   }
 
   const isOwnProfile = viewer?.id === profile.user_id;

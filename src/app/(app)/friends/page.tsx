@@ -6,9 +6,6 @@ import {
   listAcceptedFriends,
   listFriendRequests,
 } from "@/lib/friends/queries";
-import { getTasteSimilarity } from "@/lib/friends/taste-similarity";
-
-const MAX_SIMILARITY_BATCH = 10;
 
 export default async function FriendsPage() {
   const { user } = await requireProfile();
@@ -18,18 +15,6 @@ export default async function FriendsPage() {
     listFriendRequests(user.id),
   ]);
 
-  const similarityByUserId = new Map(
-    await Promise.all(
-      friends.slice(0, MAX_SIMILARITY_BATCH).map(async (f) => {
-        const similarity = await getTasteSimilarity(
-          user.id,
-          f.profile.user_id,
-        );
-        return [f.profile.user_id, similarity] as const;
-      }),
-    ),
-  );
-
   return (
     <div className="mx-auto max-w-2xl space-y-10">
       <header>
@@ -38,8 +23,8 @@ export default async function FriendsPage() {
           Friends
         </h1>
         <p className="mt-2 text-sm text-muted">
-          Find people by username, manage requests, and compare taste with
-          friends.
+          Find people by username or name, manage requests, and compare taste
+          on each friend&apos;s compare page.
         </p>
       </header>
 
@@ -67,11 +52,7 @@ export default async function FriendsPage() {
         ) : (
           <ul className="mt-4 space-y-2">
             {friends.map((friend) => (
-              <FriendCard
-                key={friend.friendship.id}
-                friend={friend}
-                similarity={similarityByUserId.get(friend.profile.user_id)}
-              />
+              <FriendCard key={friend.friendship.id} friend={friend} />
             ))}
           </ul>
         )}

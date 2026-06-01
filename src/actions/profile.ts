@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requireAuthUser } from "@/lib/auth/session";
-import { logUserEvent } from "@/lib/events/log";
 import {
   normalizeUsername,
   validateUsername,

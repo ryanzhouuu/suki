@@ -155,11 +155,25 @@ export async function getTasteSimilarity(
   };
 }
 
+const emptyTasteCompareHighlights = (): TasteCompareHighlights => ({
+  sharedFavorites: [],
+  biggestDisagreements: [],
+  sharedCompletedSeriesCount: 0,
+});
+
 export async function getTasteCompareHighlights(
   viewerId: string,
   friendUserId: string,
   limit = 5,
 ): Promise<TasteCompareHighlights> {
+  const friendship = await getFriendshipBetween(viewerId, friendUserId);
+
+  try {
+    assertAcceptedFriends(friendship, viewerId, friendUserId);
+  } catch {
+    return emptyTasteCompareHighlights();
+  }
+
   const supabase = await createClient();
 
   const [viewerRankings, friendRankings] = await Promise.all([

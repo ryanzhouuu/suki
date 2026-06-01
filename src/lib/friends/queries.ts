@@ -1,5 +1,13 @@
+import {
+  friendshipStatusForViewer,
+  type FriendshipUiStatus,
+} from "@/lib/friends/relationship";
 import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/types/database";
+
+export function escapeIlikePattern(value: string): string {
+  return value.replace(/[%_\\]/g, "\\$&");
+}
 
 export type FriendProfile = Pick<
   Tables<"profiles">,
@@ -9,6 +17,11 @@ export type FriendProfile = Pick<
 export type FriendWithProfile = {
   friendship: Tables<"friendships">;
   profile: FriendProfile;
+};
+
+export type FriendSearchResult = FriendProfile & {
+  status: FriendshipUiStatus;
+  friendshipId: string | null;
 };
 
 export async function getFriendshipBetween(
@@ -36,6 +49,40 @@ export async function getFriendshipBetween(
     .maybeSingle();
 
   return asRecipient;
+}
+
+export async function getFriendshipsBetweenViewerAndUsers(
+  viewerId: string,
+  otherUserIds: string[],
+): Promise<Map<string, Tables<"friendships">>> {
+  if (otherUserIds.length === 0) return new Map();
+
+  const supabase = await createClient();
+  const statuses = ["pending", "accepted", "blocked", "declined"] as const;
+
+  const [asRequester, asRecipient] = await Promise.all([
+    supabase
+      .from("friendships")
+      .select("*")
+      .eq("requester_id", viewerId)
+      .in("recipient_id", otherUserIds)
+      .in("status", [...statuses]),
+    supabase
+      .from("friendships")
+      .select("*")
+      .eq("recipient_id", viewerId)
+      .in("requester_id", otherUserIds)
+      .in("status", [...statuses]),
+  ]);
+
+  const map = new Map<string, Tables<"friendships">>();
+  for (const row of [...(asRequester.data ?? []), ...(asRecipient.data ?? [])]) {
+    const otherId =
+      row.requester_id === viewerId ? row.recipient_id : row.requester_id;
+    map.set(otherId, row);
+  }
+
+  return map;
 }
 
 async function profilesByUserIds(
@@ -145,14 +192,35 @@ export async function searchProfiles(
   if (trimmed.length < 2) return [];
 
   const supabase = await createClient();
-  const pattern = `%${trimmed}%`;
+  const pattern = `%${escapeIlikePattern(trimmed)}%`;
 
   const { data } = await supabase
     .from("profiles")
     .select("user_id, username, display_name, avatar_url, bio")
     .neq("user_id", excludeUserId)
-    .ilike("username", pattern)
+    .or(`username.ilike.${pattern},display_name.ilike.${pattern}`)
     .limit(limit);
 
   return data ?? [];
+}
+
+export async function searchProfilesWithFriendship(
+  query: string,
+  viewerId: string,
+  limit = 10,
+): Promise<FriendSearchResult[]> {
+  const profiles = await searchProfiles(query, viewerId, limit);
+  const friendshipMap = await getFriendshipsBetweenViewerAndUsers(
+    viewerId,
+    profiles.map((p) => p.user_id),
+  );
+
+  return profiles.map((profile) => {
+    const friendship = friendshipMap.get(profile.user_id) ?? null;
+    return {
+      ...profile,
+      status: friendshipStatusForViewer(friendship, viewerId),
+      friendshipId: friendship?.id ?? null,
+    };
+  });
 }

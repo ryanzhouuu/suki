@@ -7,8 +7,8 @@ import { USER_EVENT_TYPES } from "@/lib/constants";
 import { logUserEvent } from "@/lib/events/log";
 import {
   getFriendshipBetween,
-  searchProfiles,
-  type FriendProfile,
+  searchProfilesWithFriendship,
+  type FriendSearchResult,
 } from "@/lib/friends/queries";
 import { createClient } from "@/lib/supabase/server";
 
@@ -26,10 +26,10 @@ function revalidateFriendPaths(username?: string) {
 
 export async function searchUsers(
   query: string,
-): Promise<{ users: FriendProfile[]; error?: string }> {
+): Promise<{ users: FriendSearchResult[]; error?: string }> {
   try {
     const { user } = await requireProfile();
-    const users = await searchProfiles(query, user.id);
+    const users = await searchProfilesWithFriendship(query, user.id);
     return { users };
   } catch (e) {
     return {

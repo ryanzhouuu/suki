@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 
 import { removeAnimeEntry, updateAnimeEntry } from "@/actions/library";
 import { AnimePoster } from "@/components/anime/anime-poster";
@@ -17,11 +17,14 @@ type EntryCardProps = {
 export function EntryCard({ entry }: EntryCardProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [displayStatus, setDisplayStatus] = useState(entry.status);
+  const [optimisticStatus, setOptimisticStatus] =
+    useState<AnimeEntryStatus | null>(null);
 
-  useEffect(() => {
-    setDisplayStatus(entry.status);
-  }, [entry.status]);
+  if (optimisticStatus !== null && entry.status === optimisticStatus) {
+    setOptimisticStatus(null);
+  }
+
+  const displayStatus = optimisticStatus ?? entry.status;
 
   const anime = entry.anime;
   const title =
@@ -36,12 +39,11 @@ export function EntryCard({ entry }: EntryCardProps) {
       : 0;
 
   function setStatus(status: AnimeEntryStatus) {
-    const previous = displayStatus;
-    setDisplayStatus(status);
+    setOptimisticStatus(status);
     startTransition(async () => {
       const result = await updateAnimeEntry(entry.id, { status });
       if (result.error) {
-        setDisplayStatus(previous);
+        setOptimisticStatus(null);
       } else {
         router.refresh();
       }
