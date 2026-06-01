@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 import { addAnimeEntry } from "@/actions/library";
 import { AnimePoster } from "@/components/anime/anime-poster";
@@ -10,7 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getAniListDisplayTitle } from "@/lib/anilist/display";
 import type { AniListMediaSummary } from "@/lib/anilist/types";
-import { useGenreFromUrl, useSetGenreInUrl } from "@/lib/filters/use-genre-url";
+import {
+  genreFilterKey,
+  useGenreFromUrl,
+  useSetGenreInUrl,
+} from "@/lib/filters/use-genre-url";
 import { STATUS_LABELS, type AnimeEntryStatus } from "@/lib/constants";
 
 function buildSearchUrl(query: string, genres: string[]): string {
@@ -26,6 +30,7 @@ function buildSearchUrl(query: string, genres: string[]): string {
 
 export function SearchPanel() {
   const genresFromUrl = useGenreFromUrl();
+  const genreKey = genreFilterKey(genresFromUrl);
   const setGenresInUrl = useSetGenreInUrl();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<AniListMediaSummary[]>([]);
@@ -33,41 +38,56 @@ export function SearchPanel() {
   const [loading, setLoading] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  const runSearch = useCallback(async (q: string, genres: string[]) => {
-    if (!q.trim() && genres.length === 0) {
+  useEffect(() => {
+    const trimmed = query.trim();
+
+    if (!trimmed && genresFromUrl.length === 0) {
       setResults([]);
+      setLoading(false);
+      setError(null);
       return;
     }
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(buildSearchUrl(q, genres));
-      if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(body.error ?? "Search failed");
-      }
-      const data = (await res.json()) as { media: AniListMediaSummary[] };
-      setResults(data.media);
-    } catch (e) {
-      setError(
-        e instanceof Error && e.message.includes("429")
-          ? "AniList is busy. Wait a moment and try again."
-          : e instanceof Error
-            ? e.message
-            : "Could not reach AniList. Try again.",
-      );
-      setResults([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
 
-  useEffect(() => {
+    let cancelled = false;
+
     const timer = setTimeout(() => {
-      void runSearch(query, genresFromUrl);
+      setLoading(true);
+      setError(null);
+
+      void (async () => {
+        try {
+          const res = await fetch(buildSearchUrl(query, genresFromUrl));
+          if (cancelled) return;
+          if (!res.ok) {
+            const body = (await res.json().catch(() => ({}))) as {
+              error?: string;
+            };
+            throw new Error(body.error ?? "Search failed");
+          }
+          const data = (await res.json()) as { media: AniListMediaSummary[] };
+          if (cancelled) return;
+          setResults(data.media);
+        } catch (e) {
+          if (cancelled) return;
+          setError(
+            e instanceof Error && e.message.includes("429")
+              ? "AniList is busy. Wait a moment and try again."
+              : e instanceof Error
+                ? e.message
+                : "Could not reach AniList. Try again.",
+          );
+          setResults([]);
+        } finally {
+          if (!cancelled) setLoading(false);
+        }
+      })();
     }, 350);
-    return () => clearTimeout(timer);
-  }, [query, genresFromUrl, runSearch]);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [query, genreKey, genresFromUrl]);
 
   function quickAdd(anilistId: number, status: AnimeEntryStatus) {
     startTransition(async () => {
