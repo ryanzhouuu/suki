@@ -56,6 +56,8 @@ export async function fetchFranchiseCluster(
 
     const media = result.Media;
     if (!media) continue;
+    // Opening/ending singles share relations but are not part of the narrative franchise.
+    if (media.format === "MUSIC") continue;
 
     visited.set(media.id, mediaToNode(media));
 

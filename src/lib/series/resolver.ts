@@ -86,11 +86,13 @@ async function resolveFromCluster(
   const admin = createAdminClient();
   const primary = pickPrimaryMedia(cluster);
   const franchiseRoot = franchiseRootForCluster(cluster, fallbackTitle);
+  const fallbackRoot = franchiseRootFromTitle(fallbackTitle);
   const primaryRoot = franchiseRootFromTitle(
     primary.title.english || primary.title.romaji || fallbackTitle,
   );
   const canonicalTitle =
     franchiseRoot ||
+    fallbackRoot ||
     primaryRoot ||
     displayTitleFromAniList(primary.title);
 
@@ -209,18 +211,27 @@ export async function resolveSeriesForAnilistId(
 
 export async function ensureAnimeSeriesMapping(
   anime: Tables<"anime">,
+  options?: { lightweight?: boolean },
 ): Promise<ResolvedSeries> {
   const admin = createAdminClient();
   const title =
     anime.english_title || anime.romaji_title || `Anime ${anime.anilist_id}`;
 
   const override = await loadOverride(anime.anilist_id);
-  const series = await resolveSeriesForAnilistId(anime.anilist_id, {
-    fallbackTitle: title,
-    fallbackCoverUrl: anime.cover_image_url,
-  });
+  const series = options?.lightweight
+    ? await resolveSingleton(
+        anime.anilist_id,
+        title,
+        anime.cover_image_url,
+      )
+    : await resolveSeriesForAnilistId(anime.anilist_id, {
+        fallbackTitle: title,
+        fallbackCoverUrl: anime.cover_image_url,
+      });
 
-  let source: TablesInsert<"anime_series_map">["source"] = "anilist_auto";
+  let source: TablesInsert<"anime_series_map">["source"] = options?.lightweight
+    ? "singleton"
+    : "anilist_auto";
   if (override) source = "manual_override";
   if (
     override?.action === "force_singleton" ||

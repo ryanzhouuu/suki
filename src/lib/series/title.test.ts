@@ -87,6 +87,17 @@ describe("pickConsolidatedFranchiseRoot", () => {
       "Black Clover",
     );
   });
+
+  it("does not pick an unrelated shortest title (OP single vs show)", () => {
+    assert.equal(
+      pickConsolidatedFranchiseRoot([
+        "Just Awake",
+        "Hunter x Hunter",
+        "Hunter x Hunter (2011)",
+      ]),
+      "Hunter x Hunter",
+    );
+  });
 });
 
 describe("slugifySeriesTitle", () => {

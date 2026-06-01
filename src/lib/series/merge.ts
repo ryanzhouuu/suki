@@ -97,16 +97,38 @@ export async function findExistingSeriesForFranchise(
   return best;
 }
 
+/** Formats that should not define a franchise label when crawling relations. */
+const NON_NARRATIVE_FORMATS = new Set(["MUSIC"]);
+
 export function franchiseRootForCluster(
   cluster: FranchiseMediaNode[],
   fallbackTitle: string,
 ): string {
-  const roots = cluster.map((n) =>
+  const fallbackRoot = franchiseRootFromTitle(fallbackTitle);
+  const narrative = cluster.filter(
+    (n) => !n.format || !NON_NARRATIVE_FORMATS.has(n.format),
+  );
+  const nodes = narrative.length > 0 ? narrative : cluster;
+
+  const roots = nodes.map((n) =>
     franchiseRootFromTitle(
       n.title.english || n.title.romaji || fallbackTitle,
     ),
   );
-  roots.push(franchiseRootFromTitle(fallbackTitle));
+  roots.push(fallbackRoot);
 
-  return pickConsolidatedFranchiseRoot(roots);
+  const consolidated = pickConsolidatedFranchiseRoot(roots);
+
+  if (
+    fallbackRoot &&
+    consolidated &&
+    !sameFranchiseTitle(consolidated, fallbackRoot)
+  ) {
+    const clusterAgreesWithFallback = roots.some((r) =>
+      sameFranchiseTitle(r, fallbackRoot),
+    );
+    if (clusterAgreesWithFallback) return fallbackRoot;
+  }
+
+  return consolidated || fallbackRoot;
 }

@@ -73,7 +73,27 @@ export function pickConsolidatedFranchiseRoot(candidates: string[]): string {
     if (isSharedPrefix) return candidate;
   }
 
-  return sorted[0];
+  // Unrelated titles in one graph (e.g. OP single + parent show): prefer majority
+  // franchise root, not the shortest string ("Just Awake" vs "Hunter x Hunter").
+  const counts = new Map<string, number>();
+  for (const raw of unique) {
+    const root = franchiseRootFromTitle(raw);
+    counts.set(root, (counts.get(root) ?? 0) + 1);
+  }
+
+  let best = "";
+  let bestCount = 0;
+  for (const [root, count] of counts) {
+    if (
+      count > bestCount ||
+      (count === bestCount && root.length > best.length)
+    ) {
+      best = root;
+      bestCount = count;
+    }
+  }
+
+  return best || unique[0];
 }
 
 /**
@@ -102,6 +122,11 @@ export function franchiseRootFromTitle(title: string): string {
   const withoutPrequelZero = trimmed.replace(PREQUEL_ZERO_SUFFIX, "").trim();
   if (withoutPrequelZero.length > 0 && withoutPrequelZero.length < trimmed.length) {
     return franchiseRootFromTitle(withoutPrequelZero);
+  }
+
+  const withoutYear = trimmed.replace(/\s*\(\d{4}\)\s*$/, "").trim();
+  if (withoutYear.length > 0 && withoutYear.length < trimmed.length) {
+    return franchiseRootFromTitle(withoutYear);
   }
 
   return trimmed;
