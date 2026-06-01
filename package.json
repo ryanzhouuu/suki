@@ -15,7 +15,7 @@
     "backfill:embeddings": "npx tsx src/scripts/backfill-anime-embeddings.ts",
     "seed:catalog": "npx tsx src/scripts/seed-recommendation-catalog.ts",
     "backfill:popular": "npx tsx src/scripts/backfill-popular-catalog.ts",
-    "test": "sh -c 'set -e; files=$(find src -name \"*.test.ts\" | sort); if [ -z \"$files\" ]; then echo \"No test files found\"; exit 1; fi; npx tsx --test $files'",
+    "test": "node scripts/run-tests.mjs",
     "test:coverage": "c8 npm test",
     "test:coverage:check": "c8 check-coverage --lines 32 --functions 70 --branches 75 --statements 32"
   },
