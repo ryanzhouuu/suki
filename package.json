@@ -13,6 +13,7 @@
     "backfill:series": "npx tsx src/scripts/backfill-series.ts",
     "backfill:embeddings": "npx tsx src/scripts/backfill-anime-embeddings.ts",
     "seed:catalog": "npx tsx src/scripts/seed-recommendation-catalog.ts",
+    "backfill:popular": "npx tsx src/scripts/backfill-popular-catalog.ts",
     "test": "npx tsx --test src/lib/**/*.test.ts"
   },
   "dependencies": {

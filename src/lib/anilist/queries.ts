@@ -2,9 +2,14 @@ export const ANIME_DISCOVER_QUERY = `
   query AnimeDiscover(
     $sort: [MediaSort]
     $status: MediaStatus
+    $page: Int
     $perPage: Int
   ) {
-    Page(page: 1, perPage: $perPage) {
+    Page(page: $page, perPage: $perPage) {
+      pageInfo {
+        hasNextPage
+        lastPage
+      }
       media(
         type: ANIME
         sort: $sort

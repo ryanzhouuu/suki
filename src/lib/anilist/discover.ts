@@ -32,6 +32,7 @@ async function fetchDiscover(
 ): Promise<DiscoverAnimeItem[]> {
   const variables: Record<string, unknown> = {
     sort,
+    page: 1,
     perPage: DISCOVER_PER_PAGE,
   };
   if (status) {
@@ -45,6 +46,55 @@ async function fetchDiscover(
   );
 
   return (data.Page?.media ?? []).map(toDiscoverItem);
+}
+
+const MAX_DISCOVER_PER_PAGE = 50;
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Top anime on AniList by popularity (paginated). For CLI backfills — not React-cached.
+ */
+export async function fetchTopPopularAnimeIds(
+  limit: number,
+  options?: { pageDelayMs?: number },
+): Promise<number[]> {
+  const perPage = Math.min(MAX_DISCOVER_PER_PAGE, limit);
+  const ids: number[] = [];
+  let page = 1;
+
+  while (ids.length < limit) {
+    const data = await anilistQuery<AniListDiscoverResult>(
+      ANIME_DISCOVER_QUERY,
+      {
+        sort: ["POPULARITY_DESC"],
+        page,
+        perPage,
+      },
+      { cache: "no-store" },
+    );
+
+    const media = data.Page?.media ?? [];
+    if (media.length === 0) break;
+
+    for (const item of media) {
+      if (ids.includes(item.id)) continue;
+      ids.push(item.id);
+      if (ids.length >= limit) break;
+    }
+
+    const lastPage = data.Page?.pageInfo?.lastPage;
+    if (!lastPage || page >= lastPage) break;
+
+    page += 1;
+    if (options?.pageDelayMs) {
+      await sleep(options.pageDelayMs);
+    }
+  }
+
+  return ids.slice(0, limit);
 }
 
 /** Currently airing, sorted by newest start date. */

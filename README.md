@@ -107,7 +107,8 @@ docs/
 | `npm run db:studio` | Drizzle Studio (requires `DATABASE_URL`) |
 | `npm run backfill:series` | Map existing anime → series via AniList relations, recompute rankings |
 | `npm run backfill:embeddings` | Embed cached anime for vector search (requires `OPENAI_API_KEY`) |
-| `npm run seed:catalog` | Cache + embed popular/trending AniList titles to grow the recommendation pool |
+| `npm run seed:catalog` | Cache + embed ~60 popular/trending titles (quick catalog boost) |
+| `npm run backfill:popular` | Cache top 300 popular anime from AniList (`--metadata-only` skips embeddings; optional limit arg) |
 | `npm run test` | Unit tests (series grouping, ranking helpers) |
 
 ## Security notes

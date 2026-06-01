@@ -79,6 +79,10 @@ export type AniListSearchResult = {
 
 export type AniListDiscoverResult = {
   Page: {
+    pageInfo?: {
+      hasNextPage: boolean;
+      lastPage: number;
+    } | null;
     media: AniListMediaSummary[] | null;
   } | null;
 };
