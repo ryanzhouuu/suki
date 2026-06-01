@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { anilistQuery } from "./client";
 import { getAniListDisplayTitle } from "./display";
 import { ANIME_DISCOVER_QUERY } from "./queries";
@@ -46,11 +48,11 @@ async function fetchDiscover(
 }
 
 /** Currently airing, sorted by newest start date. */
-export async function getLatestAnime(): Promise<DiscoverAnimeItem[]> {
+export const getLatestAnime = cache(async (): Promise<DiscoverAnimeItem[]> => {
   return fetchDiscover(["START_DATE_DESC"], "RELEASING");
-}
+});
 
 /** All-time popularity on AniList. */
-export async function getPopularAnime(): Promise<DiscoverAnimeItem[]> {
+export const getPopularAnime = cache(async (): Promise<DiscoverAnimeItem[]> => {
   return fetchDiscover(["POPULARITY_DESC"]);
-}
+});

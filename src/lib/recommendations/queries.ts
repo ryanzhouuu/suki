@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 
 import { RECOMMENDATION_ALGORITHM_VERSION } from "./constants";
+import { getDismissedAnimeIds } from "./dismissed";
 import type { RecommendationRow } from "./types";
 
 export async function getUserRecommendations(
@@ -29,7 +30,10 @@ export async function getUserRecommendations(
     throw new Error(error.message);
   }
 
-  return (data ?? []) as RecommendationRow[];
+  const dismissed = new Set(await getDismissedAnimeIds(userId));
+  return (data ?? []).filter(
+    (row) => !dismissed.has(row.anime_id),
+  ) as RecommendationRow[];
 }
 
 export async function getEmbeddingCatalogCount(): Promise<number> {

@@ -1,6 +1,7 @@
 "use client";
 
-import { useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState, useTransition } from "react";
 
 import { addAnimeEntry } from "@/actions/library";
 import { Button } from "@/components/ui/button";
@@ -21,11 +22,24 @@ export function StatusPicker({
   currentStatus,
   compact = false,
 }: StatusPickerProps) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [displayStatus, setDisplayStatus] = useState(currentStatus ?? null);
+
+  useEffect(() => {
+    setDisplayStatus(currentStatus ?? null);
+  }, [currentStatus]);
 
   function handleStatus(status: AnimeEntryStatus) {
+    const previous = displayStatus;
+    setDisplayStatus(status);
     startTransition(async () => {
-      await addAnimeEntry(anilistId, status);
+      const result = await addAnimeEntry(anilistId, status);
+      if (result.error) {
+        setDisplayStatus(previous);
+      } else {
+        router.refresh();
+      }
     });
   }
 
@@ -35,7 +49,7 @@ export function StatusPicker({
         <Button
           key={status}
           type="button"
-          variant={currentStatus === status ? "primary" : "secondary"}
+          variant={displayStatus === status ? "primary" : "secondary"}
           size={compact ? "sm" : "md"}
           disabled={pending}
           onClick={() => handleStatus(status)}

@@ -23,12 +23,8 @@ export async function syncAnimeFromAnilist(
   if (existing?.metadata_updated_at) {
     const age = Date.now() - new Date(existing.metadata_updated_at).getTime();
     if (age < staleMs) {
-      try {
-        await ensureAnimeSeriesMapping(existing);
-        await syncAnimeEmbedding(existing).catch(() => undefined);
-      } catch {
-        // repaired on ranking page if secret key / AniList unavailable
-      }
+      void ensureAnimeSeriesMapping(existing).catch(() => undefined);
+      void syncAnimeEmbedding(existing).catch(() => undefined);
       return existing;
     }
   }
@@ -53,12 +49,8 @@ export async function syncAnimeFromAnilist(
     throw new Error(error?.message ?? "Failed to cache anime metadata");
   }
 
-  try {
-    await ensureAnimeSeriesMapping(data);
-    await syncAnimeEmbedding(data).catch(() => undefined);
-  } catch {
-    // Series mapping is best-effort during sync; ranking backfill can repair.
-  }
+  void ensureAnimeSeriesMapping(data).catch(() => undefined);
+  void syncAnimeEmbedding(data).catch(() => undefined);
 
   return data;
 }

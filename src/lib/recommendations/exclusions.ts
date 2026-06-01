@@ -1,6 +1,8 @@
 import { getUserLibraryEntries, type LibraryEntry } from "@/lib/library/queries";
 import { createClient } from "@/lib/supabase/server";
 
+import { getDismissedAnimeIds } from "./dismissed";
+
 export type RecommendationExclusions = {
   excludedAnimeIds: string[];
   excludedSeriesIds: string[];
@@ -12,7 +14,13 @@ export async function getRecommendationExclusions(
 ): Promise<RecommendationExclusions> {
   const resolvedEntries = entries ?? (await getUserLibraryEntries(userId));
 
-  const excludedAnimeIds = resolvedEntries.map((e) => e.anime_id);
+  const dismissedIds = await getDismissedAnimeIds(userId);
+  const excludedAnimeIds = [
+    ...new Set([
+      ...resolvedEntries.map((e) => e.anime_id),
+      ...dismissedIds,
+    ]),
+  ];
 
   if (excludedAnimeIds.length === 0) {
     return { excludedAnimeIds: [], excludedSeriesIds: [] };

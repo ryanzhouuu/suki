@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 
 import {
   dismissRecommendation,
@@ -18,6 +18,7 @@ type RecommendationCardProps = {
 };
 
 export function RecommendationCard({ row }: RecommendationCardProps) {
+  const [dismissed, setDismissed] = useState(false);
   const [pending, startTransition] = useTransition();
   const anime = row.anime;
   const title = anime.english_title || anime.romaji_title || "Unknown";
@@ -30,10 +31,13 @@ export function RecommendationCard({ row }: RecommendationCardProps) {
   }
 
   function dismiss() {
+    setDismissed(true);
     startTransition(async () => {
       await dismissRecommendation(anime.id);
     });
   }
+
+  if (dismissed) return null;
 
   return (
     <li className="rounded-card border border-line bg-surface transition-colors hover:border-accent">

@@ -5,26 +5,14 @@ import { RankedList } from "@/components/ranking/ranked-list";
 import { requireProfile } from "@/lib/auth/session";
 import { RANKING_ALGORITHM_VERSION } from "@/lib/constants";
 import { getNextComparisonPair } from "@/lib/ranking/prompt";
-import { recomputeUserRanking } from "@/lib/ranking/recompute-series";
 import { getCompletedSeriesForUser } from "@/lib/series/queries";
-import { repairSeriesMappingsForUser } from "@/lib/series/repair-mappings";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function RankingPage() {
   const { user } = await requireProfile();
   const supabase = await createClient();
 
-  let completedSeries = await getCompletedSeriesForUser(user.id);
-
-  if (completedSeries.length === 0) {
-    try {
-      await repairSeriesMappingsForUser(user.id);
-      await recomputeUserRanking(user.id);
-      completedSeries = await getCompletedSeriesForUser(user.id);
-    } catch {
-      // Missing SUPABASE_SECRET_KEY or AniList rate limit
-    }
-  }
+  const completedSeries = await getCompletedSeriesForUser(user.id);
 
   const [pair, rankingsResult] = await Promise.all([
     getNextComparisonPair(user.id),

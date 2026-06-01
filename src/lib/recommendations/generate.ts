@@ -11,7 +11,6 @@ import {
   finalizeRecommendations,
   rerankCandidates,
 } from "./rerank";
-import { backfillMissingAnimeEmbeddings } from "./sync-anime-embedding";
 import { buildTasteProfile } from "./taste-profile";
 import { upsertUserTasteEmbedding } from "./taste-embedding";
 import { isEmbeddingConfigured } from "./embedding-provider";
@@ -59,7 +58,6 @@ export async function generateRecommendations(
     }
   }
 
-  await backfillMissingAnimeEmbeddings(120);
   await upsertUserTasteEmbedding(profile);
 
   const exclusions = await getRecommendationExclusions(userId);

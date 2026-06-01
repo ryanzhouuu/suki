@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 
 import { requireAuthUser } from "@/lib/auth/session";
 import { syncAnimeFromAnilist } from "@/lib/anime/sync";
@@ -10,18 +11,85 @@ import { logUserEvent } from "@/lib/events/log";
 import { recomputeUserRanking } from "@/lib/ranking/recompute-series";
 import { ensureAnimeSeriesMapping } from "@/lib/series/resolver";
 import { createClient } from "@/lib/supabase/server";
-import type { Tables, TablesUpdate } from "@/types/database";
+import type { Json, Tables, TablesUpdate } from "@/types/database";
 
 export type LibraryActionState = {
   error?: string;
   message?: string;
 };
 
-function revalidateLibraryPaths() {
-  revalidatePath("/");
+function revalidateLibraryPaths(options?: {
+  anilistId?: number;
+  includeHome?: boolean;
+  includeRanking?: boolean;
+}) {
   revalidatePath("/library");
-  revalidatePath("/search");
-  revalidatePath("/ranking");
+  if (options?.anilistId) {
+    revalidatePath(`/anime/${options.anilistId}`);
+  }
+  if (options?.includeHome) {
+    revalidatePath("/");
+  }
+  if (options?.includeRanking) {
+    revalidatePath("/ranking");
+  }
+}
+
+function scheduleCompletedEntrySideEffects(
+  userId: string,
+  anime: Tables<"anime">,
+) {
+  after(async () => {
+    try {
+      await ensureAnimeSeriesMapping(anime);
+      await recomputeUserRanking(userId);
+    } catch {
+      /* optional without secret key / AniList */
+    }
+  });
+}
+
+function scheduleRankingRecompute(userId: string) {
+  after(async () => {
+    try {
+      await recomputeUserRanking(userId);
+    } catch {
+      /* optional */
+    }
+  });
+}
+
+function scheduleLibraryRevalidation(options?: {
+  anilistId?: number;
+  includeHome?: boolean;
+  includeRanking?: boolean;
+}) {
+  after(() => {
+    revalidateLibraryPaths(options);
+  });
+}
+
+function scheduleLogEvent(
+  userId: string,
+  eventType: string,
+  options?: { animeId?: string; metadata?: Json },
+) {
+  after(() => {
+    void logUserEvent(userId, eventType, options);
+  });
+}
+
+/** Use cached row when present — avoids AniList + series crawl on status changes. */
+async function resolveAnimeForLibraryEntry(anilistId: number) {
+  const supabase = await createClient();
+  const { data: cached } = await supabase
+    .from("anime")
+    .select("*")
+    .eq("anilist_id", anilistId)
+    .maybeSingle();
+
+  if (cached) return cached;
+  return syncAnimeFromAnilist(anilistId);
 }
 
 export async function addAnimeEntry(
@@ -31,7 +99,7 @@ export async function addAnimeEntry(
   const user = await requireAuthUser();
 
   try {
-    const anime = await syncAnimeFromAnilist(anilistId);
+    const anime = await resolveAnimeForLibraryEntry(anilistId);
     const supabase = await createClient();
 
     const { data: existing } = await supabase
@@ -58,25 +126,23 @@ export async function addAnimeEntry(
 
       if (error) return { error: error.message };
 
-      await logUserEvent(user.id, USER_EVENT_TYPES.statusChanged, {
+      scheduleLogEvent(user.id, USER_EVENT_TYPES.statusChanged, {
         animeId: anime.id,
         metadata: { from: existing.status, to: status },
       });
 
       if (status === "completed") {
-        await logUserEvent(user.id, USER_EVENT_TYPES.animeCompleted, {
+        scheduleLogEvent(user.id, USER_EVENT_TYPES.animeCompleted, {
           animeId: anime.id,
         });
-        try {
-          await ensureAnimeSeriesMapping(anime);
-          await recomputeUserRanking(user.id);
-        } catch {
-          // Secret key may be unset during local dev
-        }
+        scheduleCompletedEntrySideEffects(user.id, anime);
       }
 
-      revalidateLibraryPaths();
-      revalidatePath(`/anime/${anilistId}`);
+      scheduleLibraryRevalidation({
+        anilistId,
+        includeHome: true,
+        includeRanking: status === "completed",
+      });
       return { message: "Already in your library. Status updated." };
     }
 
@@ -90,25 +156,23 @@ export async function addAnimeEntry(
 
     if (error) return { error: error.message };
 
-    await logUserEvent(user.id, USER_EVENT_TYPES.animeAdded, {
+    scheduleLogEvent(user.id, USER_EVENT_TYPES.animeAdded, {
       animeId: anime.id,
       metadata: { status },
     });
 
     if (status === "completed") {
-      await logUserEvent(user.id, USER_EVENT_TYPES.animeCompleted, {
+      scheduleLogEvent(user.id, USER_EVENT_TYPES.animeCompleted, {
         animeId: anime.id,
       });
-      try {
-        await ensureAnimeSeriesMapping(anime);
-        await recomputeUserRanking(user.id);
-      } catch {
-        // ranking optional without secret key
-      }
+      scheduleCompletedEntrySideEffects(user.id, anime);
     }
 
-    revalidateLibraryPaths();
-    revalidatePath(`/anime/${anilistId}`);
+    scheduleLibraryRevalidation({
+      anilistId,
+      includeHome: true,
+      includeRanking: status === "completed",
+    });
     return { message: "Added to your library." };
   } catch (e) {
     return {
@@ -164,43 +228,54 @@ export async function updateAnimeEntry(
   if (error) return { error: error.message };
 
   if (patch.status && patch.status !== existing.status) {
-    await logUserEvent(user.id, USER_EVENT_TYPES.statusChanged, {
+    scheduleLogEvent(user.id, USER_EVENT_TYPES.statusChanged, {
       animeId: existing.anime_id,
       metadata: { from: existing.status, to: patch.status },
     });
     if (patch.status === "completed") {
-      await logUserEvent(user.id, USER_EVENT_TYPES.animeCompleted, {
+      scheduleLogEvent(user.id, USER_EVENT_TYPES.animeCompleted, {
         animeId: existing.anime_id,
       });
-      try {
-        const animeRow = existing.anime as Tables<"anime"> | null;
-        if (animeRow && !Array.isArray(animeRow)) {
-          await ensureAnimeSeriesMapping(animeRow);
-        } else {
+      const animeRow = existing.anime as Tables<"anime"> | null;
+      if (animeRow && !Array.isArray(animeRow)) {
+        scheduleCompletedEntrySideEffects(user.id, animeRow);
+      } else {
+        const animeId = existing.anime_id;
+        after(async () => {
           const { data: animeData } = await supabase
             .from("anime")
             .select("*")
-            .eq("id", existing.anime_id)
+            .eq("id", animeId)
             .single();
-          if (animeData) await ensureAnimeSeriesMapping(animeData);
-        }
-        await recomputeUserRanking(user.id);
-      } catch {
-        /* optional */
+          if (animeData) {
+            try {
+              await ensureAnimeSeriesMapping(animeData);
+              await recomputeUserRanking(user.id);
+            } catch {
+              /* optional */
+            }
+          }
+        });
       }
     }
   }
 
   if (patch.progressEpisodes !== undefined) {
-    await logUserEvent(user.id, USER_EVENT_TYPES.progressUpdated, {
+    scheduleLogEvent(user.id, USER_EVENT_TYPES.progressUpdated, {
       animeId: existing.anime_id,
       metadata: { progress: patch.progressEpisodes },
     });
   }
 
-  revalidateLibraryPaths();
   const anilistId = (existing.anime as { anilist_id: number } | null)?.anilist_id;
-  if (anilistId) revalidatePath(`/anime/${anilistId}`);
+  const statusChanged =
+    patch.status !== undefined && patch.status !== existing.status;
+
+  scheduleLibraryRevalidation({
+    anilistId: anilistId ?? undefined,
+    includeHome: statusChanged,
+    includeRanking: patch.status === "completed",
+  });
 
   return { message: "Updated." };
 }
@@ -217,12 +292,8 @@ export async function removeAnimeEntry(entryId: string): Promise<LibraryActionSt
 
   if (error) return { error: error.message };
 
-  try {
-    await recomputeUserRanking(user.id);
-  } catch {
-    /* optional */
-  }
+  scheduleRankingRecompute(user.id);
 
-  revalidateLibraryPaths();
+  scheduleLibraryRevalidation({ includeHome: true, includeRanking: true });
   return { message: "Removed from library." };
 }

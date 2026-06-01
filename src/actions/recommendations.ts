@@ -58,7 +58,6 @@ export async function logRecommendationAdded(animeId: string, status: string) {
     animeId,
     metadata: { status },
   });
-  revalidatePath("/recommendations");
 }
 
 export async function dismissRecommendation(animeId: string) {
@@ -66,7 +65,6 @@ export async function dismissRecommendation(animeId: string) {
   await logUserEvent(user.id, USER_EVENT_TYPES.recommendationDismissed, {
     animeId,
   });
-  revalidatePath("/recommendations");
 }
 
 export async function loadRecommendationsForUser(userId: string) {
@@ -74,16 +72,6 @@ export async function loadRecommendationsForUser(userId: string) {
     return { configured: false as const, items: [] };
   }
 
-  let items = await getUserRecommendations(userId);
-
-  if (items.length === 0) {
-    try {
-      await generateRecommendations(userId);
-      items = await getUserRecommendations(userId);
-    } catch {
-      return { configured: true as const, items: [] };
-    }
-  }
-
+  const items = await getUserRecommendations(userId);
   return { configured: true as const, items };
 }

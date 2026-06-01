@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState, useTransition } from "react";
 
 import { removeAnimeEntry, updateAnimeEntry } from "@/actions/library";
 import { AnimePoster } from "@/components/anime/anime-poster";
@@ -14,7 +15,14 @@ type EntryCardProps = {
 };
 
 export function EntryCard({ entry }: EntryCardProps) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [displayStatus, setDisplayStatus] = useState(entry.status);
+
+  useEffect(() => {
+    setDisplayStatus(entry.status);
+  }, [entry.status]);
+
   const anime = entry.anime;
   const title =
     anime.english_title ||
@@ -28,8 +36,15 @@ export function EntryCard({ entry }: EntryCardProps) {
       : 0;
 
   function setStatus(status: AnimeEntryStatus) {
+    const previous = displayStatus;
+    setDisplayStatus(status);
     startTransition(async () => {
-      await updateAnimeEntry(entry.id, { status });
+      const result = await updateAnimeEntry(entry.id, { status });
+      if (result.error) {
+        setDisplayStatus(previous);
+      } else {
+        router.refresh();
+      }
     });
   }
 
@@ -65,7 +80,7 @@ export function EntryCard({ entry }: EntryCardProps) {
         <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] text-muted">
           <span className="inline-flex items-center gap-1 rounded-full bg-surface-2 px-1.5 py-0.5 font-medium text-ink">
             <span className="h-1 w-1 rounded-full bg-accent" />
-            {STATUS_LABELS[entry.status]}
+            {STATUS_LABELS[displayStatus as AnimeEntryStatus]}
           </span>
           {entry.progress_episodes > 0 ? (
             <span>
@@ -75,7 +90,7 @@ export function EntryCard({ entry }: EntryCardProps) {
           ) : null}
         </p>
 
-        {entry.status === "watching" && total ? (
+        {displayStatus === "watching" && total ? (
           <div className="mt-2">
             <div className="h-0.5 overflow-hidden rounded-full bg-surface-2">
               <div
@@ -117,7 +132,7 @@ export function EntryCard({ entry }: EntryCardProps) {
         ) : null}
 
         <div className="mt-auto flex flex-wrap gap-1 pt-2">
-          {entry.status !== "completed" ? (
+          {displayStatus !== "completed" ? (
             <Button
               type="button"
               size="sm"
