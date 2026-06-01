@@ -12,6 +12,7 @@
     "types:supabase": "echo 'Regenerate with Supabase MCP generate_typescript_types or: supabase gen types typescript'",
     "backfill:series": "npx tsx src/scripts/backfill-series.ts",
     "backfill:embeddings": "npx tsx src/scripts/backfill-anime-embeddings.ts",
+    "seed:catalog": "npx tsx src/scripts/seed-recommendation-catalog.ts",
     "test": "npx tsx --test src/lib/**/*.test.ts"
   },
   "dependencies": {
