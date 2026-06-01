@@ -2,8 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { AnimePoster } from "@/components/anime/anime-poster";
+import { FriendActionButton } from "@/components/friends/friend-action-button";
 import { RankedList } from "@/components/ranking/ranked-list";
-import { STATUS_LABELS } from "@/lib/constants";
+import { getAuthUser } from "@/lib/auth/session";
+import { STATUS_LABELS, USER_EVENT_TYPES } from "@/lib/constants";
+import { logUserEvent } from "@/lib/events/log";
+import { getFriendshipBetween } from "@/lib/friends/queries";
+import { friendshipStatusForViewer } from "@/lib/friends/relationship";
 import { getPublicProfileData } from "@/lib/profiles/queries";
 
 type PublicProfilePageProps = {
@@ -20,6 +25,7 @@ export default async function PublicProfilePage({
     notFound();
   }
 
+  const viewer = await getAuthUser();
   const { profile, entries, rankings, stats } = data;
   const displayName = profile.display_name || profile.username;
   const watching = entries.filter((e) => e.status === "watching").slice(0, 6);
@@ -31,6 +37,23 @@ export default async function PublicProfilePage({
     { label: "Watching now", entries: watching },
     { label: STATUS_LABELS.plan_to_watch, entries: watchlist },
   ];
+
+  let friendshipId: string | null = null;
+  let friendshipStatus = friendshipStatusForViewer(null, viewer?.id ?? "");
+
+  if (viewer && viewer.id !== profile.user_id) {
+    const friendship = await getFriendshipBetween(viewer.id, profile.user_id);
+    friendshipId = friendship?.id ?? null;
+    friendshipStatus = friendshipStatusForViewer(friendship, viewer.id);
+
+    if (friendshipStatus === "friends") {
+      await logUserEvent(viewer.id, USER_EVENT_TYPES.friendProfileViewed, {
+        metadata: { viewed_user_id: profile.user_id, username },
+      });
+    }
+  }
+
+  const isOwnProfile = viewer?.id === profile.user_id;
 
   return (
     <div className="mx-auto max-w-5xl space-y-12 px-4 py-10">
@@ -74,6 +97,17 @@ export default async function PublicProfilePage({
                 </span>
               ))}
             </div>
+            {viewer ? (
+              <div className="mt-4">
+                <FriendActionButton
+                  targetUserId={profile.user_id}
+                  targetUsername={profile.username}
+                  friendshipId={friendshipId}
+                  status={friendshipStatus}
+                  isOwnProfile={isOwnProfile}
+                />
+              </div>
+            ) : null}
           </div>
         </div>
       </header>

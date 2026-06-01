@@ -49,6 +49,8 @@ export const USER_EVENT_TYPES = {
   seriesComparisonCreated: "series_comparison_created",
   rankingViewed: "ranking_viewed",
   friendRequestSent: "friend_request_sent",
+  friendRequestAccepted: "friend_request_accepted",
+  friendRequestDeclined: "friend_request_declined",
   friendProfileViewed: "friend_profile_viewed",
   recommendationViewed: "recommendation_viewed",
   recommendationClicked: "recommendation_clicked",
