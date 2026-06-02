@@ -6,6 +6,7 @@ import { HomeHero } from "@/components/home/home-hero";
 import { RecommendationsPreview } from "@/components/home/recommendations-preview";
 import { getLatestAnime, getPopularAnime } from "@/lib/anilist/discover";
 import { requireProfile } from "@/lib/auth/session";
+import { pickHeroHeadline } from "@/lib/home/hero-copy";
 import { getUserLibraryEntries } from "@/lib/library/queries";
 import { getNextComparisonPair } from "@/lib/ranking/prompt";
 import { getCompletedSeriesForUser } from "@/lib/series/queries";
@@ -38,12 +39,14 @@ export default async function HomePage() {
 
   const greetingName = profile.display_name || profile.username;
   const heroBackdropUrls = uniqueCoverUrls([...latest, ...popular], 6);
+  const headline = pickHeroHeadline(user.id);
 
   return (
     <div className="space-y-14 pb-24 sm:pb-12">
       <HomeHero
         greetingName={greetingName}
         watchingCount={watching.length}
+        headline={headline}
         backdropUrls={heroBackdropUrls}
       />
 

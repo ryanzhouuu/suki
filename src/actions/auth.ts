@@ -27,7 +27,7 @@ export async function signIn(
     return { error: error.message };
   }
 
-  redirect("/");
+  redirect("/home");
 }
 
 export async function signUp(

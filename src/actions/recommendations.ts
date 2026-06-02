@@ -28,7 +28,7 @@ export async function refreshRecommendations(): Promise<RecommendationsActionSta
     await generateRecommendations(user.id, { force: true });
     await logUserEvent(user.id, USER_EVENT_TYPES.recommendationRefreshed, {});
     revalidatePath("/recommendations");
-    revalidatePath("/");
+    revalidatePath("/home");
     return { message: "Recommendations updated." };
   } catch (e) {
     return {

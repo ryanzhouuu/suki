@@ -27,7 +27,7 @@ export const CONFIDENCE_LABELS = {
 } as const;
 
 export const NAV_ITEMS = [
-  { href: "/", label: "Home" },
+  { href: "/home", label: "Home" },
   { href: "/search", label: "Search" },
   { href: "/library", label: "Library" },
   { href: "/ranking", label: "Ranking" },

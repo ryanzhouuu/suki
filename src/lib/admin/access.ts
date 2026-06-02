@@ -22,7 +22,7 @@ export function isSeriesAdminEmail(email: string | undefined | null): boolean {
 export async function requireSeriesAdmin() {
   const user = await requireAuthUser();
   if (!isSeriesAdminEmail(user.email)) {
-    redirect("/");
+    redirect("/home");
   }
   return user;
 }

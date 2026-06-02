@@ -28,7 +28,7 @@ function revalidateLibraryPaths(options?: {
     revalidatePath(`/anime/${options.anilistId}`);
   }
   if (options?.includeHome) {
-    revalidatePath("/");
+    revalidatePath("/home");
   }
   if (options?.includeRanking) {
     revalidatePath("/ranking");

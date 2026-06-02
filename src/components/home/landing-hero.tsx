@@ -1,20 +1,12 @@
 import Link from "next/link";
 
-import type { HeroHeadline } from "@/lib/home/hero-copy";
+import { APP_NAME } from "@/lib/constants";
 
-type HomeHeroProps = {
-  greetingName: string;
-  watchingCount: number;
-  headline: HeroHeadline;
+type LandingHeroProps = {
   backdropUrls?: string[];
 };
 
-export function HomeHero({
-  greetingName,
-  watchingCount,
-  headline,
-  backdropUrls = [],
-}: HomeHeroProps) {
+export function LandingHero({ backdropUrls = [] }: LandingHeroProps) {
   const covers = backdropUrls.slice(0, 6);
   const doubledCovers =
     covers.length > 0 ? [...covers, ...covers] : [];
@@ -44,42 +36,29 @@ export function HomeHero({
       </div>
 
       <div className="relative z-10 px-6 py-10 sm:px-10 sm:py-14">
-        <p className="eyebrow">Welcome back, {greetingName}</p>
+        <p className="eyebrow">Track anime with less friction</p>
         <h1 className="mt-2 max-w-xl text-balance text-4xl font-semibold leading-[1.02] sm:text-[3.25rem] sm:leading-[1.02]">
-          {headline.lead}{" "}
-          <span className="italic text-accent">{headline.emphasis}</span>
-          {headline.trailing ? (
-            <span className="text-accent">{headline.trailing}</span>
-          ) : (
-            <span className="text-accent">.</span>
-          )}
+          Keep track, rank clearly, and{" "}
+          <span className="italic text-accent">find what is next</span>
+          <span className="text-accent">.</span>
         </h1>
         <p className="mt-4 max-w-md text-[0.95rem] leading-relaxed text-muted">
-          {headline.description}
+          {APP_NAME} gives you one place to manage your watchlist, record
+          episode progress, and build rankings through quick head-to-head picks.
         </p>
-
-        {watchingCount > 0 ? (
-          <p className="mt-5 inline-flex items-center gap-2 rounded-full border border-line-strong bg-paper/80 px-3.5 py-1.5 text-sm text-muted backdrop-blur-sm">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
-            </span>
-            {watchingCount} {watchingCount === 1 ? "show" : "shows"} in progress
-          </p>
-        ) : null}
 
         <div className="mt-7 flex flex-wrap gap-2.5">
           <Link
-            href="/search"
+            href="/auth/signup"
             className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-on-accent shadow-sm transition-all hover:bg-accent-strong hover:shadow-md active:translate-y-px"
           >
-            Search anime
+            Create account
           </Link>
           <Link
-            href="/ranking"
+            href="/auth/login"
             className="inline-flex items-center gap-2 rounded-full border border-line-strong bg-paper/85 px-5 py-2.5 text-sm font-medium text-ink backdrop-blur-sm transition-colors hover:border-accent hover:text-accent"
           >
-            Open ranking
+            Sign in
           </Link>
         </div>
       </div>
