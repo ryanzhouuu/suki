@@ -112,7 +112,7 @@ export async function submitComparison(
   }
 
   revalidatePath("/ranking");
-  revalidatePath("/");
+  revalidatePath("/home");
   return {};
 }
 

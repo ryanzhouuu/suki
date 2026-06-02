@@ -55,7 +55,7 @@ export async function completeProfile(
     return { error: error.message };
   }
 
-  revalidatePath("/");
+  revalidatePath("/home");
   redirect("/search");
 }
 

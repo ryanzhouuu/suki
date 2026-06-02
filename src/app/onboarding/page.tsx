@@ -11,7 +11,7 @@ export default async function OnboardingPage() {
   if (!user) redirect("/auth/login");
 
   const profile = await getCurrentProfile();
-  if (profile) redirect("/");
+  if (profile) redirect("/home");
 
   return (
     <div className="mx-auto flex min-h-full w-full max-w-md flex-col justify-center px-4 py-16">

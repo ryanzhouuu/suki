@@ -8,7 +8,7 @@ import { getAuthUser } from "@/lib/auth/session";
 
 export default async function LoginPage() {
   const user = await getAuthUser();
-  if (user) redirect("/");
+  if (user) redirect("/home");
 
   return (
     <div className="mx-auto flex min-h-full w-full max-w-md flex-col justify-center px-4 py-16">
