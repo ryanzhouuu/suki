@@ -15,10 +15,10 @@ function collectTestFiles(dir) {
   return files;
 }
 
-const testFiles = collectTestFiles("src").sort();
+const testFiles = collectTestFiles("tests").sort();
 
 if (testFiles.length === 0) {
-  console.error("No test files found under src/");
+  console.error("No test files found under tests/");
   process.exit(1);
 }
 
