@@ -1,14 +1,18 @@
 import Link from "next/link";
 
+import type { HeroHeadline } from "@/lib/home/hero-copy";
+
 type HomeHeroProps = {
   greetingName: string;
   watchingCount: number;
+  headline: HeroHeadline;
   backdropUrls?: string[];
 };
 
 export function HomeHero({
   greetingName,
   watchingCount,
+  headline,
   backdropUrls = [],
 }: HomeHeroProps) {
   const covers = backdropUrls.slice(0, 6);
@@ -42,13 +46,16 @@ export function HomeHero({
       <div className="relative z-10 px-6 py-10 sm:px-10 sm:py-14">
         <p className="eyebrow">Welcome back, {greetingName}</p>
         <h1 className="mt-2 max-w-xl text-balance text-4xl font-semibold leading-[1.02] sm:text-[3.25rem] sm:leading-[1.02]">
-          Pick up right where you{" "}
-          <span className="italic text-accent">left off</span>
-          <span className="text-accent">.</span>
+          {headline.lead}{" "}
+          <span className="italic text-accent">{headline.emphasis}</span>
+          {headline.trailing ? (
+            <span className="text-accent">{headline.trailing}</span>
+          ) : (
+            <span className="text-accent">.</span>
+          )}
         </h1>
         <p className="mt-4 max-w-md text-[0.95rem] leading-relaxed text-muted">
-          Track what you watch, build a watchlist, and shape a ranking you
-          actually trust — one quick comparison at a time.
+          {headline.description}
         </p>
 
         {watchingCount > 0 ? (
