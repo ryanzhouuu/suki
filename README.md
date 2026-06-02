@@ -108,7 +108,7 @@ docs/
 | `npm run build` | Production build |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | TypeScript (`tsc --noEmit`) |
-| `npm test` | Unit tests (all `src/**/*.test.ts` — pure logic in `src/lib`) |
+| `npm test` | Unit tests (all `tests/**/*.test.ts`, mirroring `src/lib`) |
 | `npm run test:coverage` | Unit tests + coverage report (open `coverage/index.html`; scopes `src/lib`) |
 | `npm run test:coverage:check` | Fail if coverage drops below baseline thresholds (run after `test:coverage`) |
 | `npm run db:generate` | Generate Drizzle migrations from schema |

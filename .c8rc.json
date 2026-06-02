@@ -2,7 +2,7 @@
   "all": true,
   "include": ["src/lib/**/*.ts"],
   "exclude": [
-    "src/lib/**/*.test.ts",
+    "tests/**/*.test.ts",
     "src/lib/db/**",
     "src/lib/**/types.ts"
   ],
