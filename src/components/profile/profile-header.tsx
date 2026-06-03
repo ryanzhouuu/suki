@@ -90,17 +90,9 @@ export function ProfileHeader({
 
           <div className="mt-5 flex flex-wrap items-center gap-2">
             {isOwnProfile ? (
-              <>
-                {!isEditing ? (
-                  <ProfileEditSection profile={profile} editing={false} />
-                ) : null}
-                <Link
-                  href="/settings"
-                  className="inline-flex rounded-full border border-line bg-surface-2 px-3 py-1.5 text-sm font-medium text-muted transition-all hover:-translate-y-0.5 hover:border-accent hover:text-ink"
-                >
-                  Settings
-                </Link>
-              </>
+              !isEditing ? (
+                <ProfileEditSection profile={profile} editing={false} />
+              ) : null
             ) : viewerId ? (
               <FriendActionButton
                 targetUserId={profile.user_id}
