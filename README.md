@@ -49,6 +49,7 @@ The remote Supabase project should already have migrations applied:
 - `series_layer` / `series_rls` — franchise grouping (`series`, `anime_series_map`) and series-level rankings
 - `recommendations_pgvector` — taste embeddings and vector search
 - `friendships_update_rls` — scoped friendship update policies (apply on deploy)
+- `avatars_storage` — public `avatars` bucket for profile photo uploads
 
 SQL files are mirrored in [`supabase/migrations/`](./supabase/migrations/) for version control.
 
@@ -69,6 +70,16 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+### 4. Google OAuth (optional)
+
+1. In [Supabase Dashboard](https://supabase.com/dashboard) → **Authentication** → **Providers**, enable **Google** and add your OAuth client credentials.
+2. Under **Authentication** → **URL Configuration**, add `http://localhost:3000/auth/callback` to **Redirect URLs** (and your production callback URL).
+3. Set `NEXT_PUBLIC_SITE_URL` to match the app origin used in redirects.
+
+### 5. Avatar uploads
+
+Apply the `avatars_storage` migration (`supabase db push` or run the SQL in the Supabase SQL editor). Uploads go to the public `avatars` bucket; each user can only write files under `{user_id}/`.
 
 ## Project structure
 

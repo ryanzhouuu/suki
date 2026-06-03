@@ -2,13 +2,21 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { signIn } from "@/actions/auth";
+import { AuthErrorBanner } from "@/components/auth/auth-error";
 import { AuthForm } from "@/components/auth/auth-form";
+import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { APP_NAME } from "@/lib/constants";
 import { getAuthUser } from "@/lib/auth/session";
 
-export default async function LoginPage() {
+type LoginPageProps = {
+  searchParams: Promise<{ error?: string; error_description?: string }>;
+};
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
   const user = await getAuthUser();
   if (user) redirect("/home");
+
+  const { error, error_description: errorDescription } = await searchParams;
 
   return (
     <div className="mx-auto flex min-h-full w-full max-w-md flex-col justify-center px-4 py-16">
@@ -27,7 +35,9 @@ export default async function LoginPage() {
           <p className="mt-1 text-sm text-muted">
             Pick up your lists and rankings right where you left off.
           </p>
-          <div className="mt-7">
+          <div className="mt-7 space-y-4">
+            <OAuthButtons />
+            <AuthErrorBanner code={error} description={errorDescription} />
             <AuthForm action={signIn} submitLabel="Sign in" />
           </div>
         </div>
