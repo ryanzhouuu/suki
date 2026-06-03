@@ -7,7 +7,7 @@ export default async function AdminSeriesPage() {
   const overrides = await listSeriesOverrides();
 
   return (
-    <div className="mx-auto max-w-2xl space-y-8 pb-24 sm:pb-10">
+    <div className="mx-auto max-w-2xl space-y-8">
       <div>
         <p className="eyebrow">Admin</p>
         <h1 className="mt-1.5 text-4xl font-semibold">Series overrides</h1>

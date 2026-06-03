@@ -22,7 +22,7 @@ export function SearchPanel() {
   const hasGenres = genres.length > 0;
 
   return (
-    <div className="space-y-7 pb-24 sm:pb-10">
+    <div className="space-y-7">
       <div>
         <p className="eyebrow">Discover</p>
         <h1 className="mt-1.5 text-4xl font-semibold">Search</h1>

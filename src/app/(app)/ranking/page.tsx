@@ -39,7 +39,7 @@ export default async function RankingPage() {
   const genresBySeriesId = Object.fromEntries(genresMap);
 
   return (
-    <div className="space-y-12 pb-24 sm:pb-10">
+    <div className="space-y-12">
       <div>
         <p className="eyebrow">Express your taste</p>
         <h1 className="mt-1.5 text-4xl font-semibold">Ranking</h1>

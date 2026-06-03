@@ -75,6 +75,20 @@
 html {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  overflow-x: clip;
+}
+
+.app-main {
+  padding-bottom: max(
+    5.75rem,
+    calc(4.25rem + env(safe-area-inset-bottom, 0px))
+  );
+}
+
+@media (width >= 640px) {
+  .app-main {
+    padding-bottom: 2.5rem;
+  }
 }
 
 body {
@@ -328,11 +342,18 @@ select {
   right: 0.02em;
   bottom: -0.12em;
   font-family: var(--font-display), Georgia, serif;
-  font-size: clamp(7rem, 20vw, 13rem);
+  font-size: clamp(4.5rem, 18vw, 13rem);
   font-weight: 600;
   line-height: 0.85;
   color: color-mix(in srgb, var(--accent) 10%, transparent);
   user-select: none;
+  pointer-events: none;
+}
+
+@media (width >= 640px) {
+  .home-hero__mark {
+    font-size: clamp(7rem, 20vw, 13rem);
+  }
 }
 
 .home-hero__covers {
@@ -365,5 +386,16 @@ select {
   .home-hero__mesh,
   .home-hero__covers {
     animation: none !important;
+  }
+}
+
+@media (width < 640px) {
+  .home-hero__orb {
+    filter: blur(48px);
+  }
+
+  .home-hero__orb--1 {
+    width: 70%;
+    right: -20%;
   }
 }

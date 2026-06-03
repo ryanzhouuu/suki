@@ -43,9 +43,9 @@ export function HomeHero({
         <span className="home-hero__mark">好</span>
       </div>
 
-      <div className="relative z-10 px-6 py-10 sm:px-10 sm:py-14">
-        <p className="eyebrow">Welcome back, {greetingName}</p>
-        <h1 className="mt-2 max-w-xl text-balance text-4xl font-semibold leading-[1.02] sm:text-[3.25rem] sm:leading-[1.02]">
+      <div className="relative z-10 px-4 py-8 sm:px-10 sm:py-14">
+        <p className="eyebrow truncate">Welcome back, {greetingName}</p>
+        <h1 className="mt-2 max-w-xl text-balance text-[1.75rem] font-semibold leading-[1.08] sm:text-4xl sm:leading-[1.02] lg:text-[3.25rem]">
           {headline.lead}{" "}
           <span className="italic text-accent">{headline.emphasis}</span>
           {headline.trailing ? (
