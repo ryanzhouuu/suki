@@ -35,7 +35,6 @@ export const PROFILE_VISIBILITY_LABELS: Record<ProfileVisibility, string> = {
 };
 
 export const NAV_ITEMS = [
-  { href: "/home", label: "Home", mobileLabel: "Home" },
   { href: "/search", label: "Search", mobileLabel: "Search" },
   { href: "/library", label: "Library", mobileLabel: "Library" },
   { href: "/ranking", label: "Ranking", mobileLabel: "Rank" },
