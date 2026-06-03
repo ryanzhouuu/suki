@@ -43,7 +43,7 @@ export default async function AnimeDetailPage({ params }: AnimeDetailPageProps) 
   if (anime.episodes) meta.push(`${anime.episodes} eps`);
 
   return (
-    <div className="pb-24">
+    <div className="pb-10">
       <div className="relative h-44 w-full overflow-hidden sm:h-64">
         {anime.banner_image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -58,7 +58,7 @@ export default async function AnimeDetailPage({ params }: AnimeDetailPageProps) 
         <div className="absolute inset-0 bg-linear-to-t from-paper via-paper/40 to-transparent" />
         <div className="absolute inset-x-0 top-0 mx-auto max-w-5xl px-4 pt-5">
           <Link
-            href={user ? "/" : "/auth/login"}
+            href={user ? "/home" : "/"}
             className="inline-flex items-center gap-1.5 rounded-full bg-paper/80 px-3.5 py-1.5 text-sm font-medium text-ink backdrop-blur-md transition-colors hover:text-accent"
           >
             ← Back
@@ -66,13 +66,13 @@ export default async function AnimeDetailPage({ params }: AnimeDetailPageProps) 
         </div>
       </div>
 
-      <div className="relative z-10 mx-auto max-w-5xl space-y-9 px-4">
+      <div className="relative z-10 mx-auto max-w-5xl min-w-0 space-y-9 px-4">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-6">
-          <div className="-mt-24 w-fit shrink-0 overflow-hidden rounded-card border-4 border-paper shadow-[0_18px_50px_-26px_rgb(var(--shadow-color)/0.6)]">
+          <div className="-mt-16 w-fit shrink-0 overflow-hidden rounded-card border-4 border-paper shadow-[0_18px_50px_-26px_rgb(var(--shadow-color)/0.6)] sm:-mt-24">
             <AnimePoster src={anime.cover_image_url} alt={title} size="lg" />
           </div>
           <div className="min-w-0 flex-1 sm:pt-2">
-            <h1 className="text-balance text-3xl font-semibold leading-tight sm:text-4xl">
+            <h1 className="text-balance text-2xl font-semibold leading-tight sm:text-4xl">
               {title}
             </h1>
             {anime.native_title && anime.native_title !== title ? (

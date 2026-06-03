@@ -53,26 +53,26 @@ export default async function PublicLandingPage() {
 
   return (
     <div className="flex min-h-full flex-col">
-      <header className="border-b border-line bg-paper/80 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-4 px-4">
-          <Link href="/" className="group flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-base font-semibold text-on-accent shadow-sm transition-transform group-hover:-rotate-6">
+      <header className="border-b border-line bg-paper/80 pt-[env(safe-area-inset-top)] backdrop-blur-md">
+        <div className="mx-auto flex h-14 max-w-5xl min-w-0 items-center justify-between gap-2 px-4 sm:h-16 sm:gap-4">
+          <Link href="/" className="group flex min-w-0 items-center gap-2 sm:gap-2.5">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-base font-semibold text-on-accent shadow-sm transition-transform group-hover:-rotate-6">
               好
             </span>
-            <span className="font-display text-2xl font-semibold tracking-tight text-ink">
+            <span className="truncate font-display text-xl font-semibold tracking-tight text-ink sm:text-2xl">
               {APP_NAME}
             </span>
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <Link
               href="/auth/login"
-              className="rounded-full px-3.5 py-2 text-sm font-medium text-muted transition-colors hover:text-ink"
+              className="rounded-full px-3 py-2 text-sm font-medium text-muted transition-colors hover:text-ink sm:px-3.5"
             >
               Sign in
             </Link>
             <Link
               href="/auth/signup"
-              className="rounded-full bg-accent px-4 py-2 text-sm font-medium text-on-accent shadow-sm transition-colors hover:bg-accent-strong"
+              className="rounded-full bg-accent px-3.5 py-2 text-sm font-medium text-on-accent shadow-sm transition-colors hover:bg-accent-strong sm:px-4"
             >
               Get started
             </Link>
@@ -80,7 +80,7 @@ export default async function PublicLandingPage() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-5xl flex-1 space-y-14 px-4 py-10 pb-16">
+      <main className="mx-auto w-full max-w-5xl min-w-0 flex-1 space-y-10 px-4 py-6 pb-12 sm:space-y-14 sm:py-10 sm:pb-16">
         <LandingHero backdropUrls={heroBackdropUrls} />
 
         <section className="grid gap-4 sm:grid-cols-3">
@@ -113,9 +113,9 @@ export default async function PublicLandingPage() {
           </div>
         ) : null}
 
-        <section className="animate-rise rounded-card border border-accent/35 bg-linear-to-br from-accent-soft via-surface to-surface p-8 text-center sm:p-10 [animation-delay:360ms]">
+        <section className="animate-rise rounded-card border border-accent/35 bg-linear-to-br from-accent-soft via-surface to-surface p-6 text-center sm:p-10 [animation-delay:360ms]">
           <p className="eyebrow">Get started in minutes</p>
-          <h2 className="mt-2 font-display text-2xl font-medium text-ink sm:text-3xl">
+          <h2 className="mt-2 text-balance font-display text-xl font-medium text-ink sm:text-3xl">
             Create your account and start tracking
           </h2>
           <p className="mx-auto mt-3 max-w-md text-sm text-muted">

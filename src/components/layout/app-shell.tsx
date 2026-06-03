@@ -17,20 +17,23 @@ export function AppShell({ children, profile, isSeriesAdmin }: AppShellProps) {
 
   return (
     <div className="flex min-h-full flex-col">
-      <header className="sticky top-0 z-30 border-b border-line bg-paper/80 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-4 px-4">
-          <Link href="/home" className="group flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-base font-semibold text-on-accent shadow-sm transition-transform group-hover:-rotate-6">
+      <header className="sticky top-0 z-30 border-b border-line bg-paper/80 pt-[env(safe-area-inset-top)] backdrop-blur-md">
+        <div className="mx-auto flex h-14 max-w-5xl min-w-0 items-center justify-between gap-2 px-4 sm:h-16 sm:gap-4">
+          <Link
+            href="/home"
+            className="group flex min-w-0 shrink items-center gap-2 sm:gap-2.5"
+          >
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-base font-semibold text-on-accent shadow-sm transition-transform group-hover:-rotate-6">
               好
             </span>
-            <span className="font-display text-2xl font-semibold tracking-tight text-ink">
+            <span className="truncate font-display text-xl font-semibold tracking-tight text-ink sm:text-2xl">
               {APP_NAME}
             </span>
           </Link>
 
           <DesktopNav />
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
             {isSeriesAdmin ? (
               <Link
                 href="/admin/series"
@@ -73,7 +76,7 @@ export function AppShell({ children, profile, isSeriesAdmin }: AppShellProps) {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10">
+      <main className="app-main mx-auto w-full max-w-5xl min-w-0 flex-1 px-4 py-6 sm:py-10">
         {children}
       </main>
 

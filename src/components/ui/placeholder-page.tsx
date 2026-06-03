@@ -10,7 +10,7 @@ export function PlaceholderPage({
   milestone,
 }: PlaceholderPageProps) {
   return (
-    <div className="flex min-h-[55vh] flex-col items-center justify-center pb-24 text-center">
+    <div className="flex min-h-[55vh] flex-col items-center justify-center text-center">
       <span className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-soft font-display text-2xl font-semibold text-accent">
         友
       </span>

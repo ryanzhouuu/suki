@@ -20,7 +20,7 @@ export function LibraryTabs() {
   const current = searchParams.get("status") ?? "all";
 
   return (
-    <div className="flex gap-1.5 overflow-x-auto pb-1">
+    <div className="-mx-4 flex gap-1.5 overflow-x-auto overscroll-x-contain px-4 pb-1 [touch-action:pan-x]">
       {TABS.map((tab) => {
         const params = new URLSearchParams(searchParams.toString());
         if (tab.key === "all") {

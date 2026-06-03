@@ -22,7 +22,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
   const entries = await getUserLibraryEntries(user.id, status);
 
   return (
-    <div className="space-y-6 pb-24 sm:pb-10">
+    <div className="space-y-6">
       <div>
         <p className="eyebrow">Your collection</p>
         <h1 className="mt-1.5 text-4xl font-semibold">Library</h1>

@@ -44,27 +44,29 @@ export function MobileNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md sm:hidden"
+      className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md sm:hidden"
       aria-label="Mobile"
     >
-      <ul className="flex justify-around">
+      <ul className="grid grid-cols-6">
         {NAV_ITEMS.map((item) => {
           const active = isActive(pathname, item.href);
           return (
-            <li key={item.href}>
+            <li key={item.href} className="min-w-0">
               <Link
                 href={item.href}
                 aria-current={active ? "page" : undefined}
-                className={`flex flex-col items-center gap-1 px-3 py-2.5 text-[11px] font-medium transition-colors ${
+                aria-label={item.label}
+                title={item.label}
+                className={`flex min-h-[3.25rem] flex-col items-center justify-center gap-0.5 px-1 py-2 text-[10px] font-medium leading-tight transition-colors ${
                   active ? "text-accent" : "text-muted"
                 }`}
               >
                 <span
-                  className={`h-1 w-1 rounded-full transition-colors ${
+                  className={`h-1 w-1 shrink-0 rounded-full transition-colors ${
                     active ? "bg-accent" : "bg-transparent"
                   }`}
                 />
-                {item.label}
+                <span className="max-w-full truncate">{item.mobileLabel}</span>
               </Link>
             </li>
           );

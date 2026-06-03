@@ -24,10 +24,16 @@ export function DiscoverRow({ title, eyebrow, items }: DiscoverRowProps) {
 
   return (
     <section>
-      <div className="mb-4 flex items-end justify-between gap-4">
-        <div>
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+        <div className="min-w-0">
           {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
-          <h2 className={eyebrow ? "mt-1 text-2xl font-semibold" : "text-2xl font-semibold"}>
+          <h2
+            className={
+              eyebrow
+                ? "mt-1 text-xl font-semibold sm:text-2xl"
+                : "text-xl font-semibold sm:text-2xl"
+            }
+          >
             {title}
           </h2>
         </div>
@@ -35,16 +41,16 @@ export function DiscoverRow({ title, eyebrow, items }: DiscoverRowProps) {
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
-            className="shrink-0 text-sm font-medium text-muted transition-colors hover:text-accent"
+            className="shrink-0 self-start text-sm font-medium text-muted transition-colors hover:text-accent sm:self-auto"
           >
             {expanded ? "Show less" : `Show all (${items.length})`}
           </button>
         ) : null}
       </div>
 
-      <ul className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:thin]">
+      <ul className="-mx-4 flex gap-3 overflow-x-auto overscroll-x-contain px-4 pb-1 [scrollbar-width:thin] snap-x snap-mandatory [touch-action:pan-x]">
         {visible.map((item) => (
-          <li key={item.anilistId} className="w-[7.25rem] shrink-0 sm:w-32">
+          <li key={item.anilistId} className="w-[7.25rem] shrink-0 snap-start sm:w-32">
             <Link
               href={`/anime/${item.anilistId}`}
               className="group block"

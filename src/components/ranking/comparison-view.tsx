@@ -59,7 +59,7 @@ export function ComparisonView({ pair }: ComparisonViewProps) {
         Rankings are by series — seasons and movies in the same franchise count
         as one title.
       </p>
-      <p className="text-center font-display text-2xl font-medium sm:text-3xl">
+      <p className="text-center font-display text-xl font-medium sm:text-3xl">
         Which did you enjoy more?
       </p>
       {error ? (
@@ -67,25 +67,36 @@ export function ComparisonView({ pair }: ComparisonViewProps) {
           {error}
         </p>
       ) : null}
-      <div className="relative grid gap-4 sm:grid-cols-2">
-        {([pair.left, pair.right] as const).map((series) => (
-          <button
-            key={series.id}
-            type="button"
-            disabled={pending}
-            onClick={() => pick(series.id)}
-            className="flex flex-col items-center gap-3 rounded-card border border-line bg-surface p-5 text-center transition-all hover:-translate-y-1 hover:border-accent hover:shadow-[0_18px_40px_-26px_rgb(var(--shadow-color)/0.5)] disabled:opacity-50"
-          >
-            <AnimePoster
-              src={series.cover_image_url}
-              alt={series.canonical_title}
-              size="lg"
-            />
-            <span className="font-medium text-ink">{series.canonical_title}</span>
-            <span className="text-xs uppercase tracking-wide text-faint">
-              {seriesSubtitle(series.entryCount)}
-            </span>
-          </button>
+      <div className="relative flex flex-col gap-3 sm:grid sm:grid-cols-2 sm:gap-4">
+        {([pair.left, pair.right] as const).map((series, index) => (
+          <div key={series.id} className="contents">
+            {index === 1 ? (
+              <span
+                aria-hidden
+                className="flex items-center justify-center py-0.5 font-display text-sm font-semibold italic text-accent sm:hidden"
+              >
+                vs
+              </span>
+            ) : null}
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => pick(series.id)}
+              className="flex flex-col items-center gap-3 rounded-card border border-line bg-surface p-4 text-center transition-all hover:-translate-y-1 hover:border-accent hover:shadow-[0_18px_40px_-26px_rgb(var(--shadow-color)/0.5)] disabled:opacity-50 sm:p-5"
+            >
+              <AnimePoster
+                src={series.cover_image_url}
+                alt={series.canonical_title}
+                size="lg"
+              />
+              <span className="text-balance font-medium text-ink">
+                {series.canonical_title}
+              </span>
+              <span className="text-xs uppercase tracking-wide text-faint">
+                {seriesSubtitle(series.entryCount)}
+              </span>
+            </button>
+          </div>
         ))}
         <span
           aria-hidden

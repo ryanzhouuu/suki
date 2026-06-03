@@ -42,7 +42,7 @@ export default async function HomePage() {
   const headline = pickHeroHeadline(user.id);
 
   return (
-    <div className="space-y-14 pb-24 sm:pb-12">
+    <div className="space-y-10 sm:space-y-14">
       <HomeHero
         greetingName={greetingName}
         watchingCount={watching.length}
@@ -65,7 +65,7 @@ export default async function HomePage() {
       {pair && completedSeries.length >= 2 ? (
         <section className="animate-rise overflow-hidden rounded-card border border-accent/35 bg-linear-to-br from-accent-soft via-surface to-surface p-6 shadow-[0_16px_48px_-28px_rgb(var(--shadow-color)/0.4)] sm:p-7 [animation-delay:180ms]">
           <p className="eyebrow">Ranking prompt</p>
-          <p className="mt-2 font-display text-2xl font-medium leading-snug text-ink sm:text-3xl">
+          <p className="mt-2 text-balance font-display text-xl font-medium leading-snug text-ink sm:text-2xl lg:text-3xl">
             {pair.left.canonical_title}{" "}
             <span className="text-accent">vs</span>{" "}
             {pair.right.canonical_title}

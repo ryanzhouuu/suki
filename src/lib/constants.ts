@@ -27,12 +27,12 @@ export const CONFIDENCE_LABELS = {
 } as const;
 
 export const NAV_ITEMS = [
-  { href: "/home", label: "Home" },
-  { href: "/search", label: "Search" },
-  { href: "/library", label: "Library" },
-  { href: "/ranking", label: "Ranking" },
-  { href: "/recommendations", label: "For you" },
-  { href: "/friends", label: "Friends" },
+  { href: "/home", label: "Home", mobileLabel: "Home" },
+  { href: "/search", label: "Search", mobileLabel: "Search" },
+  { href: "/library", label: "Library", mobileLabel: "Library" },
+  { href: "/ranking", label: "Ranking", mobileLabel: "Rank" },
+  { href: "/recommendations", label: "For you", mobileLabel: "Picks" },
+  { href: "/friends", label: "Friends", mobileLabel: "Friends" },
 ] as const;
 
 export const RANKING_ALGORITHM_VERSION = "elo_series_v1";

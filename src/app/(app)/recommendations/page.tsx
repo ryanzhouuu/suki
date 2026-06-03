@@ -14,7 +14,7 @@ export default async function RecommendationsPage() {
 
   if (!isEmbeddingConfigured()) {
     return (
-      <div className="mx-auto max-w-lg space-y-4 pb-24 sm:pb-10">
+      <div className="mx-auto max-w-lg space-y-4">
         <p className="eyebrow">For you</p>
         <h1 className="text-4xl font-semibold">Recommendations</h1>
         <p className="rounded-card border border-dashed border-line-strong p-6 text-sm text-muted">
@@ -41,7 +41,7 @@ export default async function RecommendationsPage() {
     pool.eligibleCount <= items.length + 2;
 
   return (
-    <div className="space-y-8 pb-24 sm:pb-10">
+    <div className="space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="eyebrow">For you</p>
