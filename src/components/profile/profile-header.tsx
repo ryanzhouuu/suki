@@ -38,11 +38,33 @@ export function ProfileHeader({
     ? "Your taste profile"
     : "Taste profile";
 
+  const bannerUrl = profile.banner_url;
+
   return (
     <header className="profile-hero overflow-hidden rounded-card border border-line bg-surface">
-      <div className="profile-hero__glow" aria-hidden />
-      <div className="profile-hero__hatch" aria-hidden />
-      <div className="h-28 bg-linear-to-r from-accent/30 via-accent/12 to-transparent sm:h-32" />
+      <div className="relative h-28 sm:h-36">
+        {bannerUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={bannerUrl}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : (
+          <>
+            <div className="profile-hero__glow" aria-hidden />
+            <div className="profile-hero__hatch" aria-hidden />
+            <div
+              className="absolute inset-0 bg-linear-to-r from-accent/30 via-accent/12 to-transparent"
+              aria-hidden
+            />
+          </>
+        )}
+        <div
+          className="pointer-events-none absolute inset-0 bg-linear-to-t from-surface via-surface/40 to-transparent"
+          aria-hidden
+        />
+      </div>
       <div className="relative flex flex-col gap-5 px-5 pb-6 sm:flex-row sm:items-end sm:px-7">
         {profile.avatar_url ? (
           // eslint-disable-next-line @next/next/no-img-element
