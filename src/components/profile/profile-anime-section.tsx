@@ -42,7 +42,7 @@ export function ProfileAnimeSection({
   return (
     <section
       id={id}
-      className={`flex flex-col rounded-card border border-line bg-surface p-5 sm:p-6 ${id ? "scroll-mt-28" : ""} ${className}`}
+      className={`flex min-w-0 flex-col overflow-hidden rounded-card border border-line bg-surface p-5 sm:p-6 ${id ? "scroll-mt-28" : ""} ${className}`}
     >
       {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
       <h3
@@ -51,7 +51,7 @@ export function ProfileAnimeSection({
         {title}
       </h3>
       <ul
-        className={`grid flex-1 gap-3 ${
+        className={`grid min-w-0 flex-1 gap-3 ${
           layout === "grid" ? "sm:grid-cols-2" : "content-start"
         }`}
       >
@@ -70,10 +70,10 @@ export function ProfileAnimeSection({
           }
 
           return (
-            <li key={entry.id}>
+            <li key={entry.id} className="min-w-0">
               <Link
                 href={`/anime/${entry.anime.anilist_id}`}
-                className="group flex items-center gap-3 rounded-card border border-line bg-surface-2/50 p-3 transition-all hover:-translate-y-0.5 hover:border-accent hover:bg-surface"
+                className="group flex min-w-0 items-center gap-3 rounded-card border border-line bg-surface-2/50 p-3 transition-all hover:-translate-y-0.5 hover:border-accent hover:bg-surface"
               >
                 <AnimePoster
                   src={entry.anime.cover_image_url}
@@ -85,7 +85,9 @@ export function ProfileAnimeSection({
                     {titleText}
                   </p>
                   {meta.length > 0 ? (
-                    <p className="mt-0.5 text-xs text-muted">{meta.join(" · ")}</p>
+                    <p className="mt-0.5 truncate text-xs text-muted">
+                      {meta.join(" · ")}
+                    </p>
                   ) : null}
                 </div>
               </Link>

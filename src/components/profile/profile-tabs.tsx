@@ -17,7 +17,7 @@ export function ProfileTabs({ tabs }: ProfileTabsProps) {
   const [active, setActive] = useState(tabs[0]?.id ?? "");
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       <div className="profile-tabbar" role="tablist" aria-label="Profile sections">
         {tabs.map((tab) => {
           const isActive = tab.id === active;
@@ -42,7 +42,7 @@ export function ProfileTabs({ tabs }: ProfileTabsProps) {
 
       {tabs.map((tab) =>
         tab.id === active ? (
-          <div key={tab.id} role="tabpanel" className="animate-rise">
+          <div key={tab.id} role="tabpanel" className="min-w-0 animate-rise">
             {tab.content}
           </div>
         ) : null,

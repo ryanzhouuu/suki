@@ -94,7 +94,7 @@ export default async function PublicProfilePage({
   );
 
   const libraryContent = hasLibrarySections ? (
-    <div className="grid gap-4 lg:grid-cols-3">
+    <div className="grid min-w-0 gap-4 lg:grid-cols-3">
       <ProfileAnimeSection
         eyebrow="Now watching"
         title="Watching"
@@ -132,7 +132,7 @@ export default async function PublicProfilePage({
 
   return (
     <div
-      className={`mx-auto max-w-6xl space-y-6 sm:space-y-8 ${viewer ? "pb-6 sm:pb-0" : "px-4 py-10"}`}
+      className={`mx-auto min-w-0 max-w-6xl space-y-6 sm:space-y-8 ${viewer ? "pb-6 sm:pb-0" : "px-4 py-10"}`}
     >
       <ProfileHeader
         profile={profile}
