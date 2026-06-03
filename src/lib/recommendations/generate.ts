@@ -1,20 +1,35 @@
+import { randomUUID } from "node:crypto";
+
 import { createAdminClient } from "@/lib/supabase/admin";
 
+import { getVectorCandidates } from "./candidates";
 import {
   EMBEDDING_MODEL,
   RECOMMENDATION_ALGORITHM_VERSION,
   STORED_RECOMMENDATION_LIMIT,
 } from "./constants";
-import { getVectorCandidates } from "./candidates";
 import { getRecommendationExclusions } from "./exclusions";
+import { filterCandidatesByRequest } from "./request-filter";
 import {
   finalizeRecommendations,
   rerankCandidates,
 } from "./rerank";
+import {
+  EMPTY_REQUEST_PREFS,
+  type RecommendationRequestPrefs,
+} from "./request-prefs";
+import { buildRunInputHash } from "./run-input-hash";
+import { sampleAdventurous } from "./sampler";
 import { buildTasteProfile } from "./taste-profile";
 import { upsertUserTasteEmbedding } from "./taste-embedding";
 import { isEmbeddingConfigured } from "./embedding-provider";
 import type { ScoredRecommendation } from "./types";
+
+export type GenerateRecommendationsOptions = {
+  force?: boolean;
+  prefs?: RecommendationRequestPrefs;
+  samplingSeed?: string;
+};
 
 export type GenerateRecommendationsResult = {
   runId: string;
@@ -24,7 +39,7 @@ export type GenerateRecommendationsResult = {
 
 export async function generateRecommendations(
   userId: string,
-  options?: { force?: boolean },
+  options?: GenerateRecommendationsOptions,
 ): Promise<GenerateRecommendationsResult> {
   if (!isEmbeddingConfigured()) {
     throw new Error(
@@ -32,7 +47,10 @@ export async function generateRecommendations(
     );
   }
 
+  const prefs = options?.prefs ?? EMPTY_REQUEST_PREFS;
+  const samplingSeed = options?.samplingSeed ?? randomUUID();
   const profile = await buildTasteProfile(userId);
+  const runInputHash = buildRunInputHash(profile.inputHash, prefs);
 
   const admin = createAdminClient();
 
@@ -46,7 +64,7 @@ export async function generateRecommendations(
       .limit(1)
       .maybeSingle();
 
-    if (latestRun?.input_hash === profile.inputHash) {
+    if (latestRun?.input_hash === runInputHash) {
       const cached = await loadRecommendationsForRun(latestRun.id);
       if (cached.length > 0) {
         return {
@@ -63,10 +81,20 @@ export async function generateRecommendations(
   const exclusions = await getRecommendationExclusions(userId);
   const candidates = await getVectorCandidates(profile, exclusions);
 
-  const scored = finalizeRecommendations(
-    profile,
-    rerankCandidates(profile, candidates),
-  ).slice(0, STORED_RECOMMENDATION_LIMIT);
+  const filtered = filterCandidatesByRequest(candidates, prefs);
+  const pool = filtered.length > 0 ? filtered : candidates;
+
+  const scored = rerankCandidates(profile, pool, prefs);
+  const sampled = sampleAdventurous(
+    scored,
+    prefs,
+    samplingSeed,
+    STORED_RECOMMENDATION_LIMIT,
+  );
+
+  const final = finalizeRecommendations(profile, sampled, prefs, {
+    preserveOrder: true,
+  });
 
   const { data: run, error: runError } = await admin
     .from("recommendation_runs")
@@ -74,7 +102,9 @@ export async function generateRecommendations(
       user_id: userId,
       algorithm_version: RECOMMENDATION_ALGORITHM_VERSION,
       embedding_model: EMBEDDING_MODEL,
-      input_hash: profile.inputHash,
+      input_hash: runInputHash,
+      request_prefs: prefs,
+      sampling_seed: samplingSeed,
     })
     .select("id")
     .single();
@@ -83,9 +113,9 @@ export async function generateRecommendations(
     throw new Error(runError?.message ?? "Failed to create recommendation run");
   }
 
-  if (scored.length > 0) {
+  if (final.length > 0) {
     const { error: insertError } = await admin.from("recommendations").insert(
-      scored.map((rec) => ({
+      final.map((rec) => ({
         run_id: run.id,
         user_id: userId,
         anime_id: rec.anime.id,
@@ -106,7 +136,7 @@ export async function generateRecommendations(
 
   return {
     runId: run.id,
-    recommendations: scored,
+    recommendations: final,
     fromCache: false,
   };
 }

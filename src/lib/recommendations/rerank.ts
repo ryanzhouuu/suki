@@ -1,4 +1,17 @@
-import { REASON_CODES } from "./constants";
+import {
+  REASON_CODES,
+  REQUEST_MATCH_WEIGHT,
+  RERANK_WEIGHT,
+  SIMILARITY_WEIGHT,
+} from "./constants";
+import { matchesAnyGenre } from "@/lib/filters/genre";
+
+import { matchesLengthBucket } from "./request-filter";
+import {
+  EMPTY_REQUEST_PREFS,
+  isEmptyRequestPrefs,
+  type RecommendationRequestPrefs,
+} from "./request-prefs";
 import type { CandidateAnime, ScoredRecommendation, TasteProfile } from "./types";
 
 function clamp01(value: number): number {
@@ -11,9 +24,44 @@ function genreOverlap(genres: string[], preferred: string[]): number {
   return hits / Math.max(preferred.length, 1);
 }
 
+function requestMatchScore(
+  candidate: CandidateAnime,
+  prefs: RecommendationRequestPrefs,
+  reasonCodes: ScoredRecommendation["reasonCodes"],
+): number {
+  if (isEmptyRequestPrefs(prefs)) return 0;
+
+  let score = 0;
+
+  if (
+    prefs.genres.length > 0 &&
+    matchesAnyGenre(candidate.genres, prefs.genres)
+  ) {
+    const overlap = genreOverlap(candidate.genres, prefs.genres);
+    score += overlap * 0.5;
+    reasonCodes.push(REASON_CODES.requestGenreMatch);
+  }
+
+  if (prefs.format && candidate.format === prefs.format) {
+    score += 0.25;
+    reasonCodes.push(REASON_CODES.requestFormatMatch);
+  }
+
+  if (
+    prefs.lengthBucket &&
+    matchesLengthBucket(candidate, prefs.lengthBucket)
+  ) {
+    score += 0.25;
+    reasonCodes.push(REASON_CODES.requestLengthMatch);
+  }
+
+  return clamp01(score);
+}
+
 export function rerankCandidates(
   profile: TasteProfile,
   candidates: CandidateAnime[],
+  prefs: RecommendationRequestPrefs = EMPTY_REQUEST_PREFS,
 ): ScoredRecommendation[] {
   const { signals } = profile;
 
@@ -59,8 +107,12 @@ export function rerankCandidates(
 
     rerankScore = clamp01(rerankScore);
 
+    const requestScore = requestMatchScore(candidate, prefs, reasonCodes);
+
     const finalScore =
-      candidate.similarityScore * 0.75 + rerankScore * 0.25;
+      candidate.similarityScore * SIMILARITY_WEIGHT +
+      rerankScore * RERANK_WEIGHT +
+      requestScore * REQUEST_MATCH_WEIGHT;
 
     return {
       anime: candidate,
@@ -74,13 +126,50 @@ export function rerankCandidates(
   });
 }
 
+const LENGTH_LABELS: Record<string, string> = {
+  movie: "a movie",
+  short: "a shorter series",
+  cour: "a standard-length series",
+  long: "a longer series",
+};
+
 export function buildExplanation(
   rec: ScoredRecommendation,
   profile: TasteProfile,
+  prefs: RecommendationRequestPrefs = EMPTY_REQUEST_PREFS,
 ): string {
   const title =
     rec.anime.english_title || rec.anime.romaji_title || "this title";
   const { signals } = profile;
+
+  if (rec.reasonCodes.includes(REASON_CODES.wildcardPick)) {
+    if (!isEmptyRequestPrefs(prefs)) {
+      return `An adventurous pick for what you asked for — ${title} is outside your usual top matches.`;
+    }
+    return `An adventurous pick — ${title} is a wildcard suggestion based on your taste.`;
+  }
+
+  if (rec.reasonCodes.includes(REASON_CODES.diversePick)) {
+    return `A varied suggestion that still fits your request and taste profile.`;
+  }
+
+  if (rec.reasonCodes.includes(REASON_CODES.requestGenreMatch) && prefs.genres[0]) {
+    const shared = rec.anime.genres.filter((g) => prefs.genres.includes(g));
+    if (shared.length > 0) {
+      return `You asked for ${prefs.genres.slice(0, 2).join(" or ")} — ${title} includes ${shared.slice(0, 2).join(" and ")}.`;
+    }
+  }
+
+  if (
+    rec.reasonCodes.includes(REASON_CODES.requestLengthMatch) &&
+    prefs.lengthBucket
+  ) {
+    return `Matches your length preference (${LENGTH_LABELS[prefs.lengthBucket] ?? prefs.lengthBucket}) and your rankings.`;
+  }
+
+  if (rec.reasonCodes.includes(REASON_CODES.requestFormatMatch) && prefs.format) {
+    return `You wanted ${prefs.format} — ${title} matches that format and your taste.`;
+  }
 
   if (rec.reasonCodes.includes(REASON_CODES.topGenre) && signals.topGenres[0]) {
     const shared = rec.anime.genres.filter((g) =>
@@ -112,11 +201,17 @@ export function buildExplanation(
 export function finalizeRecommendations(
   profile: TasteProfile,
   scored: ScoredRecommendation[],
+  prefs: RecommendationRequestPrefs = EMPTY_REQUEST_PREFS,
+  options?: { preserveOrder?: boolean },
 ): ScoredRecommendation[] {
-  return scored
-    .map((rec) => ({
-      ...rec,
-      explanation: buildExplanation(rec, profile),
-    }))
-    .sort((a, b) => b.finalScore - a.finalScore);
+  const withExpl = scored.map((rec) => ({
+    ...rec,
+    explanation: buildExplanation(rec, profile, prefs),
+  }));
+
+  if (options?.preserveOrder) {
+    return withExpl;
+  }
+
+  return withExpl.sort((a, b) => b.finalScore - a.finalScore);
 }

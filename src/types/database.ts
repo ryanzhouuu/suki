@@ -247,6 +247,8 @@ export type Database = {
           embedding_model: string;
           id: string;
           input_hash: string;
+          request_prefs: Json | null;
+          sampling_seed: string | null;
           user_id: string;
         };
         Insert: {
@@ -255,6 +257,8 @@ export type Database = {
           embedding_model: string;
           id?: string;
           input_hash: string;
+          request_prefs?: Json | null;
+          sampling_seed?: string | null;
           user_id: string;
         };
         Update: {
@@ -263,6 +267,8 @@ export type Database = {
           embedding_model?: string;
           id?: string;
           input_hash?: string;
+          request_prefs?: Json | null;
+          sampling_seed?: string | null;
           user_id?: string;
         };
         Relationships: [];

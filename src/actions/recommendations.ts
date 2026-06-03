@@ -8,13 +8,17 @@ import { logUserEvent } from "@/lib/events/log";
 import { generateRecommendations } from "@/lib/recommendations/generate";
 import { isEmbeddingConfigured } from "@/lib/recommendations/embedding-provider";
 import { getUserRecommendations } from "@/lib/recommendations/queries";
+import { parseRecommendationRequestPrefs } from "@/lib/recommendations/request-prefs";
 
 export type RecommendationsActionState = {
   error?: string;
   message?: string;
 };
 
-export async function refreshRecommendations(): Promise<RecommendationsActionState> {
+export async function refreshRecommendations(
+  _prev: RecommendationsActionState,
+  formData: FormData,
+): Promise<RecommendationsActionState> {
   const user = await requireAuthUser();
 
   if (!isEmbeddingConfigured()) {
@@ -24,9 +28,19 @@ export async function refreshRecommendations(): Promise<RecommendationsActionSta
     };
   }
 
+  const parsed = parseRecommendationRequestPrefs(formData);
+  if (!parsed.ok) {
+    return { error: parsed.error };
+  }
+
   try {
-    await generateRecommendations(user.id, { force: true });
-    await logUserEvent(user.id, USER_EVENT_TYPES.recommendationRefreshed, {});
+    await generateRecommendations(user.id, {
+      force: true,
+      prefs: parsed.prefs,
+    });
+    await logUserEvent(user.id, USER_EVENT_TYPES.recommendationRefreshed, {
+      metadata: { requestPrefs: parsed.prefs },
+    });
     revalidatePath("/recommendations");
     revalidatePath("/home");
     return { message: "Recommendations updated." };
