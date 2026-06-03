@@ -71,7 +71,7 @@ export default async function PublicLandingPage() {
               Sign in
             </Link>
             <Link
-              href="/auth/signup"
+              href="/auth/login?mode=signup"
               className="rounded-full bg-accent px-3.5 py-2 text-sm font-medium text-on-accent shadow-sm transition-colors hover:bg-accent-strong sm:px-4"
             >
               Get started
@@ -124,7 +124,7 @@ export default async function PublicLandingPage() {
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
             <Link
-              href="/auth/signup"
+              href="/auth/login?mode=signup"
               className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-on-accent shadow-sm transition-colors hover:bg-accent-strong"
             >
               Create account

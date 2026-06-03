@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export type ProfileActionState = {
   error?: string;
+  message?: string;
 };
 
 export async function completeProfile(
@@ -66,7 +67,6 @@ export async function updateProfile(
   const user = await requireAuthUser();
   const displayName = String(formData.get("display_name") ?? "").trim() || null;
   const bio = String(formData.get("bio") ?? "").trim() || null;
-  const avatarUrl = String(formData.get("avatar_url") ?? "").trim() || null;
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -74,7 +74,6 @@ export async function updateProfile(
     .update({
       display_name: displayName,
       bio,
-      avatar_url: avatarUrl,
     })
     .eq("user_id", user.id);
 
@@ -93,5 +92,5 @@ export async function updateProfile(
     revalidatePath(`/u/${profile.username}`);
   }
 
-  return {};
+  return { message: "Profile updated." };
 }

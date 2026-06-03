@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { AnimePoster } from "@/components/anime/anime-poster";
 import { FriendActionButton } from "@/components/friends/friend-action-button";
+import { ProfileEditSection } from "@/components/profile/profile-edit-section";
 import { RankedList } from "@/components/ranking/ranked-list";
 import { getAuthUser } from "@/lib/auth/session";
 import { STATUS_LABELS } from "@/lib/constants";
@@ -12,12 +13,15 @@ import { getPublicProfileData } from "@/lib/profiles/queries";
 
 type PublicProfilePageProps = {
   params: Promise<{ username: string }>;
+  searchParams: Promise<{ edit?: string }>;
 };
 
 export default async function PublicProfilePage({
   params,
+  searchParams,
 }: PublicProfilePageProps) {
   const { username } = await params;
+  const { edit } = await searchParams;
   const data = await getPublicProfileData(username);
 
   if (!data) {
@@ -47,9 +51,10 @@ export default async function PublicProfilePage({
   }
 
   const isOwnProfile = viewer?.id === profile.user_id;
+  const isEditing = isOwnProfile && edit === "1";
 
   return (
-    <div className="mx-auto max-w-5xl space-y-12 px-4 py-10">
+    <div className={`mx-auto max-w-5xl space-y-12 ${viewer ? "pb-6 sm:pb-0" : "px-4 py-10"}`}>
       <header className="overflow-hidden rounded-card border border-line bg-surface">
         <div className="h-24 bg-linear-to-r from-accent/25 via-accent/10 to-transparent" />
         <div className="flex flex-col gap-5 px-6 pb-6 sm:flex-row sm:items-end">
@@ -90,7 +95,13 @@ export default async function PublicProfilePage({
                 </span>
               ))}
             </div>
-            {viewer ? (
+            {isOwnProfile ? (
+              <div className="mt-4">
+                {!isEditing ? (
+                  <ProfileEditSection profile={profile} editing={false} />
+                ) : null}
+              </div>
+            ) : viewer ? (
               <div className="mt-4">
                 <FriendActionButton
                   targetUserId={profile.user_id}
@@ -104,6 +115,10 @@ export default async function PublicProfilePage({
           </div>
         </div>
       </header>
+
+      {isEditing ? (
+        <ProfileEditSection profile={profile} editing />
+      ) : null}
 
       <section>
         <p className="eyebrow">Top ranked</p>
@@ -138,11 +153,13 @@ export default async function PublicProfilePage({
         ) : null,
       )}
 
-      <p className="border-t border-line pt-8 text-center text-sm text-muted">
-        <Link href="/" className="font-medium text-accent hover:underline">
-          ← Back to Suki
-        </Link>
-      </p>
+      {!viewer ? (
+        <p className="border-t border-line pt-8 text-center text-sm text-muted">
+          <Link href="/" className="font-medium text-accent hover:underline">
+            ← Back to Suki
+          </Link>
+        </p>
+      ) : null}
     </div>
   );
 }

@@ -49,7 +49,7 @@ export function LandingHero({ backdropUrls = [] }: LandingHeroProps) {
 
         <div className="mt-7 flex flex-wrap gap-2.5">
           <Link
-            href="/auth/signup"
+            href="/auth/login?mode=signup"
             className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-on-accent shadow-sm transition-all hover:bg-accent-strong hover:shadow-md active:translate-y-px"
           >
             Create account

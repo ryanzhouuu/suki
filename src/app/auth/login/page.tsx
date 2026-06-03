@@ -1,14 +1,23 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { signIn } from "@/actions/auth";
-import { AuthForm } from "@/components/auth/auth-form";
+import { AuthPanel } from "@/components/auth/auth-panel";
 import { APP_NAME } from "@/lib/constants";
-import { getAuthUser } from "@/lib/auth/session";
+import { getAuthUser, getCurrentProfile } from "@/lib/auth/session";
 
-export default async function LoginPage() {
+type LoginPageProps = {
+  searchParams: Promise<{ error?: string; error_description?: string; mode?: string }>;
+};
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
   const user = await getAuthUser();
-  if (user) redirect("/home");
+  if (user) {
+    const profile = await getCurrentProfile();
+    redirect(profile ? "/home" : "/onboarding");
+  }
+
+  const { error, error_description: errorDescription, mode } = await searchParams;
+  const initialMode = mode === "signup" ? "signup" : "signin";
 
   return (
     <div className="mx-auto flex min-h-full w-full max-w-md flex-col justify-center px-4 py-16">
@@ -21,22 +30,11 @@ export default async function LoginPage() {
             {APP_NAME}
           </span>
         </Link>
-        <div className="card p-7 shadow-[0_12px_40px_-24px_rgb(var(--shadow-color)/0.45)]">
-          <p className="eyebrow">Welcome back</p>
-          <h1 className="mt-1.5 text-3xl font-semibold">Sign in</h1>
-          <p className="mt-1 text-sm text-muted">
-            Pick up your lists and rankings right where you left off.
-          </p>
-          <div className="mt-7">
-            <AuthForm action={signIn} submitLabel="Sign in" />
-          </div>
-        </div>
-        <p className="mt-6 text-center text-sm text-muted">
-          New to {APP_NAME}?{" "}
-          <Link href="/auth/signup" className="font-semibold text-accent hover:underline">
-            Create an account
-          </Link>
-        </p>
+        <AuthPanel
+          initialMode={initialMode}
+          error={error}
+          errorDescription={errorDescription}
+        />
       </div>
     </div>
   );
