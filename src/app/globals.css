@@ -208,6 +208,158 @@ select {
   animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* —— Profile page: focused editorial scaffolding —— */
+.profile-hero {
+  position: relative;
+  isolation: isolate;
+}
+
+.profile-hero__glow {
+  position: absolute;
+  inset: -25% -10% auto auto;
+  width: 66%;
+  height: 86%;
+  border-radius: 999px;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 50%,
+    color-mix(in srgb, var(--accent) 28%, transparent),
+    transparent 72%
+  );
+  filter: blur(18px);
+}
+
+.profile-hero__hatch {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.14;
+  background-image: repeating-linear-gradient(
+    -16deg,
+    transparent,
+    transparent 9px,
+    color-mix(in srgb, var(--ink) 6%, transparent) 9px,
+    color-mix(in srgb, var(--ink) 6%, transparent) 10px
+  );
+}
+
+/* Segmented tab bar — keeps profile sections in view without endless scroll. */
+.profile-tabbar {
+  position: sticky;
+  top: calc(3.65rem + env(safe-area-inset-top, 0px));
+  z-index: 10;
+  display: flex;
+  gap: 0.3rem;
+  overflow-x: auto;
+  padding: 0.3rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 14px 26px -22px rgb(var(--shadow-color) / 0.5);
+  scrollbar-width: none;
+}
+
+.profile-tabbar::-webkit-scrollbar {
+  display: none;
+}
+
+.profile-tabbar__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 160ms ease, background-color 160ms ease,
+    transform 160ms ease, box-shadow 160ms ease;
+}
+
+.profile-tabbar__tab:hover {
+  color: var(--ink);
+}
+
+.profile-tabbar__tab[data-active="true"] {
+  color: var(--on-accent);
+  background: var(--accent);
+  box-shadow: 0 10px 20px -12px color-mix(in srgb, var(--accent) 80%, transparent);
+}
+
+.profile-tabbar__count {
+  display: inline-flex;
+  min-width: 1.25rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0 0.35rem;
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
+  color: inherit;
+}
+
+.profile-tabbar__tab[data-active="true"] .profile-tabbar__count {
+  background: color-mix(in srgb, var(--on-accent) 22%, transparent);
+}
+
+@media (width >= 640px) {
+  .profile-tabbar {
+    top: calc(4rem + env(safe-area-inset-top, 0px));
+    width: fit-content;
+  }
+}
+
+/* Headline metric strip — the at-a-glance numbers above the bento. */
+.profile-metric-strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--accent) 7%, transparent),
+      transparent 55%
+    ),
+    var(--surface);
+  padding: 1.25rem;
+  box-shadow: 0 16px 28px -26px rgb(var(--shadow-color) / 0.5);
+}
+
+.profile-metric {
+  position: relative;
+  padding-left: 0.9rem;
+}
+
+.profile-metric::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.15rem;
+  bottom: 0.15rem;
+  width: 2px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+@media (width >= 640px) {
+  .profile-metric-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 1.5rem 1.75rem;
+  }
+}
+
+@media (width >= 1024px) {
+  .profile-metric-strip {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
 /* —— Home hero: drifting vermilion atmosphere —— */
 @keyframes hero-drift-1 {
   from {

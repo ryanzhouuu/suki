@@ -1,7 +1,13 @@
 import { RANKING_ALGORITHM_VERSION } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
+import type { Tables } from "@/types/database";
 
 import type { LibraryEntry } from "../library/queries";
+import { computeProfileStats } from "./stats";
+
+export type RankedSeriesRow = Tables<"derived_series_rankings"> & {
+  series: Tables<"series"> | null;
+};
 
 export async function getProfileByUsername(username: string) {
   const supabase = await createClient();
@@ -14,13 +20,28 @@ export async function getProfileByUsername(username: string) {
   return data;
 }
 
-export async function getPublicProfileData(username: string) {
+async function getRecentComparisonCount(userId: string): Promise<number> {
+  const supabase = await createClient();
+  const { count } = await supabase
+    .from("pairwise_series_comparisons")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .not("winner_series_id", "is", null);
+
+  return count ?? 0;
+}
+
+export async function getPublicProfileData(
+  username: string,
+  options?: { viewerId?: string | null },
+) {
   const profile = await getProfileByUsername(username);
   if (!profile) return null;
 
   const supabase = await createClient();
+  const isOwnProfile = options?.viewerId === profile.user_id;
 
-  const [entriesResult, rankingsResult] = await Promise.all([
+  const [entriesResult, rankingsResult, comparisonCount] = await Promise.all([
     supabase
       .from("user_anime_entries")
       .select("*, anime(*)")
@@ -31,19 +52,20 @@ export async function getPublicProfileData(username: string) {
       .select("*, series(*)")
       .eq("user_id", profile.user_id)
       .eq("algorithm_version", RANKING_ALGORITHM_VERSION)
-      .order("rank", { ascending: true })
-      .limit(10),
+      .order("rank", { ascending: true }),
+    isOwnProfile ? getRecentComparisonCount(profile.user_id) : Promise.resolve(null),
   ]);
 
   const entries = (entriesResult.data ?? []) as LibraryEntry[];
-  const rankings = rankingsResult.data ?? [];
+  const rankings = (rankingsResult.data ?? []) as RankedSeriesRow[];
+  const topRankings = rankings.slice(0, 10);
+  const profileStats = computeProfileStats(entries, rankings, comparisonCount);
 
-  const stats = {
-    total: entries.length,
-    watching: entries.filter((e) => e.status === "watching").length,
-    completed: entries.filter((e) => e.status === "completed").length,
-    planToWatch: entries.filter((e) => e.status === "plan_to_watch").length,
+  return {
+    profile,
+    entries,
+    rankings: topRankings,
+    allRankings: rankings,
+    stats: profileStats,
   };
-
-  return { profile, entries, rankings, stats };
 }

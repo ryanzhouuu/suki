@@ -26,6 +26,14 @@ export const CONFIDENCE_LABELS = {
   high: "Well established",
 } as const;
 
+export type ProfileVisibility = Enums<"profile_visibility">;
+
+export const PROFILE_VISIBILITY_LABELS: Record<ProfileVisibility, string> = {
+  public: "Public",
+  friends_only: "Friends only",
+  private: "Private",
+};
+
 export const NAV_ITEMS = [
   { href: "/home", label: "Home", mobileLabel: "Home" },
   { href: "/search", label: "Search", mobileLabel: "Search" },
