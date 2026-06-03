@@ -3,7 +3,7 @@ import { after } from "next/server";
 
 import { loadRecommendationsForUser, logRecommendationViewed } from "@/actions/recommendations";
 import { RecommendationCard } from "@/components/recommendations/recommendation-card";
-import { RefreshRecommendationsButton } from "@/components/recommendations/refresh-recommendations-button";
+import { RecommendationPreferencesForm } from "@/components/recommendations/recommendation-preferences-form";
 import { requireProfile } from "@/lib/auth/session";
 import { isEmbeddingConfigured } from "@/lib/recommendations/embedding-provider";
 import { getRecommendationPoolStats } from "@/lib/recommendations/pool-stats";
@@ -47,12 +47,13 @@ export default async function RecommendationsPage() {
           <p className="eyebrow">For you</p>
           <h1 className="mt-1.5 text-4xl font-semibold">Recommendations</h1>
           <p className="mt-2 max-w-xl text-muted">
-            Picked from your rankings, watchlist, and completed anime using
-            semantic matching.
+            Tell us what you want to watch next — we blend that with your
+            rankings and library, and mix in adventurous picks on each refresh.
           </p>
         </div>
-        <RefreshRecommendationsButton />
       </div>
+
+      <RecommendationPreferencesForm />
 
       {showPoolHint ? (
         <div className="rounded-card border border-line bg-surface-2/50 p-4 text-sm text-muted">
@@ -71,7 +72,8 @@ export default async function RecommendationsPage() {
             Grow the pool: run{" "}
             <code className="text-ink">npm run seed:catalog</code> locally, or
             search and open more anime in the app (each title gets embedded when
-            cached). Then click <strong className="text-ink">Refresh</strong>.
+            cached). Then use <strong className="text-ink">Get recommendations</strong>{" "}
+            above.
           </p>
         </div>
       ) : null}
@@ -80,8 +82,8 @@ export default async function RecommendationsPage() {
         <div className="rounded-card border border-dashed border-line-strong p-10 text-center">
           <p className="font-display text-xl text-ink">No recommendations yet</p>
           <p className="mt-2 text-sm text-muted">
-            Add and rank anime in your library, then click{" "}
-            <strong className="text-ink">Refresh</strong> above to generate
+            Add and rank anime in your library, then use{" "}
+            <strong className="text-ink">Get recommendations</strong> above to generate
             suggestions (this can take a few seconds). You can also{" "}
             <Link href="/search" className="font-semibold text-accent hover:underline">
               search
