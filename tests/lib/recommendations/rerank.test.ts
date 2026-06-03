@@ -7,6 +7,7 @@ import {
   finalizeRecommendations,
   rerankCandidates,
 } from "@/lib/recommendations/rerank";
+import type { RecommendationRequestPrefs } from "@/lib/recommendations/request-prefs";
 import type { CandidateAnime, TasteProfile } from "@/lib/recommendations/types";
 
 const baseProfile: TasteProfile = {
@@ -66,6 +67,27 @@ describe("rerankCandidates", () => {
     assert.ok(good.reasonCodes.includes(REASON_CODES.topGenre));
     assert.ok(bad.reasonCodes.includes(REASON_CODES.droppedGenrePenalty));
   });
+
+  it("boosts request genre matches", () => {
+    const prefs: RecommendationRequestPrefs = {
+      genres: ["Romance"],
+      lengthBucket: null,
+      format: null,
+    };
+    const match = rerankCandidates(
+      baseProfile,
+      [candidate({ genres: ["Romance", "Action"] })],
+      prefs,
+    )[0];
+    const miss = rerankCandidates(
+      baseProfile,
+      [candidate({ genres: ["Sports"] })],
+      prefs,
+    )[0];
+
+    assert.ok(match.finalScore > miss.finalScore);
+    assert.ok(match.reasonCodes.includes(REASON_CODES.requestGenreMatch));
+  });
 });
 
 describe("buildExplanation", () => {
@@ -89,6 +111,12 @@ describe("buildExplanation", () => {
     ])[0];
     rec.reasonCodes = [];
     assert.match(buildExplanation(rec, baseProfile), /watch history/i);
+  });
+
+  it("explains wildcard picks", () => {
+    const rec = rerankCandidates(baseProfile, [candidate()])[0];
+    rec.reasonCodes = [REASON_CODES.wildcardPick];
+    assert.match(buildExplanation(rec, baseProfile), /adventurous/i);
   });
 });
 
