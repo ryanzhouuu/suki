@@ -63,6 +63,7 @@ export const profiles = pgTable(
     username: text("username").notNull(),
     displayName: text("display_name"),
     avatarUrl: text("avatar_url"),
+    bannerUrl: text("banner_url"),
     bio: text("bio"),
     profileVisibility: profileVisibilityEnum("profile_visibility")
       .notNull()

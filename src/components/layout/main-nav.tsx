@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import { NAV_ITEMS } from "@/lib/constants";
 
 function isActive(pathname: string, href: string) {
-  if (href === "/home") return pathname === "/home";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -47,7 +46,7 @@ export function MobileNav() {
       className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md sm:hidden"
       aria-label="Mobile"
     >
-      <ul className="grid grid-cols-6">
+      <ul className="grid grid-cols-5">
         {NAV_ITEMS.map((item) => {
           const active = isActive(pathname, item.href);
           return (

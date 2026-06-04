@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import type { ProfileActionState } from "@/actions/profile";
 import { AvatarUpload } from "@/components/profile/avatar-upload";
+import { BannerUpload } from "@/components/profile/banner-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,6 +31,7 @@ export function ProfileEditForm({ profile, action }: ProfileEditFormProps) {
 
   return (
     <div className="space-y-6">
+      <BannerUpload profile={profile} />
       <AvatarUpload profile={profile} />
       <form action={formAction} className="space-y-4 border-t border-line pt-6">
         <div>
