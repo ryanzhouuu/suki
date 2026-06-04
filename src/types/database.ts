@@ -243,35 +243,62 @@ export type Database = {
       recommendation_runs: {
         Row: {
           algorithm_version: string;
+          collaboration_mode: string | null;
+          collaborator_user_id: string | null;
           created_at: string;
           embedding_model: string;
+          friendship_id: string | null;
           id: string;
           input_hash: string;
           request_prefs: Json | null;
+          run_kind: string;
           sampling_seed: string | null;
           user_id: string;
         };
         Insert: {
           algorithm_version: string;
+          collaboration_mode?: string | null;
+          collaborator_user_id?: string | null;
           created_at?: string;
           embedding_model: string;
+          friendship_id?: string | null;
           id?: string;
           input_hash: string;
           request_prefs?: Json | null;
+          run_kind?: string;
           sampling_seed?: string | null;
           user_id: string;
         };
         Update: {
           algorithm_version?: string;
+          collaboration_mode?: string | null;
+          collaborator_user_id?: string | null;
           created_at?: string;
           embedding_model?: string;
+          friendship_id?: string | null;
           id?: string;
           input_hash?: string;
           request_prefs?: Json | null;
+          run_kind?: string;
           sampling_seed?: string | null;
           user_id?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "recommendation_runs_collaborator_user_id_fkey";
+            columns: ["collaborator_user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "recommendation_runs_friendship_id_fkey";
+            columns: ["friendship_id"];
+            isOneToOne: false;
+            referencedRelation: "friendships";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       recommendations: {
         Row: {
