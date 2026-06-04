@@ -48,7 +48,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
         </div>
       ) : (
         <Suspense fallback={null}>
-          <LibraryPanel entries={entries} />
+          <LibraryPanel entries={entries} status={status} />
         </Suspense>
       )}
     </div>

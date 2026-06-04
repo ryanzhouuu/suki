@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { StatusPicker } from "@/components/anime/status-picker";
+import { AnimeLibrarySection } from "@/components/anime/anime-library-section";
 import { AnimePoster } from "@/components/anime/anime-poster";
 import { getAuthUser } from "@/lib/auth/session";
 import { getAnimeForDisplay } from "@/lib/anime/get-for-display";
-import type { AnimeEntryStatus } from "@/lib/constants";
 import { getUserEntryForAnime } from "@/lib/library/queries";
 
 type AnimeDetailPageProps = {
@@ -119,34 +118,11 @@ export default async function AnimeDetailPage({ params }: AnimeDetailPageProps) 
         ) : null}
 
         {user ? (
-          <section className="card p-6">
-            <h2 className="font-display text-xl font-semibold">Your list</h2>
-            <p className="mt-0.5 text-sm text-muted">
-              Track this title or update where it sits.
-            </p>
-            <StatusPicker
-              anilistId={anilistId}
-              currentStatus={(entry?.status as AnimeEntryStatus) ?? null}
-            />
-            {entry ? (
-              <p className="mt-4 text-sm text-muted">
-                <Link href="/library" className="font-medium text-accent hover:underline">
-                  View library
-                </Link>
-                {entry.status === "completed" ? (
-                  <>
-                    {" · "}
-                    <Link
-                      href="/ranking"
-                      className="font-medium text-accent hover:underline"
-                    >
-                      Ranking
-                    </Link>
-                  </>
-                ) : null}
-              </p>
-            ) : null}
-          </section>
+          <AnimeLibrarySection
+            anilistId={anilistId}
+            entry={entry}
+            anime={anime}
+          />
         ) : (
           <p className="text-sm text-muted">
             <Link href="/auth/login" className="font-semibold text-accent hover:underline">
