@@ -51,7 +51,7 @@ export async function RecommendationsPreview({
                     {title}
                   </p>
                   <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted">
-                    {row.explanation}
+                    {row.parsedExplanationDetails?.primaryReason ?? row.explanation}
                   </p>
                 </div>
               </Link>

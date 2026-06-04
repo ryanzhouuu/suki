@@ -33,6 +33,28 @@ export type CandidateAnime = Tables<"anime"> & {
   similarityScore: number;
 };
 
+export type RecommendationExplanationBadge =
+  | "strong_match"
+  | "genre_match"
+  | "request_match"
+  | "community_score"
+  | "popular"
+  | "diverse_pick"
+  | "wildcard_pick";
+
+export type RecommendationExplanationDetails = {
+  primaryReason: string;
+  secondarySignals: string[];
+  matchedGenres: string[];
+  matchedRequest?: {
+    genres?: string[];
+    format?: string;
+    lengthBucket?: string;
+  };
+  anchorTitles: string[];
+  badges: RecommendationExplanationBadge[];
+};
+
 export type ScoredRecommendation = {
   anime: Tables<"anime">;
   seriesId: string | null;
@@ -41,8 +63,17 @@ export type ScoredRecommendation = {
   finalScore: number;
   reasonCodes: ReasonCode[];
   explanation: string;
+  explanationDetails: RecommendationExplanationDetails;
+};
+
+export type RecommendationLibraryEntry = {
+  id: string;
+  status: Tables<"user_anime_entries">["status"];
+  progress_episodes: number;
 };
 
 export type RecommendationRow = Tables<"recommendations"> & {
   anime: Tables<"anime">;
+  libraryEntry?: RecommendationLibraryEntry | null;
+  parsedExplanationDetails?: RecommendationExplanationDetails;
 };

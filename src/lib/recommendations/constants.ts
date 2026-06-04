@@ -9,6 +9,7 @@ export const REQUEST_MATCH_WEIGHT = 0.2;
 
 export const VECTOR_CANDIDATE_LIMIT = 200;
 export const STORED_RECOMMENDATION_LIMIT = 20;
+export const FOCUSED_RECOMMENDATION_LIMIT = 10;
 
 export const REASON_CODES = {
   semanticMatch: "semantic_match",

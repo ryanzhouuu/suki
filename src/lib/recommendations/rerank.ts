@@ -12,7 +12,7 @@ import {
   isEmptyRequestPrefs,
   type RecommendationRequestPrefs,
 } from "./request-prefs";
-import type { CandidateAnime, ScoredRecommendation, TasteProfile } from "./types";
+import type { CandidateAnime, RecommendationExplanationDetails, ScoredRecommendation, TasteProfile } from "./types";
 
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
@@ -122,6 +122,13 @@ export function rerankCandidates(
       finalScore,
       reasonCodes: [...new Set(reasonCodes)],
       explanation: "",
+      explanationDetails: {
+        primaryReason: "",
+        secondarySignals: [],
+        matchedGenres: [],
+        anchorTitles: [],
+        badges: [],
+      },
     };
   });
 }
@@ -198,16 +205,129 @@ export function buildExplanation(
   return `Suggested based on your watch history and rankings.`;
 }
 
+function badgeForReason(code: string): RecommendationExplanationDetails["badges"][number] | null {
+  switch (code) {
+    case REASON_CODES.semanticMatch:
+      return "strong_match";
+    case REASON_CODES.topGenre:
+      return "genre_match";
+    case REASON_CODES.requestGenreMatch:
+    case REASON_CODES.requestFormatMatch:
+    case REASON_CODES.requestLengthMatch:
+      return "request_match";
+    case REASON_CODES.highCommunityScore:
+      return "community_score";
+    case REASON_CODES.popular:
+      return "popular";
+    case REASON_CODES.diversePick:
+      return "diverse_pick";
+    case REASON_CODES.wildcardPick:
+      return "wildcard_pick";
+    default:
+      return null;
+  }
+}
+
+export function buildExplanationDetails(
+  rec: ScoredRecommendation,
+  profile: TasteProfile,
+  prefs: RecommendationRequestPrefs = EMPTY_REQUEST_PREFS,
+): RecommendationExplanationDetails {
+  const primaryReason = buildExplanation(rec, profile, prefs);
+  const { signals } = profile;
+  const secondarySignals: string[] = [];
+  const matchedGenres = rec.anime.genres.filter(
+    (genre) =>
+      signals.topGenres.includes(genre) ||
+      prefs.genres.includes(genre),
+  );
+
+  if (rec.reasonCodes.includes(REASON_CODES.semanticMatch)) {
+    secondarySignals.push("Strong semantic match with your ranked favorites.");
+  }
+
+  if (matchedGenres.length > 0) {
+    secondarySignals.push(
+      `Matches genres you tend to enjoy: ${matchedGenres.slice(0, 3).join(", ")}.`,
+    );
+  }
+
+  if (rec.anime.format && signals.topFormats.includes(rec.anime.format)) {
+    secondarySignals.push(`Fits your preferred ${rec.anime.format} format.`);
+  }
+
+  if (rec.anime.average_score && Number(rec.anime.average_score) >= 75) {
+    secondarySignals.push(
+      `Community score ${Number(rec.anime.average_score)} on AniList.`,
+    );
+  }
+
+  if (rec.anime.popularity && rec.anime.popularity > 50_000) {
+    secondarySignals.push("Popular with a wide audience.");
+  }
+
+  if (
+    rec.reasonCodes.includes(REASON_CODES.requestLengthMatch) &&
+    prefs.lengthBucket
+  ) {
+    secondarySignals.push(
+      `Matches your ${LENGTH_LABELS[prefs.lengthBucket] ?? prefs.lengthBucket} length preference.`,
+    );
+  }
+
+  const anchorTitles = signals.topRankedSeries.slice(0, 2).map((series) => series.title);
+  if (anchorTitles.length > 0 && rec.reasonCodes.includes(REASON_CODES.semanticMatch)) {
+    secondarySignals.push(
+      `Similar vibe to ${anchorTitles.join(" and ")}.`,
+    );
+  }
+
+  const badges = [
+    ...new Set(
+      rec.reasonCodes
+        .map((code) => badgeForReason(code))
+        .filter((badge): badge is NonNullable<typeof badge> => badge !== null),
+    ),
+  ];
+
+  const matchedRequest =
+    !isEmptyRequestPrefs(prefs)
+      ? {
+          genres: prefs.genres.length > 0 ? prefs.genres : undefined,
+          format: prefs.format ?? undefined,
+          lengthBucket: prefs.lengthBucket ?? undefined,
+        }
+      : undefined;
+
+  return {
+    primaryReason,
+    secondarySignals: [...new Set(secondarySignals)].slice(0, 4),
+    matchedGenres: matchedGenres.slice(0, 4),
+    matchedRequest,
+    anchorTitles,
+    badges,
+  };
+}
+
 export function finalizeRecommendations(
   profile: TasteProfile,
   scored: ScoredRecommendation[],
   prefs: RecommendationRequestPrefs = EMPTY_REQUEST_PREFS,
   options?: { preserveOrder?: boolean },
 ): ScoredRecommendation[] {
-  const withExpl = scored.map((rec) => ({
-    ...rec,
-    explanation: buildExplanation(rec, profile, prefs),
-  }));
+  const withExpl = scored.map((rec) => {
+    const explanation = buildExplanation(rec, profile, prefs);
+    const explanationDetails = buildExplanationDetails(
+      { ...rec, explanation },
+      profile,
+      prefs,
+    );
+    return {
+      ...rec,
+      explanation,
+      explanationDetails,
+    };
+  });
 
   if (options?.preserveOrder) {
     return withExpl;

@@ -64,4 +64,12 @@ export const USER_EVENT_TYPES = {
   recommendationAdded: "recommendation_added",
   recommendationDismissed: "recommendation_dismissed",
   recommendationRefreshed: "recommendation_refreshed",
+  libraryEntryUpdated: "library_entry_updated",
+  libraryEntryRemoved: "library_entry_removed",
+} as const;
+
+export const WATCHLIST_PRIORITY_LABELS = {
+  low: "Low",
+  medium: "Medium",
+  high: "High",
 } as const;

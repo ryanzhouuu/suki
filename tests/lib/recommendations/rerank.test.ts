@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { REASON_CODES } from "@/lib/recommendations/constants";
 import {
   buildExplanation,
+  buildExplanationDetails,
   finalizeRecommendations,
   rerankCandidates,
 } from "@/lib/recommendations/rerank";
@@ -120,6 +121,28 @@ describe("buildExplanation", () => {
   });
 });
 
+describe("buildExplanationDetails", () => {
+  it("includes matched genres and badges", () => {
+    const rec = rerankCandidates(baseProfile, [candidate()])[0];
+    rec.explanation = buildExplanation(rec, baseProfile);
+    const details = buildExplanationDetails(rec, baseProfile);
+
+    assert.equal(details.primaryReason, rec.explanation);
+    assert.ok(details.matchedGenres.includes("Action"));
+    assert.ok(details.badges.includes("genre_match"));
+    assert.ok(details.secondarySignals.length > 0);
+  });
+
+  it("adds wildcard badge for adventurous picks", () => {
+    const rec = rerankCandidates(baseProfile, [candidate()])[0];
+    rec.reasonCodes = [REASON_CODES.wildcardPick];
+    rec.explanation = buildExplanation(rec, baseProfile);
+    const details = buildExplanationDetails(rec, baseProfile);
+
+    assert.ok(details.badges.includes("wildcard_pick"));
+  });
+});
+
 describe("finalizeRecommendations", () => {
   it("adds explanations and sorts by final score", () => {
     const scored = finalizeRecommendations(baseProfile, [
@@ -133,5 +156,6 @@ describe("finalizeRecommendations", () => {
 
     assert.ok(scored[0].finalScore >= scored[1].finalScore);
     assert.ok(scored[0].explanation.length > 0);
+    assert.ok(scored[0].explanationDetails.primaryReason.length > 0);
   });
 });

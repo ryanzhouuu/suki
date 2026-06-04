@@ -8,6 +8,11 @@ import { syncAnimeFromAnilist } from "@/lib/anime/sync";
 import type { AnimeEntryStatus } from "@/lib/constants";
 import { USER_EVENT_TYPES } from "@/lib/constants";
 import { logUserEvent } from "@/lib/events/log";
+import {
+  changedLibraryFields,
+  validateLibraryEntryPatch,
+  type LibraryEntryPatchInput,
+} from "@/lib/library/validate";
 import { recomputeUserRanking } from "@/lib/ranking/recompute-series";
 import { ensureAnimeSeriesMapping } from "@/lib/series/resolver";
 import { createClient } from "@/lib/supabase/server";
@@ -183,12 +188,7 @@ export async function addAnimeEntry(
 
 export async function updateAnimeEntry(
   entryId: string,
-  patch: {
-    status?: AnimeEntryStatus;
-    progressEpisodes?: number;
-    notes?: string | null;
-    priority?: "low" | "medium" | "high" | null;
-  },
+  patch: LibraryEntryPatchInput,
 ): Promise<LibraryActionState> {
   const user = await requireAuthUser();
   const supabase = await createClient();
@@ -204,21 +204,68 @@ export async function updateAnimeEntry(
     return { error: "Entry not found." };
   }
 
+  const animeRow = existing.anime as Tables<"anime"> | null;
+  const maxEpisodes =
+    animeRow && !Array.isArray(animeRow) ? animeRow.episodes : null;
+
+  let validated;
+  try {
+    validated = validateLibraryEntryPatch(patch, { maxEpisodes });
+  } catch (e) {
+    return {
+      error: e instanceof Error ? e.message : "Invalid library update.",
+    };
+  }
+
+  const effectiveStatus = validated.status ?? existing.status;
+  if (effectiveStatus !== "plan_to_watch" && validated.priority !== undefined) {
+    validated.priority = null;
+  }
+
   const updates: TablesUpdate<"user_anime_entries"> = {};
-  if (patch.status !== undefined) {
-    updates.status = patch.status;
-    if (patch.status === "completed") {
+
+  if (validated.status !== undefined) {
+    updates.status = validated.status;
+    if (validated.status === "completed" && validated.completedAt === undefined) {
       updates.completed_at = new Date().toISOString().slice(0, 10);
     }
-    if (patch.status === "watching" && !existing.started_at) {
+    if (
+      validated.status === "watching" &&
+      validated.startedAt === undefined &&
+      !existing.started_at
+    ) {
       updates.started_at = new Date().toISOString().slice(0, 10);
     }
+    if (validated.status !== "plan_to_watch") {
+      updates.priority = null;
+    }
   }
-  if (patch.progressEpisodes !== undefined) {
-    updates.progress_episodes = Math.max(0, patch.progressEpisodes);
+
+  if (validated.progressEpisodes !== undefined) {
+    updates.progress_episodes = validated.progressEpisodes;
   }
-  if (patch.notes !== undefined) updates.notes = patch.notes;
-  if (patch.priority !== undefined) updates.priority = patch.priority;
+  if (validated.notes !== undefined) updates.notes = validated.notes;
+  if (validated.priority !== undefined) updates.priority = validated.priority;
+  if (validated.personalScore !== undefined) {
+    updates.personal_score = validated.personalScore;
+  }
+  if (validated.startedAt !== undefined) updates.started_at = validated.startedAt;
+  if (validated.completedAt !== undefined) {
+    updates.completed_at = validated.completedAt;
+  }
+  if (validated.rewatchCount !== undefined) {
+    updates.rewatch_count = validated.rewatchCount;
+  }
+
+  const startedAt = updates.started_at ?? existing.started_at;
+  const completedAt = updates.completed_at ?? existing.completed_at;
+  if (startedAt && completedAt && completedAt < startedAt) {
+    return { error: "Completed date cannot be before started date." };
+  }
+
+  if (Object.keys(updates).length === 0) {
+    return { message: "No changes to save." };
+  }
 
   const { error } = await supabase
     .from("user_anime_entries")
@@ -227,16 +274,21 @@ export async function updateAnimeEntry(
 
   if (error) return { error: error.message };
 
-  if (patch.status && patch.status !== existing.status) {
+  const changedFields = changedLibraryFields(existing, validated);
+  const richChangedFields = changedFields.filter(
+    (field) =>
+      !["status", "progress_episodes"].includes(field),
+  );
+
+  if (validated.status && validated.status !== existing.status) {
     scheduleLogEvent(user.id, USER_EVENT_TYPES.statusChanged, {
       animeId: existing.anime_id,
-      metadata: { from: existing.status, to: patch.status },
+      metadata: { from: existing.status, to: validated.status },
     });
-    if (patch.status === "completed") {
+    if (validated.status === "completed") {
       scheduleLogEvent(user.id, USER_EVENT_TYPES.animeCompleted, {
         animeId: existing.anime_id,
       });
-      const animeRow = existing.anime as Tables<"anime"> | null;
       if (animeRow && !Array.isArray(animeRow)) {
         scheduleCompletedEntrySideEffects(user.id, animeRow);
       } else {
@@ -260,21 +312,28 @@ export async function updateAnimeEntry(
     }
   }
 
-  if (patch.progressEpisodes !== undefined) {
+  if (validated.progressEpisodes !== undefined) {
     scheduleLogEvent(user.id, USER_EVENT_TYPES.progressUpdated, {
       animeId: existing.anime_id,
-      metadata: { progress: patch.progressEpisodes },
+      metadata: { progress: validated.progressEpisodes },
     });
   }
 
-  const anilistId = (existing.anime as { anilist_id: number } | null)?.anilist_id;
+  if (richChangedFields.length > 0) {
+    scheduleLogEvent(user.id, USER_EVENT_TYPES.libraryEntryUpdated, {
+      animeId: existing.anime_id,
+      metadata: { changedFields: richChangedFields },
+    });
+  }
+
+  const anilistId = animeRow && !Array.isArray(animeRow) ? animeRow.anilist_id : undefined;
   const statusChanged =
-    patch.status !== undefined && patch.status !== existing.status;
+    validated.status !== undefined && validated.status !== existing.status;
 
   scheduleLibraryRevalidation({
-    anilistId: anilistId ?? undefined,
-    includeHome: statusChanged,
-    includeRanking: patch.status === "completed",
+    anilistId,
+    includeHome: statusChanged || validated.progressEpisodes !== undefined,
+    includeRanking: validated.status === "completed",
   });
 
   return { message: "Updated." };
@@ -291,6 +350,10 @@ export async function removeAnimeEntry(entryId: string): Promise<LibraryActionSt
     .eq("user_id", user.id);
 
   if (error) return { error: error.message };
+
+  scheduleLogEvent(user.id, USER_EVENT_TYPES.libraryEntryRemoved, {
+    metadata: { entryId },
+  });
 
   scheduleRankingRecompute(user.id);
 
