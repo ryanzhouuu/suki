@@ -86,6 +86,8 @@ export async function loadRecommendationsForUser(userId: string) {
     return { configured: false as const, items: [] };
   }
 
-  const items = await getUserRecommendations(userId);
+  const items = await getUserRecommendations(userId, {
+    includeLibraryStatus: true,
+  });
   return { configured: true as const, items };
 }

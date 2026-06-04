@@ -2,10 +2,17 @@ import { createClient } from "@/lib/supabase/server";
 
 import { RECOMMENDATION_ALGORITHM_VERSION } from "./constants";
 import { getDismissedAnimeIds } from "./dismissed";
+import { parseExplanationDetails } from "./explanation-details";
 import type { RecommendationRow } from "./types";
+
+type GetUserRecommendationsOptions = {
+  limit?: number;
+  includeLibraryStatus?: boolean;
+};
 
 export async function getUserRecommendations(
   userId: string,
+  options?: GetUserRecommendationsOptions,
 ): Promise<RecommendationRow[]> {
   const supabase = await createClient();
 
@@ -31,9 +38,44 @@ export async function getUserRecommendations(
   }
 
   const dismissed = new Set(await getDismissedAnimeIds(userId));
-  return (data ?? []).filter(
-    (row) => !dismissed.has(row.anime_id),
-  ) as RecommendationRow[];
+  const filtered = (data ?? []).filter((row) => !dismissed.has(row.anime_id));
+
+  const limited =
+    options?.limit != null ? filtered.slice(0, options.limit) : filtered;
+
+  let libraryByAnimeId = new Map<
+    string,
+    NonNullable<RecommendationRow["libraryEntry"]>
+  >();
+
+  if (options?.includeLibraryStatus && limited.length > 0) {
+    const animeIds = limited.map((row) => row.anime_id);
+    const { data: libraryRows } = await supabase
+      .from("user_anime_entries")
+      .select("id, anime_id, status, progress_episodes")
+      .eq("user_id", userId)
+      .in("anime_id", animeIds);
+
+    libraryByAnimeId = new Map(
+      (libraryRows ?? []).map((entry) => [
+        entry.anime_id,
+        {
+          id: entry.id,
+          status: entry.status,
+          progress_episodes: entry.progress_episodes,
+        },
+      ]),
+    );
+  }
+
+  return limited.map((row) => ({
+    ...(row as RecommendationRow),
+    parsedExplanationDetails: parseExplanationDetails(
+      row.explanation_details,
+      row.explanation,
+    ),
+    libraryEntry: libraryByAnimeId.get(row.anime_id) ?? null,
+  }));
 }
 
 export async function getEmbeddingCatalogCount(): Promise<number> {

@@ -23,6 +23,7 @@ import { sampleAdventurous } from "./sampler";
 import { buildTasteProfile } from "./taste-profile";
 import { upsertUserTasteEmbedding } from "./taste-embedding";
 import { isEmbeddingConfigured } from "./embedding-provider";
+import { parseExplanationDetails } from "./explanation-details";
 import type { ScoredRecommendation } from "./types";
 
 export type GenerateRecommendationsOptions = {
@@ -125,6 +126,7 @@ export async function generateRecommendations(
         final_score: rec.finalScore,
         reason_codes: rec.reasonCodes,
         explanation: rec.explanation,
+        explanation_details: rec.explanationDetails,
         algorithm_version: RECOMMENDATION_ALGORITHM_VERSION,
       })),
     );
@@ -163,5 +165,9 @@ async function loadRecommendationsForRun(
     finalScore: Number(row.final_score),
     reasonCodes: row.reason_codes as ScoredRecommendation["reasonCodes"],
     explanation: row.explanation,
+    explanationDetails: parseExplanationDetails(
+      row.explanation_details,
+      row.explanation,
+    ),
   }));
 }

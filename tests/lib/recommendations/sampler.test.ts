@@ -40,6 +40,13 @@ function rec(
     finalScore,
     reasonCodes: [],
     explanation: "",
+    explanationDetails: {
+      primaryReason: "",
+      secondarySignals: [],
+      matchedGenres: [],
+      anchorTitles: [],
+      badges: [],
+    },
   };
 }
 
