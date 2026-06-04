@@ -279,6 +279,7 @@ export type Database = {
           anime_id: string;
           created_at: string;
           explanation: string;
+          explanation_details: Json;
           final_score: number;
           id: string;
           reason_codes: string[];
@@ -293,6 +294,7 @@ export type Database = {
           anime_id: string;
           created_at?: string;
           explanation: string;
+          explanation_details?: Json;
           final_score: number;
           id?: string;
           reason_codes?: string[];
@@ -307,6 +309,7 @@ export type Database = {
           anime_id?: string;
           created_at?: string;
           explanation?: string;
+          explanation_details?: Json;
           final_score?: number;
           id?: string;
           reason_codes?: string[];
