@@ -2,12 +2,16 @@ import Link from "next/link";
 import { after } from "next/server";
 
 import { loadRecommendationsForUser, logRecommendationViewed } from "@/actions/recommendations";
-import { RecommendationCard } from "@/components/recommendations/recommendation-card";
+import { FocusedRecommendations } from "@/components/recommendations/focused-recommendations";
 import { RecommendationPreferencesForm } from "@/components/recommendations/recommendation-preferences-form";
+import { RecommendationsStage } from "@/components/recommendations/recommendations-stage";
 import { requireProfile } from "@/lib/auth/session";
 import { isEmbeddingConfigured } from "@/lib/recommendations/embedding-provider";
+import {
+  FOCUSED_RECOMMENDATION_LIMIT,
+  STORED_RECOMMENDATION_LIMIT,
+} from "@/lib/recommendations/constants";
 import { getRecommendationPoolStats } from "@/lib/recommendations/pool-stats";
-import { STORED_RECOMMENDATION_LIMIT } from "@/lib/recommendations/constants";
 
 export default async function RecommendationsPage() {
   const { user } = await requireProfile();
@@ -53,10 +57,13 @@ export default async function RecommendationsPage() {
         </div>
       </div>
 
-      <RecommendationPreferencesForm />
+      <RecommendationsStage>
+        <RecommendationPreferencesForm />
+      </RecommendationsStage>
 
       {showPoolHint ? (
-        <div className="rounded-card border border-line bg-surface-2/50 p-4 text-sm text-muted">
+        <RecommendationsStage>
+          <div className="rounded-card border border-line bg-surface-2/50 p-4 text-sm text-muted">
           <p className="font-medium text-ink">Small recommendation pool</p>
           <p className="mt-1.5 leading-relaxed">
             Recommendations only come from anime we have embedded for search (
@@ -75,11 +82,13 @@ export default async function RecommendationsPage() {
             cached). Then use <strong className="text-ink">Get recommendations</strong>{" "}
             above.
           </p>
-        </div>
+          </div>
+        </RecommendationsStage>
       ) : null}
 
       {items.length === 0 ? (
-        <div className="rounded-card border border-dashed border-line-strong p-10 text-center">
+        <RecommendationsStage>
+          <div className="rounded-card border border-dashed border-line-strong p-10 text-center">
           <p className="font-display text-xl text-ink">No recommendations yet</p>
           <p className="mt-2 text-sm text-muted">
             Add and rank anime in your library, then use{" "}
@@ -90,13 +99,10 @@ export default async function RecommendationsPage() {
             </Link>{" "}
             to grow the embedded catalog.
           </p>
-        </div>
+          </div>
+        </RecommendationsStage>
       ) : (
-        <ul className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
-          {items.map((row) => (
-            <RecommendationCard key={row.id} row={row} />
-          ))}
-        </ul>
+        <FocusedRecommendations items={items.slice(0, FOCUSED_RECOMMENDATION_LIMIT)} />
       )}
     </div>
   );

@@ -33,7 +33,7 @@ export function RecommendationPreferencesForm() {
   );
 
   return (
-    <div className="w-full max-w-xl rounded-card border border-line bg-surface p-4 sm:p-5">
+    <div className="w-full rounded-card border border-line bg-surface p-4 sm:p-5">
       <div className="mb-4">
         <h2 className="text-sm font-semibold text-ink">What do you want next?</h2>
         <p className="mt-1 text-xs text-muted">
