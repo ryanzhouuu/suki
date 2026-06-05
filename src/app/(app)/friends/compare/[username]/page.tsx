@@ -7,8 +7,7 @@ import { requireProfile } from "@/lib/auth/session";
 import { getFriendshipBetween } from "@/lib/friends/queries";
 import { friendshipStatusForViewer } from "@/lib/friends/relationship";
 import {
-  getTasteCompareHighlights,
-  getTasteSimilarity,
+  getTasteMatchProfile,
 } from "@/lib/friends/taste-similarity";
 import { getProfileByUsername } from "@/lib/profiles/queries";
 
@@ -40,10 +39,7 @@ export default async function FriendsComparePage({ params }: ComparePageProps) {
   const viewerDisplayName =
     viewerProfile.display_name || viewerProfile.username;
 
-  const [similarity, highlights] = await Promise.all([
-    getTasteSimilarity(user.id, friendProfile.user_id),
-    getTasteCompareHighlights(user.id, friendProfile.user_id),
-  ]);
+  const match = await getTasteMatchProfile(user.id, friendProfile.user_id);
 
   return (
     <div className="mx-auto max-w-2xl space-y-10">
@@ -69,14 +65,15 @@ export default async function FriendsComparePage({ params }: ComparePageProps) {
       </header>
 
       <TasteSimilarityMeter
-        similarity={similarity}
+        similarity={match.similarity}
         friendDisplayName={friendDisplayName}
       />
 
       <CompareHighlights
-        highlights={highlights}
+        match={match}
         viewerLabel={viewerDisplayName}
         friendLabel={friendDisplayName}
+        friendUsername={friendProfile.username}
       />
     </div>
   );

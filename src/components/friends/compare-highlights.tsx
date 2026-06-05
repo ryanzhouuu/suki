@@ -1,21 +1,22 @@
 import Link from "next/link";
 
 import { AnimePoster } from "@/components/anime/anime-poster";
-import type { TasteCompareHighlights } from "@/lib/friends/taste-similarity";
+import type { TasteMatchProfile } from "@/lib/friends/taste-similarity";
 
 type CompareHighlightsProps = {
-  highlights: TasteCompareHighlights;
+  match: TasteMatchProfile;
   viewerLabel: string;
   friendLabel: string;
+  friendUsername: string;
 };
 
-function HighlightList({
+function SeriesHighlightList({
   title,
-  items,
+  items = [],
   emptyMessage,
 }: {
   title: string;
-  items: TasteCompareHighlights["sharedFavorites"];
+  items?: TasteMatchProfile["highlights"]["sharedFavorites"];
   emptyMessage: string;
 }) {
   return (
@@ -50,30 +51,213 @@ function HighlightList({
   );
 }
 
-export function CompareHighlights({
-  highlights,
+function GenreGrid({
+  title,
+  items,
+  emptyMessage,
+}: {
+  title: string;
+  items: TasteMatchProfile["sharedGenres"];
+  emptyMessage: string;
+}) {
+  return (
+    <section>
+      <h2 className="text-xl font-semibold">{title}</h2>
+      {items.length === 0 ? (
+        <p className="mt-2 text-sm text-muted">{emptyMessage}</p>
+      ) : (
+        <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+          {items.map((item) => (
+            <li key={item.genre} className="rounded-card border border-line bg-surface p-3">
+              <p className="font-medium text-ink">{item.genre}</p>
+              <p className="mt-1 text-xs text-muted">
+                {item.viewerCount} for you · {item.friendCount} for friend
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function DifferenceList({
+  title,
+  rows,
+  emptyMessage,
   viewerLabel,
   friendLabel,
+}: {
+  title: string;
+  rows: { label: string; viewerCount: number; friendCount: number; delta: number }[];
+  emptyMessage: string;
+  viewerLabel: string;
+  friendLabel: string;
+}) {
+  return (
+    <section>
+      <h2 className="text-xl font-semibold">{title}</h2>
+      {rows.length === 0 ? (
+        <p className="mt-2 text-sm text-muted">{emptyMessage}</p>
+      ) : (
+        <ul className="mt-4 space-y-2">
+          {rows.map((row) => {
+            const favoredBy = row.delta > 0 ? viewerLabel : friendLabel;
+            return (
+              <li key={row.label} className="rounded-card border border-line bg-surface p-3">
+                <p className="font-medium text-ink">{row.label}</p>
+                <p className="mt-1 text-xs text-muted">
+                  {viewerLabel}: {row.viewerCount} · {friendLabel}: {row.friendCount}
+                </p>
+                <p className="mt-1 text-xs text-muted">Leans toward {favoredBy}</p>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function DiscoveryList({
+  title,
+  items,
+  emptyMessage,
+}: {
+  title: string;
+  items: TasteMatchProfile["viewerLovedFriendUnwatched"];
+  emptyMessage: string;
+}) {
+  return (
+    <section>
+      <h2 className="text-xl font-semibold">{title}</h2>
+      {items.length === 0 ? (
+        <p className="mt-2 text-sm text-muted">{emptyMessage}</p>
+      ) : (
+        <ul className="mt-4 space-y-2">
+          {items.map((item) => (
+            <li key={item.animeId} className="flex items-center gap-3 rounded-card border border-line bg-surface p-3">
+              <AnimePoster src={item.coverImageUrl} alt={item.title} size="sm" />
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium text-ink">{item.title}</p>
+                {item.personalScore != null ? (
+                  <p className="text-xs text-muted">Personal score: {item.personalScore}</p>
+                ) : null}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+export function CompareHighlights({
+  match,
+  viewerLabel,
+  friendLabel,
+  friendUsername,
 }: CompareHighlightsProps) {
+  const formatDiffRows = match.formatDifferences.map((row) => ({
+    label: row.format,
+    viewerCount: row.viewerCount,
+    friendCount: row.friendCount,
+    delta: row.delta,
+  }));
+  const genreDiffRows = match.genreDifferences.map((row) => ({
+    label: row.genre,
+    viewerCount: row.viewerCount,
+    friendCount: row.friendCount,
+    delta: row.delta,
+  }));
+
   return (
     <div className="space-y-10">
       <p className="text-sm text-muted">
-        {highlights.sharedCompletedSeriesCount} completed franchise
-        {highlights.sharedCompletedSeriesCount === 1 ? "" : "s"} in common
+        {match.highlights.sharedCompletedSeriesCount} completed franchise
+        {match.highlights.sharedCompletedSeriesCount === 1 ? "" : "s"} in common
         between {viewerLabel} and {friendLabel}.
       </p>
 
-      <HighlightList
+      <SeriesHighlightList
         title="Aligned favorites"
-        items={highlights.sharedFavorites}
+        items={match.highlights.sharedFavorites}
         emptyMessage="Rank more series in common to see aligned favorites."
       />
 
-      <HighlightList
+      <SeriesHighlightList
         title="Biggest disagreements"
-        items={highlights.biggestDisagreements}
+        items={match.highlights.biggestDisagreements}
         emptyMessage="No ranked overlap yet — keep comparing series you both finished."
       />
+
+      <GenreGrid
+        title="Shared genre strengths"
+        items={match.sharedGenres}
+        emptyMessage="You need more overlapping completed or in-progress entries to surface shared genres."
+      />
+
+      <DifferenceList
+        title="Genre differences"
+        rows={genreDiffRows}
+        viewerLabel={viewerLabel}
+        friendLabel={friendLabel}
+        emptyMessage="No strong genre differences yet."
+      />
+
+      <DifferenceList
+        title="Format differences"
+        rows={formatDiffRows}
+        viewerLabel={viewerLabel}
+        friendLabel={friendLabel}
+        emptyMessage="No strong format differences yet."
+      />
+
+      <DiscoveryList
+        title={`${friendLabel} might enjoy from your favorites`}
+        items={match.viewerLovedFriendUnwatched}
+        emptyMessage="Add more highly rated or completed entries to surface picks."
+      />
+
+      <DiscoveryList
+        title={`You might enjoy from ${friendLabel}'s favorites`}
+        items={match.friendLovedViewerUnwatched}
+        emptyMessage={`${friendLabel} needs more highly rated or completed entries to surface picks.`}
+      />
+
+      <section>
+        <h2 className="text-xl font-semibold">Shared plan to watch</h2>
+        {match.sharedPlanToWatch.length === 0 ? (
+          <p className="mt-2 text-sm text-muted">
+            Add more watchlist entries to find overlap.
+          </p>
+        ) : (
+          <ul className="mt-4 space-y-2">
+            {match.sharedPlanToWatch.map((item) => (
+              <li key={item.animeId} className="rounded-card border border-line bg-surface p-3">
+                <p className="font-medium text-ink">{item.title}</p>
+                <p className="mt-1 text-xs text-muted">
+                  Priority: you ({item.viewerPriority ?? "none"}) · {friendLabel} (
+                  {item.friendPriority ?? "none"})
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="rounded-card border border-line bg-surface p-4">
+        <h2 className="text-lg font-semibold text-ink">Find something for both of us</h2>
+        <p className="mt-1 text-sm text-muted">
+          Turn this match profile into collaborative recommendations.
+        </p>
+        <Link
+          href={`/friends/compare/${friendUsername}/recommendations`}
+          className="mt-3 inline-flex text-sm font-medium text-accent hover:underline"
+        >
+          Open collaborative picks →
+        </Link>
+      </section>
 
       <p className="text-sm text-muted">
         View full rankings on{" "}
