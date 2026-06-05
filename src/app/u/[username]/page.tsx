@@ -7,6 +7,7 @@ import { ProfileEditSection } from "@/components/profile/profile-edit-section";
 import { ProfileHeader } from "@/components/profile/profile-header";
 import { ProfileStatsPanel } from "@/components/profile/profile-stats-panel";
 import { ProfileTabs } from "@/components/profile/profile-tabs";
+import { WidePageFrame } from "@/components/layout/page-frame";
 import { RankedList } from "@/components/ranking/ranked-list";
 import { getAuthUser } from "@/lib/auth/session";
 import { getFriendshipBetween } from "@/lib/friends/queries";
@@ -131,8 +132,8 @@ export default async function PublicProfilePage({
   );
 
   return (
-    <div
-      className={`mx-auto min-w-0 max-w-6xl space-y-6 sm:space-y-8 ${viewer ? "pb-6 sm:pb-0" : "px-4 py-10"}`}
+    <WidePageFrame
+      className={`min-w-0 space-y-6 sm:space-y-8 ${viewer ? "pb-6 sm:pb-0" : "py-10"}`}
     >
       <ProfileHeader
         profile={profile}
@@ -178,6 +179,6 @@ export default async function PublicProfilePage({
           </Link>
         </p>
       ) : null}
-    </div>
+    </WidePageFrame>
   );
 }
