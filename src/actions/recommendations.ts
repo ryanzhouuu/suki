@@ -5,9 +5,20 @@ import { revalidatePath } from "next/cache";
 import { requireAuthUser } from "@/lib/auth/session";
 import { USER_EVENT_TYPES } from "@/lib/constants";
 import { logUserEvent } from "@/lib/events/log";
+import { getFriendshipBetween } from "@/lib/friends/queries";
+import { assertAcceptedFriends } from "@/lib/friends/relationship";
+import { generateCollaborativeRecommendations } from "@/lib/recommendations/collaborative-generate";
+import {
+  DEFAULT_COLLABORATIVE_RECOMMENDATION_PREFS,
+  isCollaborativeRecommendationMode,
+  type CollaborativeRecommendationMode,
+} from "@/lib/recommendations/collaborative-types";
 import { generateRecommendations } from "@/lib/recommendations/generate";
 import { isEmbeddingConfigured } from "@/lib/recommendations/embedding-provider";
-import { getUserRecommendations } from "@/lib/recommendations/queries";
+import {
+  getCollaborativeRecommendations,
+  getUserRecommendations,
+} from "@/lib/recommendations/queries";
 import { parseRecommendationRequestPrefs } from "@/lib/recommendations/request-prefs";
 
 export type RecommendationsActionState = {
@@ -89,5 +100,92 @@ export async function loadRecommendationsForUser(userId: string) {
   const items = await getUserRecommendations(userId, {
     includeLibraryStatus: true,
   });
+  return { configured: true as const, items };
+}
+
+export async function refreshCollaborativeRecommendations(
+  _prev: RecommendationsActionState,
+  formData: FormData,
+): Promise<RecommendationsActionState> {
+  const user = await requireAuthUser();
+
+  if (!isEmbeddingConfigured()) {
+    return {
+      error:
+        "Recommendations are not configured. Add OPENAI_API_KEY to the server environment.",
+    };
+  }
+
+  const friendUserId = String(formData.get("friendUserId") ?? "").trim();
+  if (!friendUserId) {
+    return { error: "Missing friend user id." };
+  }
+
+  const rawMode = String(
+    formData.get("collaborationMode") ??
+      DEFAULT_COLLABORATIVE_RECOMMENDATION_PREFS.mode,
+  ).trim();
+  if (!isCollaborativeRecommendationMode(rawMode)) {
+    return { error: "Invalid collaborative mode." };
+  }
+
+  const friendship = await getFriendshipBetween(user.id, friendUserId);
+  try {
+    assertAcceptedFriends(friendship, user.id, friendUserId);
+  } catch {
+    return { error: "You must be friends to generate collaborative picks." };
+  }
+
+  const parsed = parseRecommendationRequestPrefs(formData);
+  if (!parsed.ok) {
+    return { error: parsed.error };
+  }
+
+  try {
+    await generateCollaborativeRecommendations(user.id, friendUserId, {
+      force: true,
+      prefs: { ...parsed.prefs, mode: rawMode },
+    });
+    await logUserEvent(
+      user.id,
+      USER_EVENT_TYPES.collaborativeRecommendationRefreshed,
+      {
+        metadata: {
+          friendUserId,
+          mode: rawMode,
+          requestPrefs: parsed.prefs,
+        },
+      },
+    );
+
+    const friendUsername = String(formData.get("friendUsername") ?? "").trim();
+    if (friendUsername) {
+      revalidatePath(`/friends/compare/${friendUsername}/recommendations`);
+      revalidatePath(`/friends/compare/${friendUsername}`);
+    } else {
+      revalidatePath("/friends");
+    }
+
+    return { message: "Collaborative recommendations updated." };
+  } catch (e) {
+    return {
+      error:
+        e instanceof Error
+          ? e.message
+          : "Failed to refresh collaborative recommendations.",
+    };
+  }
+}
+
+export async function loadCollaborativeRecommendationsForUsers(
+  viewerId: string,
+  friendUserId: string,
+  mode: CollaborativeRecommendationMode,
+) {
+  if (!isEmbeddingConfigured()) {
+    return { configured: false as const, items: [] };
+  }
+
+  const items = await getCollaborativeRecommendations(viewerId, friendUserId, mode);
   return { configured: true as const, items };
 }

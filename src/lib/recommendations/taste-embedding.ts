@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 
 import {
+  EMBEDDING_DIMENSIONS,
   EMBEDDING_MODEL,
   RECOMMENDATION_ALGORITHM_VERSION,
 } from "./constants";
@@ -9,6 +10,28 @@ import {
   isEmbeddingConfigured,
 } from "./embedding-provider";
 import type { TasteProfile } from "./types";
+
+function parseEmbedding(value: unknown): number[] | null {
+  if (Array.isArray(value)) {
+    const parsed = value
+      .map((item) => (typeof item === "number" ? item : Number(item)))
+      .filter((item) => Number.isFinite(item));
+    return parsed.length > 0 ? parsed : null;
+  }
+
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) {
+        return parseEmbedding(parsed);
+      }
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+}
 
 export async function upsertUserTasteEmbedding(
   profile: TasteProfile,
@@ -21,12 +44,17 @@ export async function upsertUserTasteEmbedding(
 
   const { data: existing } = await admin
     .from("user_taste_profiles")
-    .select("input_hash, embedding")
+    .select("input_hash, embedding, embedding_model")
     .eq("user_id", profile.userId)
     .maybeSingle();
 
-  if (existing?.input_hash === profile.inputHash && existing.embedding) {
-    return existing.embedding as unknown as number[];
+  const existingEmbedding = parseEmbedding(existing?.embedding);
+  if (
+    existing?.input_hash === profile.inputHash &&
+    existing?.embedding_model === EMBEDDING_MODEL &&
+    existingEmbedding?.length === EMBEDDING_DIMENSIONS
+  ) {
+    return existingEmbedding;
   }
 
   const provider = createEmbeddingProvider();

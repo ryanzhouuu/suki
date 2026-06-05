@@ -8,6 +8,8 @@ import type { RecommendationRow } from "@/lib/recommendations/types";
 
 type FocusedRecommendationsProps = {
   items: RecommendationRow[];
+  contextLabel?: string;
+  whyLabel?: string;
 };
 
 function CarouselChevron({ direction }: { direction: "prev" | "next" }) {
@@ -54,7 +56,11 @@ function CarouselArrow({
   );
 }
 
-export function FocusedRecommendations({ items }: FocusedRecommendationsProps) {
+export function FocusedRecommendations({
+  items,
+  contextLabel,
+  whyLabel,
+}: FocusedRecommendationsProps) {
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -126,6 +132,8 @@ export function FocusedRecommendations({ items }: FocusedRecommendationsProps) {
           index={safeIndex}
           total={visibleItems.length}
           onDismissed={handleDismissed}
+          contextLabel={contextLabel}
+          whyLabel={whyLabel}
         />
       </RecommendationsStage>
 

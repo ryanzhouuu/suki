@@ -38,3 +38,28 @@ export async function getRecommendationExclusions(
 
   return { excludedAnimeIds, excludedSeriesIds };
 }
+
+export async function getCollaborativeRecommendationExclusions(
+  viewerId: string,
+  friendUserId: string,
+): Promise<RecommendationExclusions> {
+  const [viewerExclusions, friendExclusions] = await Promise.all([
+    getRecommendationExclusions(viewerId),
+    getRecommendationExclusions(friendUserId),
+  ]);
+
+  return {
+    excludedAnimeIds: [
+      ...new Set([
+        ...viewerExclusions.excludedAnimeIds,
+        ...friendExclusions.excludedAnimeIds,
+      ]),
+    ],
+    excludedSeriesIds: [
+      ...new Set([
+        ...viewerExclusions.excludedSeriesIds,
+        ...friendExclusions.excludedSeriesIds,
+      ]),
+    ],
+  };
+}
