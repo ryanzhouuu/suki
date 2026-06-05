@@ -14,10 +14,13 @@ import { useGenreFilters } from "@/lib/filters";
 import { filterLibraryEntries } from "@/lib/library/filter";
 import type { LibraryEntry } from "@/lib/library/queries";
 import {
+  defaultDirectionForSort,
   defaultSortForStatus,
   isLibrarySortKey,
+  isSortDirection,
   sortLibraryEntries,
   type LibrarySortKey,
+  type SortDirection,
 } from "@/lib/library/sort";
 import type { AnimeEntryStatus } from "@/lib/constants";
 import { useDebouncedUrlParam } from "@/lib/navigation/url-params";
@@ -34,6 +37,10 @@ export function LibraryPanel({ entries, status }: LibraryPanelProps) {
     sortParam && isLibrarySortKey(sortParam)
       ? sortParam
       : defaultSortForStatus(status);
+  const dirParam = searchParams.get("dir");
+  const direction: SortDirection = isSortDirection(dirParam)
+    ? dirParam
+    : defaultDirectionForSort(sort);
 
   const { value: query, setValue: setQuery, urlValue: qFromUrl } =
     useDebouncedUrlParam("q");
@@ -46,8 +53,8 @@ export function LibraryPanel({ entries, status }: LibraryPanelProps) {
   );
 
   const sorted = useMemo(
-    () => sortLibraryEntries(filtered, sort),
-    [filtered, sort],
+    () => sortLibraryEntries(filtered, sort, direction),
+    [filtered, sort, direction],
   );
 
   const editingEntry = sorted.find((entry) => entry.id === editingEntryId) ?? null;
