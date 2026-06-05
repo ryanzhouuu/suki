@@ -1,4 +1,6 @@
 export const RECOMMENDATION_ALGORITHM_VERSION = "embedding_v2_request_prefs";
+export const COLLABORATIVE_RECOMMENDATION_ALGORITHM_VERSION =
+  "collaborative_embedding_v1";
 
 export const EMBEDDING_MODEL = "text-embedding-3-small";
 export const EMBEDDING_DIMENSIONS = 1536;
@@ -23,6 +25,11 @@ export const REASON_CODES = {
   requestGenreMatch: "request_genre_match",
   requestLengthMatch: "request_length_match",
   requestFormatMatch: "request_format_match",
+  collaborativeBothMatch: "collaborative_both_match",
+  collaborativeViewerMatch: "collaborative_viewer_match",
+  collaborativeFriendMatch: "collaborative_friend_match",
+  collaborativeSharedGenre: "collaborative_shared_genre",
+  collaborativeSurprise: "collaborative_surprise",
   diversePick: "diverse_pick",
   wildcardPick: "wildcard_pick",
 } as const;

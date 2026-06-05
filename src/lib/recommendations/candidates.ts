@@ -27,8 +27,20 @@ export async function getVectorCandidates(
     throw new Error("User taste profile embedding is missing.");
   }
 
+  return getVectorCandidatesForEmbedding(
+    tasteRow.embedding as unknown as number[],
+    exclusions,
+  );
+}
+
+export async function getVectorCandidatesForEmbedding(
+  queryEmbedding: number[],
+  exclusions: RecommendationExclusions,
+): Promise<CandidateAnime[]> {
+  const supabase = await createClient();
+
   const { data: matches, error } = await supabase.rpc("match_anime_embeddings", {
-    query_embedding: tasteRow.embedding,
+    query_embedding: queryEmbedding,
     match_count: VECTOR_CANDIDATE_LIMIT,
     excluded_anime_ids: exclusions.excludedAnimeIds,
     excluded_series_ids: exclusions.excludedSeriesIds,

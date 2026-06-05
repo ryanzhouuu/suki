@@ -60,6 +60,7 @@ export async function generateRecommendations(
       .from("recommendation_runs")
       .select("id, input_hash")
       .eq("user_id", userId)
+      .eq("run_kind", "personal")
       .eq("algorithm_version", RECOMMENDATION_ALGORITHM_VERSION)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -101,6 +102,7 @@ export async function generateRecommendations(
     .from("recommendation_runs")
     .insert({
       user_id: userId,
+      run_kind: "personal",
       algorithm_version: RECOMMENDATION_ALGORITHM_VERSION,
       embedding_model: EMBEDDING_MODEL,
       input_hash: runInputHash,
