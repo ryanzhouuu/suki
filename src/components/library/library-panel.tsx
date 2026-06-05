@@ -8,6 +8,7 @@ import { EntryEditPanel } from "@/components/library/entry-edit-panel";
 import { FilterMatchCount } from "@/components/filters/filter-match-count";
 import { GenreFilter } from "@/components/filters/genre-filter";
 import { LibrarySortSelect } from "@/components/library/library-sort-select";
+import { ControlRail } from "@/components/layout/page-frame";
 import { Input } from "@/components/ui/input";
 import { useGenreFilters } from "@/lib/filters";
 import { filterLibraryEntries } from "@/lib/library/filter";
@@ -55,56 +56,66 @@ export function LibraryPanel({ entries, status }: LibraryPanelProps) {
   const filtering = titleFiltering || genreFiltering;
 
   return (
-    <div className="space-y-4">
-      <Input
-        type="search"
-        placeholder="Search your library…"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        aria-label="Search your library"
-      />
-
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <GenreFilter selected={genres} onChange={setGenres} />
-        <LibrarySortSelect status={status} />
-      </div>
-
-      {filtering ? (
-        <FilterMatchCount matched={sorted.length} total={entries.length} noun="entry" />
-      ) : null}
-
-      {editingEntry ? (
-        <EntryEditPanel
-          key={editingEntry.id}
-          entry={editingEntry}
-          onClose={() => setEditingEntryId(null)}
-        />
-      ) : null}
-
-      {sorted.length === 0 ? (
-        <div className="rounded-card border border-dashed border-line-strong p-10 text-center">
-          <p className="font-display text-xl text-ink">No matches</p>
-          <p className="mt-1 text-sm text-muted">
-            {titleFiltering ? (
-              <>Nothing in your library matches &ldquo;{qFromUrl}&rdquo;.</>
-            ) : (
-              <>Nothing in your library matches the selected genres.</>
-            )}{" "}
-            Try a different filter.
+    <ControlRail
+      sidebarLabel="Library filters"
+      sidebar={
+        <div className="space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-faint">
+            Filter &amp; sort
           </p>
-        </div>
-      ) : (
-        <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-          {sorted.map((entry) => (
-            <EntryCard
-              key={entry.id}
-              entry={entry}
-              onEdit={() => setEditingEntryId(entry.id)}
-              isEditing={editingEntryId === entry.id}
+          <Input
+            type="search"
+            placeholder="Search your library…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            aria-label="Search your library"
+          />
+          <GenreFilter selected={genres} onChange={setGenres} layout="wrap" />
+          <LibrarySortSelect status={status} />
+          {filtering ? (
+            <FilterMatchCount
+              matched={sorted.length}
+              total={entries.length}
+              noun="entry"
             />
-          ))}
-        </ul>
-      )}
-    </div>
+          ) : null}
+        </div>
+      }
+    >
+      <div className="space-y-4">
+        {editingEntry ? (
+          <EntryEditPanel
+            key={editingEntry.id}
+            entry={editingEntry}
+            onClose={() => setEditingEntryId(null)}
+          />
+        ) : null}
+
+        {sorted.length === 0 ? (
+          <div className="rounded-card border border-dashed border-line-strong p-10 text-center">
+            <p className="font-display text-xl text-ink">No matches</p>
+            <p className="mt-1 text-sm text-muted">
+              {titleFiltering ? (
+                <>Nothing in your library matches &ldquo;{qFromUrl}&rdquo;.</>
+              ) : (
+                <>Nothing in your library matches the selected genres.</>
+              )}{" "}
+              Try a different filter.
+            </p>
+          </div>
+        ) : (
+          <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+            {sorted.map((entry) => (
+              <EntryCard
+                key={entry.id}
+                entry={entry}
+                onEdit={() => setEditingEntryId(entry.id)}
+                isEditing={editingEntryId === entry.id}
+              />
+            ))}
+          </ul>
+        )}
+      </div>
+    </ControlRail>
   );
 }
