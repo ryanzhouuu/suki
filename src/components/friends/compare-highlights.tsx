@@ -172,24 +172,42 @@ export function CompareHighlights({
   }));
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       <p className="text-sm text-muted">
         {match.highlights.sharedCompletedSeriesCount} completed franchise
         {match.highlights.sharedCompletedSeriesCount === 1 ? "" : "s"} in common
         between {viewerLabel} and {friendLabel}.
       </p>
 
-      <SeriesHighlightList
-        title="Aligned favorites"
-        items={match.highlights.sharedFavorites}
-        emptyMessage="Rank more series in common to see aligned favorites."
-      />
+      <section className="overflow-hidden rounded-card border border-accent/35 bg-linear-to-br from-accent-soft via-surface to-surface p-6 shadow-[0_16px_48px_-28px_rgb(var(--shadow-color)/0.4)] sm:p-7">
+        <p className="eyebrow">For both of you</p>
+        <h2 className="mt-2 font-display text-2xl font-semibold text-ink">
+          Find something for both of us
+        </h2>
+        <p className="mt-1.5 max-w-lg text-sm text-muted">
+          Turn this match profile into collaborative recommendations blending
+          your shared and complementary taste.
+        </p>
+        <Link
+          href={`/friends/compare/${friendUsername}/recommendations`}
+          className="mt-5 inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-on-accent shadow-sm transition-colors hover:bg-accent-strong"
+        >
+          Open collaborative picks →
+        </Link>
+      </section>
 
-      <SeriesHighlightList
-        title="Biggest disagreements"
-        items={match.highlights.biggestDisagreements}
-        emptyMessage="No ranked overlap yet — keep comparing series you both finished."
-      />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <SeriesHighlightList
+          title="Aligned favorites"
+          items={match.highlights.sharedFavorites}
+          emptyMessage="Rank more series in common to see aligned favorites."
+        />
+        <SeriesHighlightList
+          title="Biggest disagreements"
+          items={match.highlights.biggestDisagreements}
+          emptyMessage="No ranked overlap yet — keep comparing series you both finished."
+        />
+      </div>
 
       <GenreGrid
         title="Shared genre strengths"
@@ -197,33 +215,35 @@ export function CompareHighlights({
         emptyMessage="You need more overlapping completed or in-progress entries to surface shared genres."
       />
 
-      <DifferenceList
-        title="Genre differences"
-        rows={genreDiffRows}
-        viewerLabel={viewerLabel}
-        friendLabel={friendLabel}
-        emptyMessage="No strong genre differences yet."
-      />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <DifferenceList
+          title="Genre differences"
+          rows={genreDiffRows}
+          viewerLabel={viewerLabel}
+          friendLabel={friendLabel}
+          emptyMessage="No strong genre differences yet."
+        />
+        <DifferenceList
+          title="Format differences"
+          rows={formatDiffRows}
+          viewerLabel={viewerLabel}
+          friendLabel={friendLabel}
+          emptyMessage="No strong format differences yet."
+        />
+      </div>
 
-      <DifferenceList
-        title="Format differences"
-        rows={formatDiffRows}
-        viewerLabel={viewerLabel}
-        friendLabel={friendLabel}
-        emptyMessage="No strong format differences yet."
-      />
-
-      <DiscoveryList
-        title={`${friendLabel} might enjoy from your favorites`}
-        items={match.viewerLovedFriendUnwatched}
-        emptyMessage="Add more highly rated or completed entries to surface picks."
-      />
-
-      <DiscoveryList
-        title={`You might enjoy from ${friendLabel}'s favorites`}
-        items={match.friendLovedViewerUnwatched}
-        emptyMessage={`${friendLabel} needs more highly rated or completed entries to surface picks.`}
-      />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <DiscoveryList
+          title={`${friendLabel} might enjoy from your favorites`}
+          items={match.viewerLovedFriendUnwatched}
+          emptyMessage="Add more highly rated or completed entries to surface picks."
+        />
+        <DiscoveryList
+          title={`You might enjoy from ${friendLabel}'s favorites`}
+          items={match.friendLovedViewerUnwatched}
+          emptyMessage={`${friendLabel} needs more highly rated or completed entries to surface picks.`}
+        />
+      </div>
 
       <section>
         <h2 className="text-xl font-semibold">Shared plan to watch</h2>
@@ -232,7 +252,7 @@ export function CompareHighlights({
             Add more watchlist entries to find overlap.
           </p>
         ) : (
-          <ul className="mt-4 space-y-2">
+          <ul className="mt-4 grid gap-2 sm:grid-cols-2">
             {match.sharedPlanToWatch.map((item) => (
               <li key={item.animeId} className="rounded-card border border-line bg-surface p-3">
                 <p className="font-medium text-ink">{item.title}</p>
@@ -244,19 +264,6 @@ export function CompareHighlights({
             ))}
           </ul>
         )}
-      </section>
-
-      <section className="rounded-card border border-line bg-surface p-4">
-        <h2 className="text-lg font-semibold text-ink">Find something for both of us</h2>
-        <p className="mt-1 text-sm text-muted">
-          Turn this match profile into collaborative recommendations.
-        </p>
-        <Link
-          href={`/friends/compare/${friendUsername}/recommendations`}
-          className="mt-3 inline-flex text-sm font-medium text-accent hover:underline"
-        >
-          Open collaborative picks →
-        </Link>
       </section>
 
       <p className="text-sm text-muted">
