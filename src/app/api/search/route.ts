@@ -5,7 +5,8 @@ import { parseSearchParams } from "@/lib/search/params";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const { query, genres, invalidGenre } = parseSearchParams(searchParams);
+  const { query, genres, format, sort, invalidGenre } =
+    parseSearchParams(searchParams);
 
   if (invalidGenre) {
     return NextResponse.json(
@@ -14,12 +15,16 @@ export async function GET(request: Request) {
     );
   }
 
-  if (!query.trim() && genres.length === 0) {
+  if (!query.trim() && genres.length === 0 && !format) {
     return NextResponse.json({ media: [] });
   }
 
   try {
-    const media = await searchAniListAnime(query, { genres });
+    const media = await searchAniListAnime(query, {
+      genres,
+      format: format ?? undefined,
+      sort,
+    });
     return NextResponse.json({ media });
   } catch (e) {
     return NextResponse.json(

@@ -1,10 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import { GenreFilter } from "@/components/filters/genre-filter";
 import { ControlRail, WidePageFrame } from "@/components/layout/page-frame";
 import { SearchResultCard } from "@/components/search/search-result-card";
+import {
+  ANILIST_FORMATS,
+  ANILIST_FORMAT_LABELS,
+  SEARCH_SORT_KEYS,
+  SEARCH_SORT_LABELS,
+  type AniListFormat,
+  type SearchSortKey,
+} from "@/lib/anilist/search-filters";
 import { useGenreFilters } from "@/lib/filters";
 import { useAnilistSearch } from "@/lib/search";
 
@@ -26,36 +34,115 @@ function SearchIcon() {
   );
 }
 
+function FilterSection({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="space-y-2.5">
+      <p className="text-xs font-semibold uppercase tracking-wide text-faint">
+        {label}
+      </p>
+      {children}
+    </div>
+  );
+}
+
 export function SearchPanel() {
   const { genres, setGenres, genreKey } = useGenreFilters();
   const [query, setQuery] = useState("");
+  const [format, setFormat] = useState<AniListFormat | null>(null);
+  const [sort, setSort] = useState<SearchSortKey>("relevance");
 
   const { results, loading, error, isActive, trimmedQuery } = useAnilistSearch({
     query,
     genres,
     genreKey,
+    format,
+    sort,
   });
 
   const hasQuery = trimmedQuery.length > 0;
+  const hasFilters = genres.length > 0 || format !== null;
+
+  function resetFilters() {
+    setGenres([]);
+    setFormat(null);
+    setSort("relevance");
+  }
 
   return (
     <WidePageFrame className="space-y-6">
       <div>
         <p className="eyebrow">Discover</p>
         <h1 className="mt-1.5 text-4xl font-semibold">Search</h1>
-        <p className="mt-2 max-w-xl text-muted">
-          Find anime via AniList and add them to your library in seconds.
-        </p>
       </div>
 
       <ControlRail
         sidebarLabel="Search filters"
         sidebar={
-          <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-faint">
-              Filter by genre
-            </p>
-            <GenreFilter selected={genres} onChange={setGenres} layout="wrap" />
+          <div className="space-y-5">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-semibold text-ink">Filters</p>
+              {hasFilters || sort !== "relevance" ? (
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="text-xs font-medium text-muted transition-colors hover:text-accent"
+                >
+                  Clear all
+                </button>
+              ) : null}
+            </div>
+
+            <FilterSection label="Sort by">
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value as SearchSortKey)}
+                aria-label="Sort results"
+                className="w-full rounded-lg border border-line-strong bg-paper px-3 py-2 text-sm text-ink"
+              >
+                {SEARCH_SORT_KEYS.map((key) => (
+                  <option key={key} value={key}>
+                    {SEARCH_SORT_LABELS[key]}
+                  </option>
+                ))}
+              </select>
+            </FilterSection>
+
+            <FilterSection label="Format">
+              <div className="flex flex-wrap gap-1.5">
+                {ANILIST_FORMATS.map((value) => {
+                  const active = format === value;
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => setFormat(active ? null : value)}
+                      className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                        active
+                          ? "border-accent bg-accent text-on-accent"
+                          : "border-line-strong bg-surface text-muted hover:border-accent hover:text-accent"
+                      }`}
+                    >
+                      {ANILIST_FORMAT_LABELS[value]}
+                    </button>
+                  );
+                })}
+              </div>
+            </FilterSection>
+
+            <FilterSection label="Genre">
+              <GenreFilter
+                selected={genres}
+                onChange={setGenres}
+                layout="wrap"
+              />
+            </FilterSection>
           </div>
         }
       >
@@ -91,17 +178,17 @@ export function SearchPanel() {
             <p className="text-sm text-muted">
               {hasQuery
                 ? `No results for “${trimmedQuery}”.`
-                : "No results for the selected genres."}
+                : "No results for the selected filters."}
             </p>
           ) : null}
 
           {!isActive && !loading ? (
             <div className="rounded-card border border-dashed border-line-strong p-10 text-center">
               <p className="font-display text-xl text-ink">
-                Start typing or pick genres
+                Start typing or pick filters
               </p>
               <p className="mt-1 text-sm text-muted">
-                Search by title, browse by genre, or combine both.
+                Search by title, browse by genre or format, or combine them.
               </p>
             </div>
           ) : null}

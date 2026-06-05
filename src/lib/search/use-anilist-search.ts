@@ -13,19 +13,24 @@ type UseAnilistSearchOptions = {
   query: string;
   genres: string[];
   genreKey: string;
+  format?: string | null;
+  sort?: string | null;
 };
 
 export function useAnilistSearch({
   query,
   genres,
   genreKey,
+  format = null,
+  sort = null,
 }: UseAnilistSearchOptions) {
   const [results, setResults] = useState<AniListMediaSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const trimmedQuery = query.trim();
-  const isActive = trimmedQuery.length > 0 || genres.length > 0;
+  const isActive =
+    trimmedQuery.length > 0 || genres.length > 0 || Boolean(format);
 
   if (
     !isActive &&
@@ -47,7 +52,9 @@ export function useAnilistSearch({
 
       void (async () => {
         try {
-          const res = await fetch(buildSearchApiUrl(query, genres));
+          const res = await fetch(
+            buildSearchApiUrl(query, genres, { format, sort }),
+          );
           if (cancelled) return;
           if (!res.ok) {
             const body = (await res.json().catch(() => ({}))) as {
@@ -72,7 +79,7 @@ export function useAnilistSearch({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [query, genreKey, genres, isActive]);
+  }, [query, genreKey, genres, format, sort, isActive]);
 
   return { results, loading, error, isActive, trimmedQuery };
 }

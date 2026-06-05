@@ -36,6 +36,7 @@ export const ANIME_SEARCH_QUERY = `
   query SearchAnime(
     $search: String
     $genres: [String]
+    $format: MediaFormat
     $sort: [MediaSort]
     $page: Int
     $perPage: Int
@@ -46,6 +47,7 @@ export const ANIME_SEARCH_QUERY = `
         type: ANIME
         sort: $sort
         genre_in: $genres
+        format: $format
         isAdult: false
       ) {
         id
