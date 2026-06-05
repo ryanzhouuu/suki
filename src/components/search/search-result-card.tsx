@@ -26,12 +26,12 @@ export function SearchResultCard({ media }: SearchResultCardProps) {
   }
 
   return (
-    <li className="group flex gap-4 rounded-card border border-line bg-surface p-3.5 transition-colors hover:border-accent">
+    <li className="group flex gap-4 rounded-card border border-line bg-surface p-3.5 transition-all hover:-translate-y-0.5 hover:border-accent hover:shadow-[0_16px_40px_-28px_rgb(var(--shadow-color)/0.5)]">
       <Link href={`/anime/${media.id}`} className="shrink-0">
         <AnimePoster
           src={media.coverImage?.large ?? null}
           alt={title}
-          size="sm"
+          size="md"
         />
       </Link>
       <div className="min-w-0 flex-1">

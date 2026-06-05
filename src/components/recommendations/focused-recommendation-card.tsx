@@ -32,6 +32,8 @@ type FocusedRecommendationCardProps = {
   onDismissed: () => void;
   contextLabel?: string;
   whyLabel?: string;
+  /** Render the contained banner halo. Off when a page-level backdrop is present. */
+  backdrop?: boolean;
 };
 
 export function FocusedRecommendationCard({
@@ -41,6 +43,7 @@ export function FocusedRecommendationCard({
   onDismissed,
   contextLabel = "Recommendation",
   whyLabel = "Why this pick",
+  backdrop = true,
 }: FocusedRecommendationCardProps) {
   const [pending, startTransition] = useTransition();
   const [libraryStatus, setLibraryStatus] = useState(row.libraryEntry?.status ?? null);
@@ -72,10 +75,12 @@ export function FocusedRecommendationCard({
 
   return (
     <div className="relative isolate animate-rise pt-2">
-      <RecommendationBannerBackdrop
-        bannerUrl={anime.banner_image_url}
-        coverUrl={anime.cover_image_url}
-      />
+      {backdrop ? (
+        <RecommendationBannerBackdrop
+          bannerUrl={anime.banner_image_url}
+          coverUrl={anime.cover_image_url}
+        />
+      ) : null}
 
       <article className="relative z-10 overflow-hidden rounded-card border border-line/80 bg-surface/95 shadow-[0_18px_50px_-30px_rgb(var(--shadow-color)/0.45)] backdrop-blur-sm">
         <div className="grid gap-0 lg:grid-cols-[minmax(220px,280px)_1fr]">

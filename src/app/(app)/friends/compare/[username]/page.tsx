@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { CompareHighlights } from "@/components/friends/compare-highlights";
 import { TasteSimilarityMeter } from "@/components/friends/taste-similarity-meter";
+import { WidePageFrame } from "@/components/layout/page-frame";
 import { requireProfile } from "@/lib/auth/session";
 import { getFriendshipBetween } from "@/lib/friends/queries";
 import { friendshipStatusForViewer } from "@/lib/friends/relationship";
@@ -42,7 +43,7 @@ export default async function FriendsComparePage({ params }: ComparePageProps) {
   const match = await getTasteMatchProfile(user.id, friendProfile.user_id);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-10">
+    <WidePageFrame className="space-y-8">
       <header>
         <Link
           href="/friends"
@@ -50,7 +51,7 @@ export default async function FriendsComparePage({ params }: ComparePageProps) {
         >
           ← Friends
         </Link>
-        <h1 className="mt-4 font-display text-3xl font-semibold text-ink">
+        <h1 className="mt-4 font-display text-4xl font-semibold text-ink">
           Taste match
         </h1>
         <p className="mt-2 text-muted">
@@ -75,6 +76,6 @@ export default async function FriendsComparePage({ params }: ComparePageProps) {
         friendLabel={friendDisplayName}
         friendUsername={friendProfile.username}
       />
-    </div>
+    </WidePageFrame>
   );
 }

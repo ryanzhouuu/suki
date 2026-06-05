@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import { RankingPanel } from "@/components/ranking/ranking-panel";
+import { WidePageFrame } from "@/components/layout/page-frame";
 import { requireProfile } from "@/lib/auth/session";
 import { RANKING_ALGORITHM_VERSION } from "@/lib/constants";
 import { getNextComparisonPair } from "@/lib/ranking/prompt";
@@ -39,14 +40,10 @@ export default async function RankingPage() {
   const genresBySeriesId = Object.fromEntries(genresMap);
 
   return (
-    <div className="space-y-12">
+    <WidePageFrame className="space-y-10">
       <div>
         <p className="eyebrow">Express your taste</p>
         <h1 className="mt-1.5 text-4xl font-semibold">Ranking</h1>
-        <p className="mt-2 max-w-md text-muted">
-          Rank whole series — not individual seasons. Compare franchises you have
-          finished and build a list you actually trust.
-        </p>
       </div>
 
       {rankingsError ? (
@@ -78,6 +75,6 @@ export default async function RankingPage() {
           completedSeriesCount={completedSeriesCount}
         />
       </Suspense>
-    </div>
+    </WidePageFrame>
   );
 }

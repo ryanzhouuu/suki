@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 
+import { AnimePoster } from "@/components/anime/anime-poster";
+import { CinematicBackdrop } from "@/components/layout/page-frame";
 import { FocusedRecommendationCard } from "@/components/recommendations/focused-recommendation-card";
 import { RecommendationsStage } from "@/components/recommendations/recommendations-stage";
 import type { RecommendationRow } from "@/lib/recommendations/types";
@@ -107,54 +109,81 @@ export function FocusedRecommendations({
   }
 
   return (
-    <div className="space-y-4 pt-6 sm:pt-8">
-      <RecommendationsStage
-        leading={
-          <CarouselArrow
-            direction="prev"
-            label="Previous recommendation"
-            disabled={!canScroll}
-            onClick={goPrev}
-          />
-        }
-        trailing={
-          <CarouselArrow
-            direction="next"
-            label="Next recommendation"
-            disabled={!canScroll}
-            onClick={goNext}
-          />
-        }
-      >
-        <FocusedRecommendationCard
-          key={current.id}
-          row={current}
-          index={safeIndex}
-          total={visibleItems.length}
-          onDismissed={handleDismissed}
-          contextLabel={contextLabel}
-          whyLabel={whyLabel}
-        />
-      </RecommendationsStage>
+    <div className="relative isolate">
+      <CinematicBackdrop
+        key={current.id}
+        imageUrl={current.anime.banner_image_url ?? current.anime.cover_image_url}
+        className="animate-fade"
+      />
 
-      <RecommendationsStage>
-        <div className="flex items-center justify-center gap-2">
-          {visibleItems.map((row, index) => (
-            <button
-              key={row.id}
-              type="button"
-              aria-label={`Go to recommendation ${index + 1}`}
-              aria-current={index === safeIndex ? "true" : undefined}
-              onClick={() => setActiveIndex(index)}
-              className={`h-2.5 rounded-full transition-all ${
-                index === safeIndex
-                  ? "w-8 bg-accent"
-                  : "w-2.5 bg-line-strong hover:bg-accent/60"
-              }`}
+      <div className="relative z-10 space-y-5 pt-6 sm:pt-8">
+        <RecommendationsStage
+          leading={
+            <CarouselArrow
+              direction="prev"
+              label="Previous recommendation"
+              disabled={!canScroll}
+              onClick={goPrev}
             />
-          ))}
-        </div>
-      </RecommendationsStage>
+          }
+          trailing={
+            <CarouselArrow
+              direction="next"
+              label="Next recommendation"
+              disabled={!canScroll}
+              onClick={goNext}
+            />
+          }
+        >
+          <FocusedRecommendationCard
+            key={current.id}
+            row={current}
+            index={safeIndex}
+            total={visibleItems.length}
+            onDismissed={handleDismissed}
+            contextLabel={contextLabel}
+            whyLabel={whyLabel}
+            backdrop={false}
+          />
+        </RecommendationsStage>
+
+        {canScroll ? (
+          <RecommendationsStage>
+            <div>
+              <p className="eyebrow mb-2">Up next</p>
+              <ul className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {visibleItems.map((row, index) => {
+                  const active = index === safeIndex;
+                  const title =
+                    row.anime.english_title || row.anime.romaji_title || "Pick";
+                  return (
+                    <li key={row.id} className="shrink-0">
+                      <button
+                        type="button"
+                        aria-label={`Go to ${title}`}
+                        aria-current={active ? "true" : undefined}
+                        onClick={() => setActiveIndex(index)}
+                        className={`block overflow-hidden rounded-lg transition-all ${
+                          active
+                            ? "ring-2 ring-accent ring-offset-2 ring-offset-paper"
+                            : "opacity-65 hover:opacity-100"
+                        }`}
+                      >
+                        <AnimePoster
+                          src={row.anime.cover_image_url}
+                          alt={title}
+                          size="md"
+                          className="rounded-lg"
+                        />
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </RecommendationsStage>
+        ) : null}
+      </div>
     </div>
   );
 }

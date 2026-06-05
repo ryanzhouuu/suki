@@ -13,10 +13,28 @@ export const LIBRARY_SORT_KEYS = [
 
 export type LibrarySortKey = (typeof LIBRARY_SORT_KEYS)[number];
 
-const PRIORITY_ORDER: Record<string, number> = {
-  high: 0,
+export const SORT_DIRECTIONS = ["asc", "desc"] as const;
+export type SortDirection = (typeof SORT_DIRECTIONS)[number];
+
+export function isSortDirection(
+  value: string | undefined | null,
+): value is SortDirection {
+  return value === "asc" || value === "desc";
+}
+
+/**
+ * Each sort key has a natural default direction: titles read A→Z, everything
+ * else leads with the "most" (newest, highest score, highest priority).
+ */
+export function defaultDirectionForSort(sort: LibrarySortKey): SortDirection {
+  return sort === "title" ? "asc" : "desc";
+}
+
+// Higher number = ranks first under the default (descending) direction.
+const PRIORITY_RANK: Record<string, number> = {
+  high: 2,
   medium: 1,
-  low: 2,
+  low: 0,
 };
 
 export const LIBRARY_SORT_LABELS: Record<LibrarySortKey, string> = {
@@ -50,52 +68,60 @@ function entryTitle(entry: LibraryEntry): string {
   ).toLowerCase();
 }
 
+/**
+ * Ascending comparison of the human-meaningful quantity for each sort key
+ * (oldest→newest, low→high score, low→high priority, A→Z). The chosen
+ * direction then applies a sign so the default direction leads with the "most".
+ */
+function compareAscending(
+  a: LibraryEntry,
+  b: LibraryEntry,
+  sort: LibrarySortKey,
+): number {
+  switch (sort) {
+    case "title":
+      return entryTitle(a).localeCompare(entryTitle(b));
+    case "date_added":
+      return a.created_at.localeCompare(b.created_at);
+    case "priority": {
+      const aPriority = a.priority ? PRIORITY_RANK[a.priority] ?? -1 : -1;
+      const bPriority = b.priority ? PRIORITY_RANK[b.priority] ?? -1 : -1;
+      if (aPriority !== bPriority) return aPriority - bPriority;
+      return a.created_at.localeCompare(b.created_at);
+    }
+    case "release_year": {
+      const aYear = a.anime.season_year ?? -1;
+      const bYear = b.anime.season_year ?? -1;
+      if (aYear !== bYear) return aYear - bYear;
+      return entryTitle(a).localeCompare(entryTitle(b));
+    }
+    case "personal_score": {
+      const aScore = a.personal_score ?? -1;
+      const bScore = b.personal_score ?? -1;
+      if (aScore !== bScore) return Number(aScore) - Number(bScore);
+      const aCompleted = a.completed_at ?? "";
+      const bCompleted = b.completed_at ?? "";
+      return aCompleted.localeCompare(bCompleted);
+    }
+    case "completed_at": {
+      const aCompleted = a.completed_at ?? "";
+      const bCompleted = b.completed_at ?? "";
+      return aCompleted.localeCompare(bCompleted);
+    }
+    case "updated":
+    default:
+      return a.updated_at.localeCompare(b.updated_at);
+  }
+}
+
 export function sortLibraryEntries(
   entries: LibraryEntry[],
   sort: LibrarySortKey,
+  direction: SortDirection = defaultDirectionForSort(sort),
 ): LibraryEntry[] {
+  const factor = direction === "asc" ? 1 : -1;
   const sorted = [...entries];
-
-  sorted.sort((a, b) => {
-    switch (sort) {
-      case "title":
-        return entryTitle(a).localeCompare(entryTitle(b));
-      case "date_added":
-        return b.created_at.localeCompare(a.created_at);
-      case "priority": {
-        const aPriority = a.priority ? PRIORITY_ORDER[a.priority] ?? 3 : 3;
-        const bPriority = b.priority ? PRIORITY_ORDER[b.priority] ?? 3 : 3;
-        if (aPriority !== bPriority) return aPriority - bPriority;
-        return b.created_at.localeCompare(a.created_at);
-      }
-      case "release_year": {
-        const aYear = a.anime.season_year ?? -1;
-        const bYear = b.anime.season_year ?? -1;
-        if (aYear !== bYear) return bYear - aYear;
-        return entryTitle(a).localeCompare(entryTitle(b));
-      }
-      case "personal_score": {
-        const aScore = a.personal_score ?? -1;
-        const bScore = b.personal_score ?? -1;
-        if (aScore !== bScore) return Number(bScore) - Number(aScore);
-        const aCompleted = a.completed_at ?? "";
-        const bCompleted = b.completed_at ?? "";
-        return bCompleted.localeCompare(aCompleted);
-      }
-      case "completed_at": {
-        const aCompleted = a.completed_at ?? "";
-        const bCompleted = b.completed_at ?? "";
-        if (!aCompleted && !bCompleted) return 0;
-        if (!aCompleted) return 1;
-        if (!bCompleted) return -1;
-        return bCompleted.localeCompare(aCompleted);
-      }
-      case "updated":
-      default:
-        return b.updated_at.localeCompare(a.updated_at);
-    }
-  });
-
+  sorted.sort((a, b) => factor * compareAscending(a, b, sort));
   return sorted;
 }
 

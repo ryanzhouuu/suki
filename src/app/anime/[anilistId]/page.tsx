@@ -55,7 +55,7 @@ export default async function AnimeDetailPage({ params }: AnimeDetailPageProps) 
           <div className="h-full w-full bg-surface-2" />
         )}
         <div className="absolute inset-0 bg-linear-to-t from-paper via-paper/40 to-transparent" />
-        <div className="absolute inset-x-0 top-0 mx-auto max-w-5xl px-4 pt-5">
+        <div className="absolute inset-x-0 top-0 mx-auto max-w-6xl px-4 pt-5">
           <Link
             href={user ? "/home" : "/"}
             className="inline-flex items-center gap-1.5 rounded-full bg-paper/80 px-3.5 py-1.5 text-sm font-medium text-ink backdrop-blur-md transition-colors hover:text-accent"
@@ -65,7 +65,7 @@ export default async function AnimeDetailPage({ params }: AnimeDetailPageProps) 
         </div>
       </div>
 
-      <div className="relative z-10 mx-auto max-w-5xl min-w-0 space-y-9 px-4">
+      <div className="relative z-10 mx-auto max-w-6xl min-w-0 space-y-9 px-4">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-6">
           <div className="-mt-16 w-fit shrink-0 overflow-hidden rounded-card border-4 border-paper shadow-[0_18px_50px_-26px_rgb(var(--shadow-color)/0.6)] sm:-mt-24">
             <AnimePoster src={anime.cover_image_url} alt={title} size="lg" />

@@ -2,13 +2,49 @@ import { Suspense } from "react";
 
 import { LibraryPanel } from "@/components/library/library-panel";
 import { LibraryTabs } from "@/components/library/library-tabs";
+import { WidePageFrame } from "@/components/layout/page-frame";
 import { requireProfile } from "@/lib/auth/session";
-import type { AnimeEntryStatus } from "@/lib/constants";
+import {
+  ANIME_ENTRY_STATUSES,
+  STATUS_LABELS,
+  type AnimeEntryStatus,
+} from "@/lib/constants";
 import { getUserLibraryEntries } from "@/lib/library/queries";
 
 type LibraryPageProps = {
   searchParams: Promise<{ status?: string }>;
 };
+
+function StatCell({
+  label,
+  value,
+  active,
+}: {
+  label: string;
+  value: number;
+  active: boolean;
+}) {
+  return (
+    <div
+      className={`rounded-card border px-3 py-2.5 transition-colors ${
+        active
+          ? "border-accent/45 bg-accent-soft/60"
+          : "border-line bg-surface"
+      }`}
+    >
+      <p
+        className={`font-display text-2xl leading-none font-semibold tabular-nums ${
+          active ? "text-accent" : "text-ink"
+        }`}
+      >
+        {value}
+      </p>
+      <p className="mt-1.5 truncate text-[11px] font-medium uppercase tracking-wide text-muted">
+        {label}
+      </p>
+    </div>
+  );
+}
 
 export default async function LibraryPage({ searchParams }: LibraryPageProps) {
   const { user } = await requireProfile();
@@ -19,17 +55,37 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
       ? (statusParam as AnimeEntryStatus)
       : undefined;
 
-  const entries = await getUserLibraryEntries(user.id, status);
+  // When a status filter is active we still want full counts for the strip;
+  // on the "all" tab the unfiltered fetch already serves both.
+  const [entries, allEntries] = await Promise.all([
+    getUserLibraryEntries(user.id, status),
+    status ? getUserLibraryEntries(user.id) : Promise.resolve(null),
+  ]);
+
+  const countSource = allEntries ?? entries;
+  const counts = countSource.reduce<Record<string, number>>((acc, entry) => {
+    acc[entry.status] = (acc[entry.status] ?? 0) + 1;
+    return acc;
+  }, {});
 
   return (
-    <div className="space-y-6">
+    <WidePageFrame className="space-y-6">
       <div>
         <p className="eyebrow">Your collection</p>
         <h1 className="mt-1.5 text-4xl font-semibold">Library</h1>
-        <p className="mt-2 text-muted">
-          {entries.length} {entries.length === 1 ? "entry" : "entries"} tracked.
-        </p>
       </div>
+
+      <dl className="grid grid-cols-3 gap-2.5 sm:grid-cols-6">
+        <StatCell label="Total" value={countSource.length} active={!status} />
+        {ANIME_ENTRY_STATUSES.map((s) => (
+          <StatCell
+            key={s}
+            label={STATUS_LABELS[s]}
+            value={counts[s] ?? 0}
+            active={status === s}
+          />
+        ))}
+      </dl>
 
       <Suspense fallback={null}>
         <LibraryTabs />
@@ -51,6 +107,6 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
           <LibraryPanel entries={entries} status={status} />
         </Suspense>
       )}
-    </div>
+    </WidePageFrame>
   );
 }
