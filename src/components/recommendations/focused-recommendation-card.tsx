@@ -30,6 +30,8 @@ type FocusedRecommendationCardProps = {
   index: number;
   total: number;
   onDismissed: () => void;
+  contextLabel?: string;
+  whyLabel?: string;
 };
 
 export function FocusedRecommendationCard({
@@ -37,6 +39,8 @@ export function FocusedRecommendationCard({
   index,
   total,
   onDismissed,
+  contextLabel = "Recommendation",
+  whyLabel = "Why this pick",
 }: FocusedRecommendationCardProps) {
   const [pending, startTransition] = useTransition();
   const [libraryStatus, setLibraryStatus] = useState(row.libraryEntry?.status ?? null);
@@ -87,7 +91,7 @@ export function FocusedRecommendationCard({
           <div className="flex flex-col p-5 sm:p-6 lg:p-8">
             <div className="mb-4 flex items-center justify-between gap-3 text-xs text-muted">
             <span>
-              Recommendation {index + 1} of {total}
+              {contextLabel} {index + 1} of {total}
             </span>
             {libraryStatus ? (
               <span className="rounded-full bg-accent-soft px-2.5 py-1 font-medium text-accent">
@@ -134,7 +138,7 @@ export function FocusedRecommendationCard({
           <div className="mt-5 space-y-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-muted">
-                Why this pick
+                {whyLabel}
               </p>
               <p className="mt-1.5 text-sm leading-relaxed text-ink">{explanation}</p>
             </div>
