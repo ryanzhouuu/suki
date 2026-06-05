@@ -25,10 +25,6 @@ export default async function FriendsPage() {
         <h1 className="mt-1 font-display text-4xl font-semibold text-ink">
           Friends
         </h1>
-        <p className="mt-2 max-w-xl text-sm text-muted">
-          Find people by username or name, manage requests, and compare taste on
-          each friend&apos;s compare page.
-        </p>
       </header>
 
       <ControlRail

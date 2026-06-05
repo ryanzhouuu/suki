@@ -73,10 +73,6 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
       <div>
         <p className="eyebrow">Your collection</p>
         <h1 className="mt-1.5 text-4xl font-semibold">Library</h1>
-        <p className="mt-2 text-muted">
-          {entries.length} {entries.length === 1 ? "entry" : "entries"}{" "}
-          {status ? `marked ${STATUS_LABELS[status].toLowerCase()}` : "tracked"}.
-        </p>
       </div>
 
       <dl className="grid grid-cols-3 gap-2.5 sm:grid-cols-6">

@@ -44,10 +44,6 @@ export default async function RankingPage() {
       <div>
         <p className="eyebrow">Express your taste</p>
         <h1 className="mt-1.5 text-4xl font-semibold">Ranking</h1>
-        <p className="mt-2 max-w-md text-muted">
-          Rank whole series — not individual seasons. Compare franchises you have
-          finished and build a list you actually trust.
-        </p>
       </div>
 
       {rankingsError ? (

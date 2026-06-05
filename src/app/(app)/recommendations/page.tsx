@@ -49,10 +49,6 @@ export default async function RecommendationsPage() {
       <div className="max-w-2xl">
         <p className="eyebrow">For you</p>
         <h1 className="mt-1.5 text-4xl font-semibold">Recommendations</h1>
-        <p className="mt-2 text-muted">
-          Tell us what you want to watch next — we blend that with your rankings
-          and library, and mix in adventurous picks on each refresh.
-        </p>
       </div>
 
       <ControlRail
