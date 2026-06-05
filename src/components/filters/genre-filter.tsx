@@ -7,6 +7,11 @@ import { ANILIST_GENRES } from "@/lib/anilist/genres";
 type GenreFilterProps = {
   selected: string[];
   onChange: (genres: string[]) => void;
+  /**
+   * `grid` (default) lays chips out in fixed columns for full-width contexts.
+   * `wrap` flows chips to fit narrow containers like a sidebar rail.
+   */
+  layout?: "grid" | "wrap";
 };
 
 function ChevronIcon({ open }: { open: boolean }) {
@@ -29,7 +34,11 @@ function ChevronIcon({ open }: { open: boolean }) {
   );
 }
 
-export function GenreFilter({ selected, onChange }: GenreFilterProps) {
+export function GenreFilter({
+  selected,
+  onChange,
+  layout = "grid",
+}: GenreFilterProps) {
   const selectedSet = new Set(selected);
   const [open, setOpen] = useState(() => selected.length > 0);
 
@@ -89,7 +98,11 @@ export function GenreFilter({ selected, onChange }: GenreFilterProps) {
         className={open ? "border-t border-line px-3 pb-3 pt-3" : "hidden"}
       >
         <div
-          className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 md:grid-cols-4"
+          className={
+            layout === "wrap"
+              ? "flex flex-wrap gap-1.5"
+              : "grid grid-cols-2 gap-1.5 sm:grid-cols-3 md:grid-cols-4"
+          }
           role="group"
           aria-label="Filter by genre"
         >
@@ -101,7 +114,9 @@ export function GenreFilter({ selected, onChange }: GenreFilterProps) {
                 type="button"
                 aria-pressed={active}
                 onClick={() => toggle(genre)}
-                className={`rounded-full px-2.5 py-1.5 text-center text-xs font-medium transition-colors sm:text-sm ${
+                className={`rounded-full px-2.5 py-1.5 text-xs font-medium transition-colors sm:text-sm ${
+                  layout === "wrap" ? "text-left" : "text-center"
+                } ${
                   active
                     ? "bg-accent text-on-accent shadow-sm"
                     : "border border-line-strong bg-paper text-muted hover:border-accent hover:text-accent"

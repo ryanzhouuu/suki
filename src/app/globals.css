@@ -184,6 +184,15 @@ select {
   border-radius: var(--radius-card);
 }
 
+/*
+  Full-bleed breakout: lets an opted-in wide page escape the default reading
+  rail and stretch to the viewport edges. `html { overflow-x: clip }` (above)
+  keeps the 50vw math from introducing a horizontal scrollbar.
+*/
+@utility full-bleed {
+  margin-inline: calc(50% - 50vw);
+}
+
 @utility eyebrow {
   font-family: var(--font-sans), sans-serif;
   text-transform: uppercase;
@@ -206,6 +215,20 @@ select {
 
 @utility animate-rise {
   animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Opacity-only fade — safe for elements that rely on their own transform. */
+@utility animate-fade {
+  animation: fade 0.55s ease both;
 }
 
 /* —— Profile page: focused editorial scaffolding —— */
