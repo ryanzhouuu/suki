@@ -2,9 +2,9 @@ import Link from "next/link";
 import { after } from "next/server";
 
 import { loadRecommendationsForUser, logRecommendationViewed } from "@/actions/recommendations";
+import { ControlRail, WidePageFrame } from "@/components/layout/page-frame";
 import { FocusedRecommendations } from "@/components/recommendations/focused-recommendations";
 import { RecommendationPreferencesForm } from "@/components/recommendations/recommendation-preferences-form";
-import { RecommendationsStage } from "@/components/recommendations/recommendations-stage";
 import { requireProfile } from "@/lib/auth/session";
 import { isEmbeddingConfigured } from "@/lib/recommendations/embedding-provider";
 import {
@@ -45,65 +45,70 @@ export default async function RecommendationsPage() {
     pool.eligibleCount <= items.length + 2;
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="eyebrow">For you</p>
-          <h1 className="mt-1.5 text-4xl font-semibold">Recommendations</h1>
-          <p className="mt-2 max-w-xl text-muted">
-            Tell us what you want to watch next — we blend that with your
-            rankings and library, and mix in adventurous picks on each refresh.
-          </p>
-        </div>
+    <WidePageFrame className="space-y-8">
+      <div className="max-w-2xl">
+        <p className="eyebrow">For you</p>
+        <h1 className="mt-1.5 text-4xl font-semibold">Recommendations</h1>
+        <p className="mt-2 text-muted">
+          Tell us what you want to watch next — we blend that with your rankings
+          and library, and mix in adventurous picks on each refresh.
+        </p>
       </div>
 
-      <RecommendationsStage>
-        <RecommendationPreferencesForm />
-      </RecommendationsStage>
+      <ControlRail
+        sidebarLabel="Recommendation preferences"
+        sidebarClassName="lg:pt-10"
+        sidebar={
+          <div className="space-y-4">
+            <RecommendationPreferencesForm />
 
-      {showPoolHint ? (
-        <RecommendationsStage>
-          <div className="rounded-card border border-line bg-surface-2/50 p-4 text-sm text-muted">
-          <p className="font-medium text-ink">Small recommendation pool</p>
-          <p className="mt-1.5 leading-relaxed">
-            Recommendations only come from anime we have embedded for search (
-            {pool.embeddedCount} titles). Your library excludes{" "}
-            {pool.libraryCount} of those, leaving about{" "}
-            <strong className="font-semibold text-ink">
-              {pool.eligibleCount}
-            </strong>{" "}
-            eligible match{pool.eligibleCount === 1 ? "" : "es"} right now (up
-            to {STORED_RECOMMENDATION_LIMIT} per refresh).
-          </p>
-          <p className="mt-2 leading-relaxed">
-            Grow the pool: run{" "}
-            <code className="text-ink">npm run seed:catalog</code> locally, or
-            search and open more anime in the app (each title gets embedded when
-            cached). Then use <strong className="text-ink">Get recommendations</strong>{" "}
-            above.
-          </p>
+            {showPoolHint ? (
+              <div className="rounded-card border border-line bg-surface-2/50 p-4 text-sm text-muted">
+                <p className="font-medium text-ink">Small recommendation pool</p>
+                <p className="mt-1.5 leading-relaxed">
+                  Recommendations only come from anime we have embedded for
+                  search ({pool.embeddedCount} titles). Your library excludes{" "}
+                  {pool.libraryCount} of those, leaving about{" "}
+                  <strong className="font-semibold text-ink">
+                    {pool.eligibleCount}
+                  </strong>{" "}
+                  eligible match{pool.eligibleCount === 1 ? "" : "es"} right now
+                  (up to {STORED_RECOMMENDATION_LIMIT} per refresh).
+                </p>
+                <p className="mt-2 leading-relaxed">
+                  Grow the pool: run{" "}
+                  <code className="text-ink">npm run seed:catalog</code>{" "}
+                  locally, or search and open more anime in the app (each title
+                  gets embedded when cached). Then use{" "}
+                  <strong className="text-ink">Get recommendations</strong>{" "}
+                  above.
+                </p>
+              </div>
+            ) : null}
           </div>
-        </RecommendationsStage>
-      ) : null}
-
-      {items.length === 0 ? (
-        <RecommendationsStage>
+        }
+      >
+        {items.length === 0 ? (
           <div className="rounded-card border border-dashed border-line-strong p-10 text-center">
-          <p className="font-display text-xl text-ink">No recommendations yet</p>
-          <p className="mt-2 text-sm text-muted">
-            Add and rank anime in your library, then use{" "}
-            <strong className="text-ink">Get recommendations</strong> above to generate
-            suggestions (this can take a few seconds). You can also{" "}
-            <Link href="/search" className="font-semibold text-accent hover:underline">
-              search
-            </Link>{" "}
-            to grow the embedded catalog.
-          </p>
+            <p className="font-display text-xl text-ink">
+              No recommendations yet
+            </p>
+            <p className="mt-2 text-sm text-muted">
+              Add and rank anime in your library, then use{" "}
+              <strong className="text-ink">Get recommendations</strong> to
+              generate suggestions (this can take a few seconds). You can also{" "}
+              <Link href="/search" className="font-semibold text-accent hover:underline">
+                search
+              </Link>{" "}
+              to grow the embedded catalog.
+            </p>
           </div>
-        </RecommendationsStage>
-      ) : (
-        <FocusedRecommendations items={items.slice(0, FOCUSED_RECOMMENDATION_LIMIT)} />
-      )}
-    </div>
+        ) : (
+          <FocusedRecommendations
+            items={items.slice(0, FOCUSED_RECOMMENDATION_LIMIT)}
+          />
+        )}
+      </ControlRail>
+    </WidePageFrame>
   );
 }
