@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-export const RECOMMENDATIONS_STAGE_GUTTER_CLASS = "w-11 shrink-0 sm:w-12";
+export const RECOMMENDATIONS_STAGE_GUTTER_CLASS = "w-0 shrink-0 sm:w-12";
 
 type RecommendationsStageProps = {
   children: ReactNode;

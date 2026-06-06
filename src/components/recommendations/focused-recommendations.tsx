@@ -119,20 +119,24 @@ export function FocusedRecommendations({
       <div className="relative z-10 space-y-5 pt-6 sm:pt-8">
         <RecommendationsStage
           leading={
-            <CarouselArrow
-              direction="prev"
-              label="Previous recommendation"
-              disabled={!canScroll}
-              onClick={goPrev}
-            />
+            <span className="hidden sm:inline-flex">
+              <CarouselArrow
+                direction="prev"
+                label="Previous recommendation"
+                disabled={!canScroll}
+                onClick={goPrev}
+              />
+            </span>
           }
           trailing={
-            <CarouselArrow
-              direction="next"
-              label="Next recommendation"
-              disabled={!canScroll}
-              onClick={goNext}
-            />
+            <span className="hidden sm:inline-flex">
+              <CarouselArrow
+                direction="next"
+                label="Next recommendation"
+                disabled={!canScroll}
+                onClick={goNext}
+              />
+            </span>
           }
         >
           <FocusedRecommendationCard
@@ -151,7 +155,7 @@ export function FocusedRecommendations({
           <RecommendationsStage>
             <div>
               <p className="eyebrow mb-2">Up next</p>
-              <ul className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <ul className="scrollbar-none flex gap-3 overflow-x-auto pb-1">
                 {visibleItems.map((row, index) => {
                   const active = index === safeIndex;
                   const title =
