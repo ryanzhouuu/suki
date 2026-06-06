@@ -78,7 +78,7 @@ export function SearchPanel() {
     <WidePageFrame className="space-y-6">
       <div>
         <p className="eyebrow">Discover</p>
-        <h1 className="mt-1.5 text-4xl font-semibold">Search</h1>
+        <h1 className="mt-1.5 text-3xl font-semibold sm:text-4xl">Search</h1>
       </div>
 
       <ControlRail
@@ -103,7 +103,7 @@ export function SearchPanel() {
                 value={sort}
                 onChange={(e) => setSort(e.target.value as SearchSortKey)}
                 aria-label="Sort results"
-                className="w-full rounded-lg border border-line-strong bg-paper px-3 py-2 text-sm text-ink"
+                className="w-full rounded-lg border border-line-strong bg-paper px-3 py-2.5 text-base text-ink sm:text-sm"
               >
                 {SEARCH_SORT_KEYS.map((key) => (
                   <option key={key} value={key}>
@@ -123,7 +123,7 @@ export function SearchPanel() {
                       type="button"
                       aria-pressed={active}
                       onClick={() => setFormat(active ? null : value)}
-                      className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                      className={`rounded-full border px-3 py-2 text-xs font-medium transition-colors sm:py-1 ${
                         active
                           ? "border-accent bg-accent text-on-accent"
                           : "border-line-strong bg-surface text-muted hover:border-accent hover:text-accent"
@@ -155,7 +155,6 @@ export function SearchPanel() {
                 placeholder="Search by title…  e.g. Frieren, Cowboy Bebop"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                autoFocus
                 aria-label="Search anime"
                 className="w-full rounded-2xl border border-line-strong bg-surface py-3 pr-4 pl-12 text-base text-ink shadow-[0_8px_28px_-22px_rgb(var(--shadow-color)/0.5)] outline-none transition-colors placeholder:text-faint focus:border-accent sm:py-3.5 sm:pl-14"
               />

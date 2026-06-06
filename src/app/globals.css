@@ -80,8 +80,8 @@ html {
 
 .app-main {
   padding-bottom: max(
-    5.75rem,
-    calc(4.25rem + env(safe-area-inset-bottom, 0px))
+    9.5rem,
+    calc(8rem + env(safe-area-inset-bottom, 0px))
   );
 }
 

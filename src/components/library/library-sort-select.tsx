@@ -93,7 +93,7 @@ export function LibrarySortSelect({ status }: LibrarySortSelectProps) {
         id="library-sort"
         value={current}
         onChange={(e) => onChangeSort(e.target.value)}
-        className="min-w-0 flex-1 rounded-lg border border-line-strong bg-paper px-3 py-2 text-sm text-ink"
+        className="min-w-0 flex-1 rounded-lg border border-line-strong bg-paper px-3 py-2.5 text-base text-ink sm:text-sm"
       >
         {options.map((key) => (
           <option key={key} value={key}>
@@ -108,7 +108,7 @@ export function LibrarySortSelect({ status }: LibrarySortSelectProps) {
           direction === "asc" ? "Sorting ascending" : "Sorting descending"
         }
         title={direction === "asc" ? "Ascending" : "Descending"}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line-strong bg-paper text-muted transition-colors hover:border-accent hover:text-accent"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-line-strong bg-paper text-muted transition-colors hover:border-accent hover:text-accent"
       >
         <DirectionArrow direction={direction} />
       </button>

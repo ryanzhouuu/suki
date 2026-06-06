@@ -83,7 +83,7 @@ export function GenreFilter({
           <button
             type="button"
             onClick={() => onChange([])}
-            className="shrink-0 text-xs font-medium text-accent hover:underline"
+            className="shrink-0 rounded-full px-2 py-1 text-xs font-medium text-accent transition-colors hover:bg-accent-soft"
           >
             Clear
           </button>
@@ -114,7 +114,7 @@ export function GenreFilter({
                 type="button"
                 aria-pressed={active}
                 onClick={() => toggle(genre)}
-                className={`rounded-full px-2.5 py-1.5 text-xs font-medium transition-colors sm:text-sm ${
+                className={`rounded-full px-3 py-2 text-xs font-medium transition-colors sm:px-2.5 sm:py-1.5 sm:text-sm ${
                   layout === "wrap" ? "text-left" : "text-center"
                 } ${
                   active

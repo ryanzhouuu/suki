@@ -155,7 +155,7 @@ export function RankingPanel({
         ) : null}
 
         <section>
-          <h2 className="mb-4 text-2xl font-semibold">Your ranking</h2>
+          <h2 className="mb-4 text-xl font-semibold sm:text-2xl">Your ranking</h2>
           {genreFiltering ? (
             <div className="mb-3">
               <FilterMatchCount

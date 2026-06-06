@@ -56,7 +56,7 @@ export function MobileNav() {
                 aria-current={active ? "page" : undefined}
                 aria-label={item.label}
                 title={item.label}
-                className={`flex min-h-[3.25rem] flex-col items-center justify-center gap-0.5 px-1 py-2 text-[10px] font-medium leading-tight transition-colors ${
+                className={`flex min-h-13 flex-col items-center justify-center gap-0.5 px-1 py-2 text-xs font-medium leading-tight transition-colors ${
                   active ? "text-accent" : "text-muted"
                 }`}
               >

@@ -43,7 +43,7 @@ export default async function RankingPage() {
     <WidePageFrame className="space-y-10">
       <div>
         <p className="eyebrow">Express your taste</p>
-        <h1 className="mt-1.5 text-4xl font-semibold">Ranking</h1>
+        <h1 className="mt-1.5 text-3xl font-semibold sm:text-4xl">Ranking</h1>
       </div>
 
       {rankingsError ? (

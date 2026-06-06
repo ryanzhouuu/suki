@@ -38,14 +38,20 @@ export function ControlRail({
   sidebarClassName?: string;
 }) {
   return (
-    <div className="lg:grid lg:grid-cols-[17rem_minmax(0,1fr)] lg:items-start lg:gap-8 xl:grid-cols-[19rem_minmax(0,1fr)] xl:gap-10">
+    <div className="space-y-4 lg:grid lg:grid-cols-[17rem_minmax(0,1fr)] lg:items-start lg:gap-8 lg:space-y-0 xl:grid-cols-[19rem_minmax(0,1fr)] xl:gap-10">
+      <div className="min-w-0 lg:order-2">{children}</div>
       <aside
         aria-label={sidebarLabel}
-        className={`relative z-10 mb-6 lg:mb-0 lg:sticky lg:top-20 ${sidebarClassName}`}
+        className={`relative z-10 lg:order-1 lg:mb-0 lg:sticky lg:top-20 ${sidebarClassName}`}
       >
-        {sidebar}
+        <details className="rounded-card border border-line bg-surface lg:hidden">
+          <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
+            {sidebarLabel}
+          </summary>
+          <div className="border-t border-line px-3 py-3">{sidebar}</div>
+        </details>
+        <div className="hidden lg:block">{sidebar}</div>
       </aside>
-      <div className="min-w-0">{children}</div>
     </div>
   );
 }
