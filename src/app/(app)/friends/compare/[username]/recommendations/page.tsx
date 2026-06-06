@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { loadCollaborativeRecommendationsForUsers } from "@/actions/recommendations";
 import { CollaborativeRecommendationPreferencesForm } from "@/components/recommendations/collaborative-recommendation-preferences-form";
 import { CollaborativeFocusedRecommendations } from "@/components/recommendations/collaborative-focused-recommendations";
+import { WidePageFrame } from "@/components/layout/page-frame";
 import { RecommendationsStage } from "@/components/recommendations/recommendations-stage";
 import { requireProfile } from "@/lib/auth/session";
 import { getFriendshipBetween } from "@/lib/friends/queries";
@@ -51,7 +52,7 @@ export default async function CollaborativeRecommendationsPage({
   const viewerDisplayName = viewerProfile.display_name || viewerProfile.username;
 
   return (
-    <div className="space-y-8">
+    <WidePageFrame className="space-y-8">
       <header className="space-y-3">
         <Link
           href={`/friends/compare/${friendProfile.username}`}
@@ -60,7 +61,9 @@ export default async function CollaborativeRecommendationsPage({
           ← Back to taste match
         </Link>
         <p className="eyebrow">For both of you</p>
-        <h1 className="text-4xl font-semibold">Collaborative recommendations</h1>
+        <h1 className="text-3xl font-semibold sm:text-4xl">
+          Collaborative recommendations
+        </h1>
         <p className="max-w-2xl text-muted">
           Built from {viewerDisplayName} and {friendDisplayName}&apos;s shared and
           complementary taste signals.
@@ -99,6 +102,6 @@ export default async function CollaborativeRecommendationsPage({
           items={items.slice(0, FOCUSED_RECOMMENDATION_LIMIT)}
         />
       )}
-    </div>
+    </WidePageFrame>
   );
 }
