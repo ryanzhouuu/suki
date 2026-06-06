@@ -48,7 +48,9 @@ export default async function RecommendationsPage() {
     <WidePageFrame className="space-y-8">
       <div className="max-w-2xl">
         <p className="eyebrow">For you</p>
-        <h1 className="mt-1.5 text-4xl font-semibold">Recommendations</h1>
+        <h1 className="mt-1.5 text-3xl font-semibold sm:text-4xl">
+          Recommendations
+        </h1>
       </div>
 
       <ControlRail

@@ -22,7 +22,7 @@ export default async function FriendsPage() {
     <WidePageFrame className="space-y-8">
       <header>
         <p className="eyebrow">Social</p>
-        <h1 className="mt-1 font-display text-4xl font-semibold text-ink">
+        <h1 className="mt-1 font-display text-3xl font-semibold text-ink sm:text-4xl">
           Friends
         </h1>
       </header>

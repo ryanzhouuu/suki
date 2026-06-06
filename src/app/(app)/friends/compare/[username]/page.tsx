@@ -51,7 +51,7 @@ export default async function FriendsComparePage({ params }: ComparePageProps) {
         >
           ← Friends
         </Link>
-        <h1 className="mt-4 font-display text-4xl font-semibold text-ink">
+        <h1 className="mt-4 font-display text-3xl font-semibold text-ink sm:text-4xl">
           Taste match
         </h1>
         <p className="mt-2 text-muted">
