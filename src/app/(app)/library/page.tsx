@@ -72,10 +72,10 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
     <WidePageFrame className="space-y-6">
       <div>
         <p className="eyebrow">Your collection</p>
-        <h1 className="mt-1.5 text-4xl font-semibold">Library</h1>
+        <h1 className="mt-1.5 text-3xl font-semibold sm:text-4xl">Library</h1>
       </div>
 
-      <dl className="grid grid-cols-3 gap-2.5 sm:grid-cols-6">
+      <dl className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
         <StatCell label="Total" value={countSource.length} active={!status} />
         {ANIME_ENTRY_STATUSES.map((s) => (
           <StatCell
