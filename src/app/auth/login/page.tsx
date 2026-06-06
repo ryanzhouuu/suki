@@ -20,7 +20,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const initialMode = mode === "signup" ? "signup" : "signin";
 
   return (
-    <div className="mx-auto flex min-h-full w-full max-w-md flex-col justify-center px-4 py-16">
+    <div className="mx-auto flex min-h-full w-full max-w-md flex-col justify-start px-4 pt-[max(1.5rem,env(safe-area-inset-top))] pb-10 sm:justify-center sm:py-16">
       <div className="animate-rise">
         <Link href="/" className="mb-8 inline-flex items-center gap-2.5">
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-lg font-semibold text-on-accent shadow-sm">
