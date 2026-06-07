@@ -309,6 +309,7 @@ export type Database = {
           explanation_details: Json;
           final_score: number;
           id: string;
+          position: number;
           reason_codes: string[];
           rerank_score: number;
           run_id: string;
@@ -324,6 +325,7 @@ export type Database = {
           explanation_details?: Json;
           final_score: number;
           id?: string;
+          position: number;
           reason_codes?: string[];
           rerank_score: number;
           run_id: string;
@@ -339,6 +341,7 @@ export type Database = {
           explanation_details?: Json;
           final_score?: number;
           id?: string;
+          position?: number;
           reason_codes?: string[];
           rerank_score?: number;
           run_id?: string;
