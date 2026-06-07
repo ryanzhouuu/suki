@@ -6,6 +6,7 @@ import { AnimePoster } from "@/components/anime/anime-poster";
 import { CinematicBackdrop } from "@/components/layout/page-frame";
 import { FocusedRecommendationCard } from "@/components/recommendations/focused-recommendation-card";
 import { RecommendationsStage } from "@/components/recommendations/recommendations-stage";
+import { nextIndexAfterDismiss } from "@/lib/recommendations/carousel";
 import type { RecommendationRow } from "@/lib/recommendations/types";
 
 type FocusedRecommendationsProps = {
@@ -103,9 +104,7 @@ export function FocusedRecommendations({
 
   function handleDismissed() {
     setDismissedIds((prev) => new Set(prev).add(current.id));
-    setActiveIndex((index) =>
-      index >= visibleItems.length - 1 ? 0 : index,
-    );
+    setActiveIndex((index) => nextIndexAfterDismiss(index, visibleItems.length));
   }
 
   return (
