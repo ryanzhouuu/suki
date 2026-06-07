@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import type { AniListMediaSummary } from "@/lib/anilist/types";
 
@@ -19,7 +19,7 @@ type UseAnilistSearchOptions = {
 
 export function useAnilistSearch({
   query,
-  genres,
+  genres: _genres,
   genreKey,
   format = null,
   sort = null,
@@ -29,17 +29,12 @@ export function useAnilistSearch({
   const [error, setError] = useState<string | null>(null);
 
   const trimmedQuery = query.trim();
+  const normalizedGenres = useMemo(
+    () => (genreKey.length > 0 ? genreKey.split("\0").filter(Boolean) : []),
+    [genreKey],
+  );
   const isActive =
-    trimmedQuery.length > 0 || genres.length > 0 || Boolean(format);
-
-  if (
-    !isActive &&
-    (results.length > 0 || loading || error !== null)
-  ) {
-    setResults([]);
-    setLoading(false);
-    setError(null);
-  }
+    trimmedQuery.length > 0 || _genres.length > 0 || Boolean(format);
 
   useEffect(() => {
     if (!isActive) return;
@@ -53,7 +48,7 @@ export function useAnilistSearch({
       void (async () => {
         try {
           const res = await fetch(
-            buildSearchApiUrl(query, genres, { format, sort }),
+            buildSearchApiUrl(trimmedQuery, normalizedGenres, { format, sort }),
           );
           if (cancelled) return;
           if (!res.ok) {
@@ -79,7 +74,13 @@ export function useAnilistSearch({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [query, genreKey, genres, format, sort, isActive]);
+  }, [trimmedQuery, genreKey, format, sort, isActive, normalizedGenres]);
 
-  return { results, loading, error, isActive, trimmedQuery };
+  return {
+    results: isActive ? results : [],
+    loading: isActive ? loading : false,
+    error: isActive ? error : null,
+    isActive,
+    trimmedQuery,
+  };
 }
