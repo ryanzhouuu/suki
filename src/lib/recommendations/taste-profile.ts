@@ -27,22 +27,49 @@ function titleOf(anime: Tables<"anime">): string {
   return anime.english_title || anime.romaji_title || anime.native_title || "Unknown";
 }
 
-export async function buildTasteProfile(userId: string): Promise<TasteProfile> {
+type RankingRow = {
+  rank: number;
+  series_id: string;
+  series: Tables<"series"> | null;
+};
+
+type ComparisonRow = {
+  left_series_id: string;
+  right_series_id: string;
+  winner_series_id: string | null;
+};
+
+export type TasteProfilePreload = {
+  entries?: Awaited<ReturnType<typeof getUserLibraryEntries>>;
+  rankings?: RankingRow[];
+  comparisons?: ComparisonRow[];
+};
+
+export async function buildTasteProfile(
+  userId: string,
+  preload: TasteProfilePreload = {},
+): Promise<TasteProfile> {
   const supabase = await createClient();
 
   const [entries, rankingsResult, comparisonsResult] = await Promise.all([
-    getUserLibraryEntries(userId),
-    supabase
-      .from("derived_series_rankings")
-      .select("rank, series_id, series(*)")
-      .eq("user_id", userId)
-      .eq("algorithm_version", RANKING_ALGORITHM_VERSION)
-      .order("rank", { ascending: true })
-      .limit(15),
-    supabase
-      .from("pairwise_series_comparisons")
-      .select("left_series_id, right_series_id, winner_series_id")
-      .eq("user_id", userId),
+    preload.entries
+      ? Promise.resolve(preload.entries)
+      : getUserLibraryEntries(userId),
+    preload.rankings
+      ? Promise.resolve({ data: preload.rankings })
+      : supabase
+          .from("derived_series_rankings")
+          .select("rank, series_id, series(*)")
+          .eq("user_id", userId)
+          .eq("algorithm_version", RANKING_ALGORITHM_VERSION)
+          .order("rank", { ascending: true })
+          .limit(15),
+    preload.comparisons
+      ? Promise.resolve({ data: preload.comparisons })
+      : supabase
+          .from("pairwise_series_comparisons")
+          .select("left_series_id, right_series_id, winner_series_id")
+          .eq("user_id", userId),
   ]);
 
   const rankings = rankingsResult.data ?? [];

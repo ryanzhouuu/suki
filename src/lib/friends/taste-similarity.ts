@@ -9,6 +9,7 @@ import {
 import { isEmbeddingConfigured } from "@/lib/recommendations/embedding-provider";
 import { buildTasteProfile } from "@/lib/recommendations/taste-profile";
 import { upsertUserTasteEmbedding } from "@/lib/recommendations/taste-embedding";
+import { resolvedComparisonsFromRows } from "@/lib/ranking/preference-graph";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/types/database";
@@ -79,20 +80,9 @@ async function libraryStats(userId: string) {
   return { completed, total: entries.length };
 }
 
-async function comparisonCount(userId: string): Promise<number> {
-  const supabase = await createClient();
-  const { count } = await supabase
-    .from("pairwise_series_comparisons")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .not("winner_series_id", "is", null);
-
-  return count ?? 0;
-}
-
-async function ensureEmbedding(userId: string): Promise<number[] | null> {
-  const profile = await buildTasteProfile(userId);
-
+async function ensureEmbedding(
+  profile: Awaited<ReturnType<typeof buildTasteProfile>>,
+): Promise<number[] | null> {
   if (
     !profile.profileText.trim() ||
     (profile.signals.completedTitles.length === 0 &&
@@ -130,7 +120,10 @@ function parseEmbedding(value: unknown): number[] | null {
   return null;
 }
 
-async function loadEmbedding(userId: string): Promise<number[] | null> {
+async function loadEmbedding(
+  userId: string,
+  profileOverride?: Awaited<ReturnType<typeof buildTasteProfile>>,
+): Promise<number[] | null> {
   const admin = createAdminClient();
 
   const { data: row } = await admin
@@ -139,7 +132,7 @@ async function loadEmbedding(userId: string): Promise<number[] | null> {
     .eq("user_id", userId)
     .maybeSingle();
 
-  const profile = await buildTasteProfile(userId);
+  const profile = profileOverride ?? (await buildTasteProfile(userId));
   const parsed = parseEmbedding(row?.embedding);
 
   if (
@@ -151,7 +144,17 @@ async function loadEmbedding(userId: string): Promise<number[] | null> {
     return parsed;
   }
 
-  return ensureEmbedding(userId);
+  return ensureEmbedding(profile);
+}
+
+async function loadResolvedComparisons(userId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("pairwise_series_comparisons")
+    .select("left_series_id, right_series_id, winner_series_id")
+    .eq("user_id", userId);
+
+  return resolvedComparisonsFromRows(data ?? []);
 }
 
 export async function getTasteSimilarity(
@@ -174,13 +177,18 @@ export async function getTasteSimilarity(
     await Promise.all([
       loadEmbedding(viewerId),
       loadEmbedding(friendUserId),
-      libraryStats(viewerId).then(async (s) => ({
-        ...s,
-        comparisons: await comparisonCount(viewerId),
-      })),
-      libraryStats(friendUserId).then(async (s) => ({
-        ...s,
-        comparisons: await comparisonCount(friendUserId),
+      Promise.all([libraryStats(viewerId), loadResolvedComparisons(viewerId)]).then(
+        ([stats, comparisons]) => ({
+          ...stats,
+          comparisons: comparisons.length,
+        }),
+      ),
+      Promise.all([
+        libraryStats(friendUserId),
+        loadResolvedComparisons(friendUserId),
+      ]).then(([stats, comparisons]) => ({
+        ...stats,
+        comparisons: comparisons.length,
       })),
     ]);
 
@@ -260,15 +268,10 @@ export async function getTasteCompareHighlights(
   );
 }
 
-async function completedSeriesIds(userId: string): Promise<Set<string>> {
-  const supabase = await createClient();
-  const { data: completed } = await supabase
-    .from("user_anime_entries")
-    .select("anime_id")
-    .eq("user_id", userId)
-    .eq("status", "completed");
-
-  const animeIds = (completed ?? []).map((r) => r.anime_id);
+async function completedSeriesIdsFromAnimeIds(
+  animeIds: string[],
+  supabase: Awaited<ReturnType<typeof createClient>>,
+): Promise<Set<string>> {
   if (animeIds.length === 0) return new Set();
 
   const { data: maps } = await supabase
@@ -277,6 +280,20 @@ async function completedSeriesIds(userId: string): Promise<Set<string>> {
     .in("anime_id", animeIds);
 
   return new Set((maps ?? []).map((m) => m.series_id));
+}
+
+async function completedSeriesIds(userId: string): Promise<Set<string>> {
+  const supabase = await createClient();
+  const { data: completed } = await supabase
+    .from("user_anime_entries")
+    .select("anime_id")
+    .eq("user_id", userId)
+    .eq("status", "completed");
+
+  return completedSeriesIdsFromAnimeIds(
+    (completed ?? []).map((row) => row.anime_id),
+    supabase,
+  );
 }
 
 function asTasteRows(entries: Awaited<ReturnType<typeof getUserLibraryEntries>>): TasteMatchLibraryRow[] {
@@ -351,12 +368,123 @@ export async function getTasteMatchProfile(
     };
   }
 
-  const [similarity, highlights, viewerEntries, friendEntries] = await Promise.all([
-    getTasteSimilarity(viewerId, friendUserId),
-    getTasteCompareHighlights(viewerId, friendUserId),
+  const supabase = await createClient();
+  const [
+    viewerEntries,
+    friendEntries,
+    viewerRankingsResult,
+    friendRankingsResult,
+    viewerComparisonsResult,
+    friendComparisonsResult,
+  ] = await Promise.all([
     getUserLibraryEntries(viewerId),
     getUserLibraryEntries(friendUserId),
+    supabase
+      .from("derived_series_rankings")
+      .select("rank, series_id, series(*)")
+      .eq("user_id", viewerId)
+      .eq("algorithm_version", RANKING_ALGORITHM_VERSION)
+      .order("rank", { ascending: true })
+      .limit(25),
+    supabase
+      .from("derived_series_rankings")
+      .select("rank, series_id, series(*)")
+      .eq("user_id", friendUserId)
+      .eq("algorithm_version", RANKING_ALGORITHM_VERSION)
+      .order("rank", { ascending: true })
+      .limit(25),
+    supabase
+      .from("pairwise_series_comparisons")
+      .select("left_series_id, right_series_id, winner_series_id")
+      .eq("user_id", viewerId),
+    supabase
+      .from("pairwise_series_comparisons")
+      .select("left_series_id, right_series_id, winner_series_id")
+      .eq("user_id", friendUserId),
   ]);
+
+  const viewerRankings = (viewerRankingsResult.data ?? []).map((row) => ({
+    rank: row.rank,
+    series_id: row.series_id,
+    series: row.series as Tables<"series"> | null,
+  }));
+  const friendRankings = (friendRankingsResult.data ?? []).map((row) => ({
+    rank: row.rank,
+    series_id: row.series_id,
+    series: row.series as Tables<"series"> | null,
+  }));
+
+  const viewerComparisonRows = viewerComparisonsResult.data ?? [];
+  const friendComparisonRows = friendComparisonsResult.data ?? [];
+  const viewerResolvedComparisons = resolvedComparisonsFromRows(viewerComparisonRows);
+  const friendResolvedComparisons = resolvedComparisonsFromRows(friendComparisonRows);
+
+  const [viewerProfile, friendProfile] = await Promise.all([
+    buildTasteProfile(viewerId, {
+      entries: viewerEntries,
+      rankings: viewerRankings.slice(0, 15),
+      comparisons: viewerComparisonRows,
+    }),
+    buildTasteProfile(friendUserId, {
+      entries: friendEntries,
+      rankings: friendRankings.slice(0, 15),
+      comparisons: friendComparisonRows,
+    }),
+  ]);
+
+  const [viewerEmbedding, friendEmbedding, viewerCompleted, friendCompleted] =
+    await Promise.all([
+      isEmbeddingConfigured() ? loadEmbedding(viewerId, viewerProfile) : null,
+      isEmbeddingConfigured() ? loadEmbedding(friendUserId, friendProfile) : null,
+      completedSeriesIdsFromAnimeIds(
+        viewerEntries
+          .filter((entry) => entry.status === "completed")
+          .map((entry) => entry.anime_id),
+        supabase,
+      ),
+      completedSeriesIdsFromAnimeIds(
+        friendEntries
+          .filter((entry) => entry.status === "completed")
+          .map((entry) => entry.anime_id),
+        supabase,
+      ),
+    ]);
+
+  const similarity: TasteSimilarityResult = !isEmbeddingConfigured()
+    ? { status: "unavailable", reason: "not_configured" }
+    : !viewerEmbedding || !friendEmbedding
+      ? { status: "unavailable", reason: "insufficient_data" }
+      : (() => {
+          const viewerStats = {
+            completed: viewerEntries.filter((entry) => entry.status === "completed")
+              .length,
+            total: viewerEntries.length,
+            comparisons: viewerResolvedComparisons.length,
+          };
+          const friendStats = {
+            completed: friendEntries.filter((entry) => entry.status === "completed")
+              .length,
+            total: friendEntries.length,
+            comparisons: friendResolvedComparisons.length,
+          };
+          const score = similarityScorePercent(
+            cosineSimilarity(viewerEmbedding, friendEmbedding),
+          );
+          return {
+            status: "ready",
+            score,
+            label: similarityLabel(score),
+            confidence: confidenceFromStats(viewerStats, friendStats),
+          };
+        })();
+
+  const intersection = [...viewerCompleted].filter((id) => friendCompleted.has(id));
+  const highlights = buildCompareHighlightsFromRankings(
+    viewerRankings,
+    friendRankings,
+    intersection.length,
+    5,
+  );
 
   const viewerRows = asTasteRows(viewerEntries);
   const friendRows = asTasteRows(friendEntries);
