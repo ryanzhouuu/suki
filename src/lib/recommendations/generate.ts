@@ -18,6 +18,7 @@ import {
   EMPTY_REQUEST_PREFS,
   type RecommendationRequestPrefs,
 } from "./request-prefs";
+import { buildRecommendationInsertRows } from "./persistence";
 import { buildRunInputHash } from "./run-input-hash";
 import { sampleAdventurous } from "./sampler";
 import { buildTasteProfile } from "./taste-profile";
@@ -118,19 +119,12 @@ export async function generateRecommendations(
 
   if (final.length > 0) {
     const { error: insertError } = await admin.from("recommendations").insert(
-      final.map((rec) => ({
-        run_id: run.id,
-        user_id: userId,
-        anime_id: rec.anime.id,
-        series_id: rec.seriesId,
-        similarity_score: rec.similarityScore,
-        rerank_score: rec.rerankScore,
-        final_score: rec.finalScore,
-        reason_codes: rec.reasonCodes,
-        explanation: rec.explanation,
-        explanation_details: rec.explanationDetails,
-        algorithm_version: RECOMMENDATION_ALGORITHM_VERSION,
-      })),
+      buildRecommendationInsertRows(
+        final,
+        run.id,
+        userId,
+        RECOMMENDATION_ALGORITHM_VERSION,
+      ),
     );
 
     if (insertError) {
@@ -153,7 +147,7 @@ async function loadRecommendationsForRun(
     .from("recommendations")
     .select("*, anime(*)")
     .eq("run_id", runId)
-    .order("final_score", { ascending: false });
+    .order("position", { ascending: true });
 
   if (error) {
     throw new Error(error.message);

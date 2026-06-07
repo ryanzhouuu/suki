@@ -16,6 +16,7 @@ import {
 import { getCollaborativeRecommendationExclusions } from "./exclusions";
 import { parseExplanationDetails } from "./explanation-details";
 import { isEmbeddingConfigured } from "./embedding-provider";
+import { buildRecommendationInsertRows } from "./persistence";
 import { sampleAdventurous } from "./sampler";
 import { buildTasteProfile } from "./taste-profile";
 import { upsertUserTasteEmbedding } from "./taste-embedding";
@@ -148,19 +149,12 @@ export async function generateCollaborativeRecommendations(
 
   if (sampled.length > 0) {
     const { error: insertError } = await admin.from("recommendations").insert(
-      sampled.map((rec) => ({
-        run_id: run.id,
-        user_id: viewerId,
-        anime_id: rec.anime.id,
-        series_id: rec.seriesId,
-        similarity_score: rec.similarityScore,
-        rerank_score: rec.rerankScore,
-        final_score: rec.finalScore,
-        reason_codes: rec.reasonCodes,
-        explanation: rec.explanation,
-        explanation_details: rec.explanationDetails,
-        algorithm_version: COLLABORATIVE_RECOMMENDATION_ALGORITHM_VERSION,
-      })),
+      buildRecommendationInsertRows(
+        sampled,
+        run.id,
+        viewerId,
+        COLLABORATIVE_RECOMMENDATION_ALGORITHM_VERSION,
+      ),
     );
 
     if (insertError) {
@@ -183,7 +177,7 @@ async function loadCollaborativeRecommendationsForRun(
     .from("recommendations")
     .select("*, anime(*)")
     .eq("run_id", runId)
-    .order("final_score", { ascending: false });
+    .order("position", { ascending: true });
 
   if (error) {
     throw new Error(error.message);

@@ -68,12 +68,7 @@ function entryTitle(entry: LibraryEntry): string {
   ).toLowerCase();
 }
 
-/**
- * Ascending comparison of the human-meaningful quantity for each sort key
- * (oldest→newest, low→high score, low→high priority, A→Z). The chosen
- * direction then applies a sign so the default direction leads with the "most".
- */
-function compareAscending(
+function comparePrimaryAscending(
   a: LibraryEntry,
   b: LibraryEntry,
   sort: LibrarySortKey,
@@ -86,22 +81,17 @@ function compareAscending(
     case "priority": {
       const aPriority = a.priority ? PRIORITY_RANK[a.priority] ?? -1 : -1;
       const bPriority = b.priority ? PRIORITY_RANK[b.priority] ?? -1 : -1;
-      if (aPriority !== bPriority) return aPriority - bPriority;
-      return a.created_at.localeCompare(b.created_at);
+      return aPriority - bPriority;
     }
     case "release_year": {
       const aYear = a.anime.season_year ?? -1;
       const bYear = b.anime.season_year ?? -1;
-      if (aYear !== bYear) return aYear - bYear;
-      return entryTitle(a).localeCompare(entryTitle(b));
+      return aYear - bYear;
     }
     case "personal_score": {
       const aScore = a.personal_score ?? -1;
       const bScore = b.personal_score ?? -1;
-      if (aScore !== bScore) return Number(aScore) - Number(bScore);
-      const aCompleted = a.completed_at ?? "";
-      const bCompleted = b.completed_at ?? "";
-      return aCompleted.localeCompare(bCompleted);
+      return Number(aScore) - Number(bScore);
     }
     case "completed_at": {
       const aCompleted = a.completed_at ?? "";
@@ -114,6 +104,26 @@ function compareAscending(
   }
 }
 
+function compareTiebreakerAscending(
+  a: LibraryEntry,
+  b: LibraryEntry,
+  sort: LibrarySortKey,
+): number {
+  switch (sort) {
+    case "priority":
+      return a.created_at.localeCompare(b.created_at);
+    case "release_year":
+      return entryTitle(a).localeCompare(entryTitle(b));
+    case "personal_score": {
+      const aCompleted = a.completed_at ?? "";
+      const bCompleted = b.completed_at ?? "";
+      return aCompleted.localeCompare(bCompleted);
+    }
+    default:
+      return 0;
+  }
+}
+
 export function sortLibraryEntries(
   entries: LibraryEntry[],
   sort: LibrarySortKey,
@@ -121,7 +131,11 @@ export function sortLibraryEntries(
 ): LibraryEntry[] {
   const factor = direction === "asc" ? 1 : -1;
   const sorted = [...entries];
-  sorted.sort((a, b) => factor * compareAscending(a, b, sort));
+  sorted.sort((a, b) => {
+    const primary = comparePrimaryAscending(a, b, sort);
+    if (primary !== 0) return factor * primary;
+    return compareTiebreakerAscending(a, b, sort);
+  });
   return sorted;
 }
 

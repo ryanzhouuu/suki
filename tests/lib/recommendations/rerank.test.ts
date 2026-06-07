@@ -158,4 +158,25 @@ describe("finalizeRecommendations", () => {
     assert.ok(scored[0].explanation.length > 0);
     assert.ok(scored[0].explanationDetails.primaryReason.length > 0);
   });
+
+  it("keeps incoming order when preserveOrder is true", () => {
+    const scored = finalizeRecommendations(
+      baseProfile,
+      [
+        rerankCandidates(baseProfile, [
+          candidate({ id: "first", similarityScore: 0.5 }),
+        ])[0],
+        rerankCandidates(baseProfile, [
+          candidate({ id: "second", similarityScore: 0.9 }),
+        ])[0],
+      ],
+      undefined,
+      { preserveOrder: true },
+    );
+
+    assert.deepEqual(
+      scored.map((rec) => rec.anime.id),
+      ["first", "second"],
+    );
+  });
 });

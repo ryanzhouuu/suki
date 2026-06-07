@@ -36,7 +36,7 @@ export async function getUserRecommendations(
     .from("recommendations")
     .select("*, anime(*)")
     .eq("run_id", latestRun.id)
-    .order("final_score", { ascending: false });
+    .order("position", { ascending: true });
 
   if (error) {
     throw new Error(error.message);
@@ -118,7 +118,7 @@ export async function getCollaborativeRecommendations(
     .from("recommendations")
     .select("*, anime(*)")
     .eq("run_id", latestRun.id)
-    .order("final_score", { ascending: false });
+    .order("position", { ascending: true });
 
   if (error) throw new Error(error.message);
 
