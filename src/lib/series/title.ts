@@ -19,6 +19,8 @@ const SEASONISH_SUFFIX =
   /\b(season|part|cour)\s*(\d+|[ivxlc]+)\b/i;
 
 const ARC_SUFFIX = /^(the\s+)?[\w\s'-]+\s+arc$/i;
+const NON_DISTINGUISHING_COLON_SUFFIX =
+  /^(movie|the movie|ova|ona|special|tv special|summary|compilation|recap|episode\s+\d+.*)$/i;
 
 /**
  * Strip season / part / cour markers from display titles.
@@ -27,6 +29,9 @@ export function stripSeasonSuffix(title: string): string {
   let t = title.trim();
 
   t = t.replace(/\s+Season\s+\d+\b.*$/i, "");
+  t = t.replace(/\s+\d+(st|nd|rd|th)\s+Season\b.*$/i, "");
+  t = t.replace(/\s+(first|second|third|fourth|fifth)\s+season\b.*$/i, "");
+  t = t.replace(/\s+(the\s+)?final\s+season\b.*$/i, "");
   t = t.replace(/\s+Season\s+[IVXLC]+\b.*$/i, "");
   t = t.replace(/\s+Part\s+\d+\b.*$/i, "");
   t = t.replace(/\s+Part\s+[IVXLC]+\b.*$/i, "");
@@ -48,8 +53,42 @@ function stripColonSubtitle(title: string): string | null {
   if (base.length < 2) return null;
   if (SEASONISH_SUFFIX.test(suffix)) return null;
   if (ARC_SUFFIX.test(suffix)) return null;
+  if (!NON_DISTINGUISHING_COLON_SUFFIX.test(suffix)) return null;
 
   return base;
+}
+
+function normalizeFranchiseKey(title: string): string {
+  return title
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "")
+    .trim();
+}
+
+function legacyColonBase(title: string): string | null {
+  const colon = title.indexOf(":");
+  if (colon <= 0) return null;
+  const base = title.slice(0, colon).trim();
+  return base.length >= 2 ? base : null;
+}
+
+function franchiseMatchKeys(title: string): string[] {
+  const root = franchiseRootFromTitle(title);
+  const keys = new Set<string>();
+  const rootKey = normalizeFranchiseKey(root);
+  if (rootKey) keys.add(rootKey);
+
+  // Back-compat for existing rows created by old title cleanup that stripped
+  // identity-bearing colon subtitles (e.g. "Kaguya-sama: Love is War").
+  const legacyBase = legacyColonBase(root);
+  if (legacyBase) {
+    const legacyKey = normalizeFranchiseKey(legacyBase);
+    if (legacyKey) keys.add(legacyKey);
+  }
+
+  return [...keys];
 }
 
 /**
@@ -136,6 +175,18 @@ export function displayTitleFromAniList(title: AniListMediaTitle): string {
   return franchiseRootFromTitle(getAniListDisplayTitle(title));
 }
 
+/**
+ * Candidate franchise roots for DB lookup: canonical root first, then a legacy
+ * colon-trimmed fallback to match rows created by older normalization logic.
+ */
+export function franchiseLookupRoots(title: string): string[] {
+  const root = franchiseRootFromTitle(title);
+  const roots = [root];
+  const legacyBase = legacyColonBase(root);
+  if (legacyBase) roots.push(legacyBase);
+  return [...new Set(roots.filter(Boolean))];
+}
+
 export function slugifySeriesTitle(title: string, anilistPrimaryId: number): string {
   const base = title
     .toLowerCase()
@@ -149,5 +200,7 @@ export function slugifySeriesTitle(title: string, anilistPrimaryId: number): str
 
 /** True when two titles normalize to the same franchise root. */
 export function sameFranchiseTitle(a: string, b: string): boolean {
-  return franchiseRootFromTitle(a) === franchiseRootFromTitle(b);
+  const aKeys = new Set(franchiseMatchKeys(a));
+  const bKeys = franchiseMatchKeys(b);
+  return bKeys.some((key) => aKeys.has(key));
 }

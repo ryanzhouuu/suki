@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import {
   displayTitleFromAniList,
+  franchiseLookupRoots,
   franchiseRootFromTitle,
   pickConsolidatedFranchiseRoot,
   sameFranchiseTitle,
@@ -20,6 +21,15 @@ describe("stripSeasonSuffix", () => {
     assert.equal(stripSeasonSuffix("Frieren Part 2"), "Frieren");
     assert.equal(stripSeasonSuffix("Show Name Cour 2"), "Show Name");
     assert.equal(stripSeasonSuffix("Show Name S2"), "Show Name");
+  });
+
+  it("removes ordinal and final season variants", () => {
+    assert.equal(stripSeasonSuffix("One Punch Man 2nd Season"), "One Punch Man");
+    assert.equal(stripSeasonSuffix("Attack on Titan The Final Season"), "Attack on Titan");
+    assert.equal(
+      stripSeasonSuffix("Attack on Titan Final Season Part 2"),
+      "Attack on Titan",
+    );
   });
 
   it("removes Roman numeral season markers", () => {
@@ -62,7 +72,10 @@ describe("franchiseRootFromTitle", () => {
 
   it("groups franchise movies under the main show title", () => {
     assert.equal(
-      franchiseRootFromTitle("Black Clover: Sword of the Wizard King"),
+      pickConsolidatedFranchiseRoot([
+        "Black Clover",
+        "Black Clover: Sword of the Wizard King",
+      ]),
       "Black Clover",
     );
   });
@@ -75,6 +88,25 @@ describe("franchiseRootFromTitle", () => {
     assert.equal(
       franchiseRootFromTitle("JUJUTSU KAISEN 0"),
       "JUJUTSU KAISEN",
+    );
+  });
+
+  it("keeps identity-bearing colon subtitles", () => {
+    assert.equal(
+      franchiseRootFromTitle("Kaguya-sama: Love is War"),
+      "Kaguya-sama: Love is War",
+    );
+    assert.equal(
+      franchiseRootFromTitle("Frieren: Beyond Journey's End"),
+      "Frieren: Beyond Journey's End",
+    );
+    assert.equal(
+      franchiseRootFromTitle("Wistoria: Wand and Sword"),
+      "Wistoria: Wand and Sword",
+    );
+    assert.equal(
+      franchiseRootFromTitle("Fullmetal Alchemist: Brotherhood"),
+      "Fullmetal Alchemist: Brotherhood",
     );
   });
 });
@@ -119,6 +151,13 @@ describe("sameFranchiseTitle", () => {
     );
     assert.equal(sameFranchiseTitle("Naruto", "One Piece"), false);
   });
+
+  it("matches legacy short colon forms to canonical title", () => {
+    assert.equal(
+      sameFranchiseTitle("Kaguya-sama", "Kaguya-sama: Love is War"),
+      true,
+    );
+  });
 });
 
 describe("displayTitleFromAniList", () => {
@@ -131,5 +170,14 @@ describe("displayTitleFromAniList", () => {
       }),
       "Demon Slayer: Kimetsu no Yaiba",
     );
+  });
+});
+
+describe("franchiseLookupRoots", () => {
+  it("returns canonical root first with legacy colon fallback", () => {
+    assert.deepEqual(franchiseLookupRoots("Kaguya-sama: Love is War"), [
+      "Kaguya-sama: Love is War",
+      "Kaguya-sama",
+    ]);
   });
 });

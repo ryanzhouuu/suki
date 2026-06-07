@@ -1,5 +1,6 @@
 import type { FranchiseMediaNode } from "./graph";
 import {
+  franchiseLookupRoots,
   franchiseRootFromTitle,
   pickConsolidatedFranchiseRoot,
   sameFranchiseTitle,
@@ -18,26 +19,34 @@ export async function findSeriesByFranchiseRoot(
   admin: AdminClient,
   franchiseRoot: string,
 ): Promise<Tables<"series"> | null> {
-  const { data: exact } = await admin
-    .from("series")
-    .select("*")
-    .eq("canonical_title", franchiseRoot)
-    .maybeSingle();
+  const lookupRoots = franchiseLookupRoots(franchiseRoot);
+  const candidateRows: Tables<"series">[] = [];
 
-  if (exact) return exact;
+  for (const root of lookupRoots) {
+    const { data: exact } = await admin
+      .from("series")
+      .select("*")
+      .eq("canonical_title", root)
+      .maybeSingle();
+    if (exact) candidateRows.push(exact);
 
-  const { data: candidates } = await admin
-    .from("series")
-    .select("*")
-    .ilike("canonical_title", `${franchiseRoot}%`);
+    const { data: prefix } = await admin
+      .from("series")
+      .select("*")
+      .ilike("canonical_title", `${root}%`);
+    for (const row of prefix ?? []) candidateRows.push(row);
+  }
+
+  const candidates = [...new Map(candidateRows.map((r) => [r.id, r])).values()];
 
   let best: Tables<"series"> | null = null;
   for (const row of candidates ?? []) {
-    if (franchiseRootFromTitle(row.canonical_title) !== franchiseRoot) continue;
+    if (!sameFranchiseTitle(row.canonical_title, franchiseRoot)) continue;
     if (
       !best ||
+      row.canonical_title === franchiseRoot ||
       row.anilist_primary_id < best.anilist_primary_id ||
-      row.canonical_title === franchiseRoot
+      row.canonical_title === lookupRoots[0]
     ) {
       best = row;
     }

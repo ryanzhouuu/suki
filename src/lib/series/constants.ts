@@ -3,6 +3,7 @@ export const FRANCHISE_RELATION_TYPES: ReadonlySet<string> = new Set([
   "PREQUEL",
   "SEQUEL",
   "SIDE_STORY",
+  "SPIN_OFF",
   "SUMMARY",
   "OTHER",
   "PARENT",
@@ -11,5 +12,5 @@ export const FRANCHISE_RELATION_TYPES: ReadonlySet<string> = new Set([
   "ALTERNATIVE",
 ]);
 
-export const SERIES_GRAPH_MAX_DEPTH = 4;
-export const SERIES_GRAPH_MAX_NODES = 32;
+export const SERIES_GRAPH_MAX_DEPTH = 8;
+export const SERIES_GRAPH_MAX_NODES = 128;
