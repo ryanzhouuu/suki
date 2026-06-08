@@ -12,6 +12,19 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// Opt-in, process-local response cache. Disabled by default so the long-lived
+// server never serves stale data; one-off scripts enable it to avoid re-fetching
+// the same media (e.g. an overlapping franchise crawl) hundreds of times.
+let queryCache: Map<string, unknown> | null = null;
+
+export function enableAnilistQueryCache(): void {
+  queryCache ??= new Map();
+}
+
+export function clearAnilistQueryCache(): void {
+  queryCache?.clear();
+}
+
 function retryDelayMs(response: Response, attempt: number): number {
   const retryAfter = response.headers.get("Retry-After");
   if (retryAfter) {
@@ -29,6 +42,13 @@ export async function anilistQuery<T>(
   variables?: Record<string, unknown>,
   options?: { cache?: RequestCache; revalidate?: number },
 ): Promise<T> {
+  const cacheKey = queryCache
+    ? `${query}::${JSON.stringify(variables ?? {})}`
+    : null;
+  if (cacheKey && queryCache!.has(cacheKey)) {
+    return queryCache!.get(cacheKey) as T;
+  }
+
   let lastError: Error | undefined;
 
   for (let attempt = 0; attempt < RATE_LIMIT_MAX_RETRIES; attempt++) {
@@ -79,6 +99,7 @@ export async function anilistQuery<T>(
       throw new Error("AniList returned no data");
     }
 
+    if (cacheKey) queryCache!.set(cacheKey, json.data);
     return json.data;
   }
 

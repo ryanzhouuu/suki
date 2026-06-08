@@ -1,7 +1,16 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { pickPrimaryMedia, type FranchiseMediaNode } from "@/lib/series/graph";
+import {
+  franchiseTitleTokens,
+  pickPrimaryMedia,
+  sharesFranchiseToken,
+  type FranchiseMediaNode,
+} from "@/lib/series/graph";
+
+function tok(english: string | null, romaji: string | null) {
+  return franchiseTitleTokens({ english, romaji, native: null });
+}
 
 function node(
   id: number,
@@ -38,5 +47,57 @@ describe("pickPrimaryMedia", () => {
       node(1, "TV", 2020),
     ]);
     assert.equal(primary.anilistId, 1);
+  });
+});
+
+describe("sharesFranchiseToken", () => {
+  it("links a franchise movie to its TV series", () => {
+    assert.equal(
+      sharesFranchiseToken(
+        tok("The Quintessential Quintuplets Movie", "Go-toubun no Hanayome Movie"),
+        tok("The Quintessential Quintuplets", "Go-toubun no Hanayome"),
+      ),
+      true,
+    );
+  });
+
+  it("links a movie with a subtitle to the base TV title", () => {
+    assert.equal(
+      sharesFranchiseToken(
+        tok("Chainsaw Man – The Movie: Reze Arc", "Chainsaw Man: Reze-hen"),
+        tok("Chainsaw Man", "Chainsaw Man"),
+      ),
+      true,
+    );
+  });
+
+  it("matches across languages via romaji", () => {
+    assert.equal(
+      sharesFranchiseToken(
+        tok("Attack on Titan", "Shingeki no Kyojin"),
+        tok(null, "Shingeki no Kyojin: Lost Girls"),
+      ),
+      true,
+    );
+  });
+
+  it("does not bridge unrelated franchises (One Piece vs Dragon Ball)", () => {
+    assert.equal(
+      sharesFranchiseToken(
+        tok("One Piece Film: Gold", "One Piece Film: Gold"),
+        tok("Dragon Ball Z", "Dragon Ball Z"),
+      ),
+      false,
+    );
+  });
+
+  it("does not bridge crossover specials sharing only generic words", () => {
+    assert.equal(
+      sharesFranchiseToken(
+        tok("One Piece Film: Gold", "One Piece Film: Gold"),
+        tok("Dragon Ball: Annecy Festival 60th Anniversary", null),
+      ),
+      false,
+    );
   });
 });

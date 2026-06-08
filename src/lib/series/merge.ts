@@ -1,8 +1,9 @@
 import type { FranchiseMediaNode } from "./graph";
 import {
+  type FranchiseMember,
   franchiseLookupRoots,
   franchiseRootFromTitle,
-  pickConsolidatedFranchiseRoot,
+  pickConsolidatedFranchiseRootFromMembers,
   sameFranchiseTitle,
 } from "./title";
 
@@ -109,6 +110,9 @@ export async function findExistingSeriesForFranchise(
 /** Formats that should not define a franchise label when crawling relations. */
 const NON_NARRATIVE_FORMATS = new Set(["MUSIC"]);
 
+/** Formats that form a franchise's backbone and should name it when present. */
+const BACKBONE_FORMATS = new Set(["TV", "TV_SHORT"]);
+
 export function franchiseRootForCluster(
   cluster: FranchiseMediaNode[],
   fallbackTitle: string,
@@ -117,27 +121,26 @@ export function franchiseRootForCluster(
   const narrative = cluster.filter(
     (n) => !n.format || !NON_NARRATIVE_FORMATS.has(n.format),
   );
-  const nodes = narrative.length > 0 ? narrative : cluster;
+  const base = narrative.length > 0 ? narrative : cluster;
 
-  const roots = nodes.map((n) =>
-    franchiseRootFromTitle(
-      n.title.english || n.title.romaji || fallbackTitle,
-    ),
+  // The TV run names the franchise; movies/specials/OVAs only do so when there
+  // is no TV entry (e.g. a film-only franchise). This keeps a single main TV
+  // from being outvoted by a duplicated movie + recut-special pair.
+  const backbone = base.filter(
+    (n) => n.format !== null && BACKBONE_FORMATS.has(n.format),
   );
-  roots.push(fallbackRoot);
+  const nodes = backbone.length > 0 ? backbone : base;
 
-  const consolidated = pickConsolidatedFranchiseRoot(roots);
+  // The originating media is already a cluster node, so we don't re-add the
+  // fallback as a member: doing so double-counts a lone movie/special and lets
+  // it outvote the TV run. Trust frequency consolidation, which groups seasons
+  // together and demotes a single movie/spin-off entry to the franchise root.
+  const members: FranchiseMember[] = nodes.map((n) => ({
+    english: n.title.english,
+    romaji: n.title.romaji,
+  }));
 
-  if (
-    fallbackRoot &&
-    consolidated &&
-    !sameFranchiseTitle(consolidated, fallbackRoot)
-  ) {
-    const clusterAgreesWithFallback = roots.some((r) =>
-      sameFranchiseTitle(r, fallbackRoot),
-    );
-    if (clusterAgreesWithFallback) return fallbackRoot;
-  }
+  const consolidated = pickConsolidatedFranchiseRootFromMembers(members);
 
   return consolidated || fallbackRoot;
 }
