@@ -12,6 +12,8 @@
     "db:studio": "drizzle-kit studio",
     "types:supabase": "echo 'Regenerate with Supabase MCP generate_typescript_types or: supabase gen types typescript'",
     "backfill:series": "npx tsx src/scripts/backfill-series.ts",
+    "reresolve:titles": "npx tsx src/scripts/reresolve-series-titles.ts",
+    "regroup:franchises": "npx tsx src/scripts/regroup-franchises.ts",
     "backfill:embeddings": "npx tsx src/scripts/backfill-anime-embeddings.ts",
     "seed:catalog": "npx tsx src/scripts/seed-recommendation-catalog.ts",
     "backfill:popular": "npx tsx src/scripts/backfill-popular-catalog.ts",

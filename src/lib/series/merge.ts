@@ -1,8 +1,9 @@
 import type { FranchiseMediaNode } from "./graph";
 import {
+  type FranchiseMember,
   franchiseLookupRoots,
   franchiseRootFromTitle,
-  pickConsolidatedFranchiseRoot,
+  pickConsolidatedFranchiseRootFromMembers,
   sameFranchiseTitle,
 } from "./title";
 
@@ -119,25 +120,16 @@ export function franchiseRootForCluster(
   );
   const nodes = narrative.length > 0 ? narrative : cluster;
 
-  const roots = nodes.map((n) =>
-    franchiseRootFromTitle(
-      n.title.english || n.title.romaji || fallbackTitle,
-    ),
-  );
-  roots.push(fallbackRoot);
+  // The originating media is already a cluster node, so we don't re-add the
+  // fallback as a member: doing so double-counts a lone movie/special and lets
+  // it outvote the TV run. Trust frequency consolidation, which groups seasons
+  // together and demotes a single movie/spin-off entry to the franchise root.
+  const members: FranchiseMember[] = nodes.map((n) => ({
+    english: n.title.english,
+    romaji: n.title.romaji,
+  }));
 
-  const consolidated = pickConsolidatedFranchiseRoot(roots);
-
-  if (
-    fallbackRoot &&
-    consolidated &&
-    !sameFranchiseTitle(consolidated, fallbackRoot)
-  ) {
-    const clusterAgreesWithFallback = roots.some((r) =>
-      sameFranchiseTitle(r, fallbackRoot),
-    );
-    if (clusterAgreesWithFallback) return fallbackRoot;
-  }
+  const consolidated = pickConsolidatedFranchiseRootFromMembers(members);
 
   return consolidated || fallbackRoot;
 }

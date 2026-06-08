@@ -91,14 +91,26 @@ function franchiseMatchKeys(title: string): string[] {
   return [...keys];
 }
 
+/** A cluster member's titles in both languages (romaji is always present). */
+export type FranchiseMember = {
+  english: string | null;
+  romaji: string | null;
+};
+
+type ResolvedMember = {
+  english: string | null;
+  romaji: string | null;
+  display: string;
+  key: string;
+};
+
 /**
- * When several normalized roots appear in one franchise cluster, prefer the
- * shortest title that is a prefix of the others (e.g. "Black Clover" over
- * "Black Clover: Sword of the Wizard King").
+ * Shortest root that is a prefix of every other (e.g. "Black Clover" over
+ * "Black Clover: Sword of the Wizard King"). Returns null when none qualifies.
  */
-export function pickConsolidatedFranchiseRoot(candidates: string[]): string {
-  const unique = [...new Set(candidates.map((c) => c.trim()).filter(Boolean))];
-  if (unique.length === 0) return "";
+function findSharedPrefixRoot(roots: string[]): string | null {
+  const unique = [...new Set(roots.map((r) => r.trim()).filter(Boolean))];
+  if (unique.length === 0) return null;
   if (unique.length === 1) return unique[0];
 
   const sorted = [...unique].sort((a, b) => a.length - b.length);
@@ -111,28 +123,86 @@ export function pickConsolidatedFranchiseRoot(candidates: string[]): string {
     );
     if (isSharedPrefix) return candidate;
   }
+  return null;
+}
 
-  // Unrelated titles in one graph (e.g. OP single + parent show): prefer majority
-  // franchise root, not the shortest string ("Just Awake" vs "Hunter x Hunter").
-  const counts = new Map<string, number>();
-  for (const raw of unique) {
-    const root = franchiseRootFromTitle(raw);
-    counts.set(root, (counts.get(root) ?? 0) + 1);
+/** Within one franchise group, prefer the shortest English root; else romaji. */
+function pickGroupDisplay(group: ResolvedMember[]): string {
+  const english = group
+    .map((e) => e.english)
+    .filter((x): x is string => Boolean(x));
+  const pool =
+    english.length > 0
+      ? english
+      : group.map((e) => e.romaji).filter((x): x is string => Boolean(x));
+  const sorted = [...new Set(pool)].sort((a, b) => a.length - b.length);
+  return sorted[0] ?? group[0].display;
+}
+
+/**
+ * Pick the canonical franchise label from cluster members, choosing the
+ * franchise by frequency and the *language* by preference: group members by
+ * their romaji identity (always present, stable across seasons) so English and
+ * romaji-only seasons of one show vote together, then display the English root
+ * whenever any member in the winning group has one.
+ */
+export function pickConsolidatedFranchiseRootFromMembers(
+  members: FranchiseMember[],
+): string {
+  const entries: ResolvedMember[] = [];
+  for (const m of members) {
+    const english = m.english?.trim() ? franchiseRootFromTitle(m.english) : null;
+    const romaji = m.romaji?.trim() ? franchiseRootFromTitle(m.romaji) : null;
+    const display = english ?? romaji;
+    if (!display) continue;
+    entries.push({
+      english,
+      romaji,
+      display,
+      key: normalizeFranchiseKey(romaji ?? english ?? ""),
+    });
   }
 
-  let best = "";
-  let bestCount = 0;
-  for (const [root, count] of counts) {
+  if (entries.length === 0) return "";
+  if (entries.length === 1) return entries[0].display;
+
+  // 1. Shared-prefix consolidation on the English-preferred display roots.
+  const prefix = findSharedPrefixRoot(entries.map((e) => e.display));
+  if (prefix) return prefix;
+
+  // 2. Group by romaji identity; pick the most frequent franchise. On a tie,
+  //    prefer the shorter (more general) label over a long movie/special title.
+  const groups = new Map<string, ResolvedMember[]>();
+  for (const e of entries) {
+    const list = groups.get(e.key) ?? [];
+    list.push(e);
+    groups.set(e.key, list);
+  }
+
+  let best: { display: string; count: number } | null = null;
+  for (const list of groups.values()) {
+    const display = pickGroupDisplay(list);
+    const count = list.length;
     if (
-      count > bestCount ||
-      (count === bestCount && root.length > best.length)
+      !best ||
+      count > best.count ||
+      (count === best.count && display.length < best.display.length)
     ) {
-      best = root;
-      bestCount = count;
+      best = { display, count };
     }
   }
 
-  return best || unique[0];
+  return best?.display ?? entries[0].display;
+}
+
+/**
+ * Consolidate a set of franchise root strings (treated as English display
+ * titles). Thin wrapper over {@link pickConsolidatedFranchiseRootFromMembers}.
+ */
+export function pickConsolidatedFranchiseRoot(candidates: string[]): string {
+  return pickConsolidatedFranchiseRootFromMembers(
+    candidates.map((c) => ({ english: c, romaji: null })),
+  );
 }
 
 /**

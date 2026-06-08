@@ -6,6 +6,7 @@ import {
   franchiseLookupRoots,
   franchiseRootFromTitle,
   pickConsolidatedFranchiseRoot,
+  pickConsolidatedFranchiseRootFromMembers,
   sameFranchiseTitle,
   slugifySeriesTitle,
   stripSeasonSuffix,
@@ -130,6 +131,80 @@ describe("pickConsolidatedFranchiseRoot", () => {
         "Hunter x Hunter (2011)",
       ]),
       "Hunter x Hunter",
+    );
+  });
+
+  it("prefers the most frequent root when no shared prefix exists", () => {
+    // Seasons repeat once per cluster node; a movie subtitle and a romaji
+    // fallback title break the shared-prefix heuristic. The franchise should
+    // still win on frequency, not the longest subtitle.
+    assert.equal(
+      pickConsolidatedFranchiseRoot([
+        "My Hero Academia",
+        "My Hero Academia",
+        "My Hero Academia",
+        "My Hero Academia: Heroes Rising",
+        "Boku no Hero Academia: Two Heroes",
+      ]),
+      "My Hero Academia",
+    );
+  });
+
+  it("keeps an identity-bearing colon franchise over a one-off OVA subtitle", () => {
+    assert.equal(
+      pickConsolidatedFranchiseRoot([
+        "Kaguya-sama: Love is War",
+        "Kaguya-sama: Love is War",
+        'Kaguya-sama: Love is War -Ultra Romantic- "Yu Ishigami Wants to Chat"',
+      ]),
+      "Kaguya-sama: Love is War",
+    );
+  });
+});
+
+describe("pickConsolidatedFranchiseRootFromMembers", () => {
+  it("groups by romaji identity but displays the English title", () => {
+    assert.equal(
+      pickConsolidatedFranchiseRootFromMembers([
+        { english: null, romaji: "Shingeki no Kyojin" },
+        { english: null, romaji: "Shingeki no Kyojin Season 2" },
+        { english: "Attack on Titan", romaji: "Shingeki no Kyojin" },
+      ]),
+      "Attack on Titan",
+    );
+  });
+
+  it("prefers the English display over a more frequent romaji-only variant", () => {
+    assert.equal(
+      pickConsolidatedFranchiseRootFromMembers([
+        { english: "Kuroko's Basketball", romaji: "Kuroko no Basket" },
+        { english: null, romaji: "Kuroko no Basket 2nd Season" },
+        { english: null, romaji: "Kuroko no Basket 3rd Season" },
+      ]),
+      "Kuroko's Basketball",
+    );
+  });
+
+  it("falls back to romaji when no member has an English title", () => {
+    assert.equal(
+      pickConsolidatedFranchiseRootFromMembers([
+        { english: null, romaji: "Nitian Xie Shen" },
+        { english: null, romaji: "Nitian Xie Shen: Nian Fan" },
+      ]),
+      "Nitian Xie Shen",
+    );
+  });
+
+  it("still consolidates franchise movies via the shared prefix", () => {
+    assert.equal(
+      pickConsolidatedFranchiseRootFromMembers([
+        { english: "Black Clover", romaji: "Black Clover" },
+        {
+          english: "Black Clover: Sword of the Wizard King",
+          romaji: "Black Clover: Mahou Tei no Ken",
+        },
+      ]),
+      "Black Clover",
     );
   });
 });
