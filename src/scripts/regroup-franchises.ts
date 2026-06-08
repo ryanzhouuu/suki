@@ -37,6 +37,8 @@ import { ensureAnimeSeriesMapping } from "@/lib/series/resolver";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Tables } from "@/types/database";
 
+import { fetchAllRows } from "./paginate";
+
 type AdminClient = ReturnType<typeof createAdminClient>;
 
 /** Formats that commonly get isolated; TV/TV_SHORT seasons rarely do. */
@@ -61,13 +63,11 @@ async function main() {
   enableAnilistQueryCache();
   const admin = createAdminClient();
 
-  const { data: anime, error } = await admin
-    .from("anime")
-    .select("*")
-    .order("anilist_id");
-  if (error) throw new Error(error.message);
+  const anime = await fetchAllRows<Tables<"anime">>((from, to) =>
+    admin.from("anime").select("*").order("anilist_id").range(from, to),
+  );
 
-  const candidates = (anime ?? []).filter(
+  const candidates = anime.filter(
     (a) => all || (a.format !== null && TARGET_FORMATS.has(a.format)),
   );
   console.log(

@@ -27,6 +27,8 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Tables } from "@/types/database";
 
+import { fetchAllRows } from "./paginate";
+
 type MappedAnime = Pick<
   Tables<"anime">,
   | "anilist_id"
@@ -105,18 +107,21 @@ async function main() {
   const apply = process.argv.includes("--apply");
   const admin = createAdminClient();
 
-  const { data: series, error } = await admin
-    .from("series")
-    .select("id, canonical_title")
-    .order("canonical_title");
-  if (error) throw new Error(error.message);
+  const series = await fetchAllRows<{ id: string; canonical_title: string }>(
+    (from, to) =>
+      admin
+        .from("series")
+        .select("id, canonical_title")
+        .order("canonical_title")
+        .range(from, to),
+  );
 
   const membersBySeries = await loadMembersBySeries(admin);
 
   const changes: { id: string; from: string; to: string }[] = [];
   let noMembers = 0;
 
-  for (const row of series ?? []) {
+  for (const row of series) {
     const cluster = membersBySeries.get(row.id);
     if (!cluster || cluster.length === 0) {
       noMembers += 1;
@@ -129,7 +134,7 @@ async function main() {
   }
 
   console.log(
-    `${series?.length ?? 0} series, ${changes.length} title change(s)` +
+    `${series.length} series, ${changes.length} title change(s)` +
       (noMembers ? `, ${noMembers} with no mapped anime (skipped)` : ""),
   );
   for (const c of changes) {
