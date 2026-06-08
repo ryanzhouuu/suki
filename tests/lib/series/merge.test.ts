@@ -65,4 +65,49 @@ describe("franchiseRootForCluster", () => {
     );
     assert.equal(root, "Chainsaw Man");
   });
+
+  it("lets the TV run name the franchise over duplicated movie/special pairs", () => {
+    const tv: FranchiseMediaNode = {
+      anilistId: 1,
+      format: "TV",
+      seasonYear: 1999,
+      title: { english: "ONE PIECE", romaji: "One Piece", native: null },
+      coverImageUrl: null,
+    };
+    // A movie and its TV-special recut share a romaji title, so frequency alone
+    // would let the Alabasta pair (count 2) outvote the single main TV.
+    const alabasta = (
+      id: number,
+      format: string,
+      english: string,
+    ): FranchiseMediaNode => ({
+      anilistId: id,
+      format,
+      seasonYear: 2007,
+      title: {
+        english,
+        romaji: "One Piece: Episode of Alabasta - Sabaku no Oujo to Kaizoku-tachi",
+        native: null,
+      },
+      coverImageUrl: null,
+    });
+
+    const root = franchiseRootForCluster(
+      [
+        alabasta(
+          2,
+          "MOVIE",
+          "One Piece: The Desert Princess and the Pirates, Adventures in Alabasta",
+        ),
+        alabasta(
+          3,
+          "SPECIAL",
+          "One Piece: Episode of Alabasta - The Desert Princess and the Pirates",
+        ),
+        tv,
+      ],
+      "One Piece Film: Gold",
+    );
+    assert.equal(root, "ONE PIECE");
+  });
 });

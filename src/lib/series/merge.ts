@@ -110,6 +110,9 @@ export async function findExistingSeriesForFranchise(
 /** Formats that should not define a franchise label when crawling relations. */
 const NON_NARRATIVE_FORMATS = new Set(["MUSIC"]);
 
+/** Formats that form a franchise's backbone and should name it when present. */
+const BACKBONE_FORMATS = new Set(["TV", "TV_SHORT"]);
+
 export function franchiseRootForCluster(
   cluster: FranchiseMediaNode[],
   fallbackTitle: string,
@@ -118,7 +121,15 @@ export function franchiseRootForCluster(
   const narrative = cluster.filter(
     (n) => !n.format || !NON_NARRATIVE_FORMATS.has(n.format),
   );
-  const nodes = narrative.length > 0 ? narrative : cluster;
+  const base = narrative.length > 0 ? narrative : cluster;
+
+  // The TV run names the franchise; movies/specials/OVAs only do so when there
+  // is no TV entry (e.g. a film-only franchise). This keeps a single main TV
+  // from being outvoted by a duplicated movie + recut-special pair.
+  const backbone = base.filter(
+    (n) => n.format !== null && BACKBONE_FORMATS.has(n.format),
+  );
+  const nodes = backbone.length > 0 ? backbone : base;
 
   // The originating media is already a cluster node, so we don't re-add the
   // fallback as a member: doing so double-counts a lone movie/special and lets

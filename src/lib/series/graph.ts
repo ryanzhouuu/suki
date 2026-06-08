@@ -2,6 +2,7 @@ import { anilistQuery } from "@/lib/anilist/client";
 import { ANIME_RELATIONS_QUERY } from "@/lib/anilist/queries";
 import type {
   AniListMediaRelationsOnly,
+  AniListMediaTitle,
   AniListRelationsResult,
 } from "@/lib/anilist/types";
 
@@ -19,6 +20,47 @@ export type FranchiseMediaNode = {
   coverImageUrl: string | null;
 };
 
+// Format / grammatical words that don't identify a franchise, so two unrelated
+// works sharing only these (e.g. crossover "… Movie"/"… Special") must not link.
+const TOKEN_STOPWORDS: ReadonlySet<string> = new Set([
+  "the", "a", "an", "of", "to", "and", "in", "on", "for", "with",
+  "no", "wa", "ga", "wo", "ni", "he", "ya", "wai",
+  "movie", "film", "gekijouban", "season", "part", "cour", "chapter",
+  "ova", "ona", "oad", "special", "specials", "episode", "episodes",
+  "tv", "short", "edition", "anime", "story", "the movie",
+  "festival", "anniversary", "th", "nd", "rd", "st",
+]);
+
+/**
+ * Distinctive lowercase tokens across a title's languages, used to keep the
+ * franchise crawl from drifting into a different franchise via crossovers.
+ */
+export function franchiseTitleTokens(title: AniListMediaTitle): Set<string> {
+  const tokens = new Set<string>();
+  for (const raw of [title.english, title.romaji, title.native]) {
+    if (!raw) continue;
+    const normalized = raw
+      .toLowerCase()
+      .normalize("NFKD")
+      .replace(/[̀-ͯ]/g, "");
+    for (const part of normalized.split(/[^a-z0-9]+/)) {
+      if (part.length < 2) continue; // drops lone letters/digits ("z", "2")
+      if (/^\d+$/.test(part)) continue; // drops pure numbers
+      if (TOKEN_STOPWORDS.has(part)) continue;
+      tokens.add(part);
+    }
+  }
+  return tokens;
+}
+
+/** True when two titles share at least one distinctive franchise token. */
+export function sharesFranchiseToken(a: Set<string>, b: Set<string>): boolean {
+  for (const token of a) {
+    if (b.has(token)) return true;
+  }
+  return false;
+}
+
 function mediaToNode(media: AniListMediaRelationsOnly): FranchiseMediaNode {
   return {
     anilistId: media.id,
@@ -29,14 +71,16 @@ function mediaToNode(media: AniListMediaRelationsOnly): FranchiseMediaNode {
   };
 }
 
-function relatedIds(media: AniListMediaRelationsOnly): number[] {
-  const ids: number[] = [];
+function relatedNodes(
+  media: AniListMediaRelationsOnly,
+): { id: number; title: AniListMediaTitle }[] {
+  const related: { id: number; title: AniListMediaTitle }[] = [];
   for (const edge of media.relations?.edges ?? []) {
     if (!edge.node || edge.node.type !== "ANIME") continue;
     if (!FRANCHISE_RELATION_TYPES.has(edge.relationType)) continue;
-    ids.push(edge.node.id);
+    related.push({ id: edge.node.id, title: edge.node.title });
   }
-  return ids;
+  return related;
 }
 
 export async function fetchFranchiseCluster(
@@ -44,6 +88,11 @@ export async function fetchFranchiseCluster(
 ): Promise<FranchiseMediaNode[]> {
   const visited = new Map<number, FranchiseMediaNode>();
   const queue: { id: number; depth: number }[] = [{ id: rootAnilistId, depth: 0 }];
+
+  // Tokens of the originating media. Every traversed neighbor must share one, so
+  // a crossover/festival edge into another franchise can't drag it in even if a
+  // loose relation type slips through.
+  let seedTokens: Set<string> | null = null;
 
   while (queue.length > 0 && visited.size < SERIES_GRAPH_MAX_NODES) {
     const current = queue.shift();
@@ -60,13 +109,19 @@ export async function fetchFranchiseCluster(
     if (media.format === "MUSIC") continue;
 
     visited.set(media.id, mediaToNode(media));
+    seedTokens ??= franchiseTitleTokens(media.title);
 
     if (current.depth >= SERIES_GRAPH_MAX_DEPTH) continue;
 
-    for (const nextId of relatedIds(media)) {
-      if (!visited.has(nextId)) {
-        queue.push({ id: nextId, depth: current.depth + 1 });
+    for (const next of relatedNodes(media)) {
+      if (visited.has(next.id)) continue;
+      if (
+        seedTokens &&
+        !sharesFranchiseToken(seedTokens, franchiseTitleTokens(next.title))
+      ) {
+        continue;
       }
+      queue.push({ id: next.id, depth: current.depth + 1 });
     }
   }
 
