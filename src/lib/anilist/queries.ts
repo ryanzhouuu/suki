@@ -112,6 +112,80 @@ export const ANIME_DETAIL_QUERY = `
   }
 `;
 
+/**
+ * Full media detail fields (mirrors ANIME_DETAIL_QUERY's scalars, minus
+ * relations) so import flows can build anime rows offline.
+ */
+const MEDIA_DETAIL_FIELDS = `
+  id
+  title {
+    romaji
+    english
+    native
+  }
+  description
+  coverImage {
+    large
+  }
+  bannerImage
+  format
+  episodes
+  duration
+  season
+  seasonYear
+  status
+  genres
+  averageScore
+  popularity
+  source
+`;
+
+/** A user's full anime list by username, plus their score display format. */
+export const MEDIA_LIST_COLLECTION_QUERY = `
+  query MediaListCollection($userName: String) {
+    User(name: $userName) {
+      mediaListOptions {
+        scoreFormat
+      }
+    }
+    MediaListCollection(userName: $userName, type: ANIME) {
+      lists {
+        entries {
+          status
+          score
+          progress
+          media {
+            ${MEDIA_DETAIL_FIELDS}
+          }
+        }
+      }
+    }
+  }
+`;
+
+/** Batched lookup of AniList media by MyAnimeList ids (for MAL XML imports). */
+export const MEDIA_BY_MAL_IDS_QUERY = `
+  query MediaByMalIds($malIds: [Int]) {
+    Page(page: 1, perPage: 50) {
+      media(idMal_in: $malIds, type: ANIME) {
+        idMal
+        ${MEDIA_DETAIL_FIELDS}
+      }
+    }
+  }
+`;
+
+/** Search returning full detail so a confirmed plain-text match builds offline. */
+export const IMPORT_SEARCH_QUERY = `
+  query ImportSearch($search: String, $perPage: Int) {
+    Page(page: 1, perPage: $perPage) {
+      media(search: $search, type: ANIME, isAdult: false) {
+        ${MEDIA_DETAIL_FIELDS}
+      }
+    }
+  }
+`;
+
 /** Lightweight fetch for series graph traversal */
 export const ANIME_RELATIONS_QUERY = `
   query AnimeRelations($id: Int) {

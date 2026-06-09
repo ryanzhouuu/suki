@@ -91,3 +91,38 @@ export type AniListDiscoverResult = {
 export type AniListMediaResult = {
   Media: AniListMediaDetail | null;
 };
+
+export type AniListScoreFormat =
+  | "POINT_100"
+  | "POINT_10_DECIMAL"
+  | "POINT_10"
+  | "POINT_5"
+  | "POINT_3";
+
+export type AniListMediaListEntry = {
+  status: string | null;
+  score: number | null;
+  progress: number | null;
+  media: AniListMediaDetail | null;
+};
+
+export type AniListMediaListCollectionResult = {
+  User: {
+    mediaListOptions: { scoreFormat: AniListScoreFormat | null } | null;
+  } | null;
+  MediaListCollection: {
+    lists: Array<{ entries: AniListMediaListEntry[] | null } | null> | null;
+  } | null;
+};
+
+export type AniListMediaByMalIdsResult = {
+  Page: {
+    media: Array<AniListMediaDetail & { idMal: number | null }> | null;
+  } | null;
+};
+
+export type AniListImportSearchResult = {
+  Page: {
+    media: AniListMediaDetail[] | null;
+  } | null;
+};
