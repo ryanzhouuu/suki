@@ -1,4 +1,5 @@
 import {
+  boolean,
   date,
   integer,
   jsonb,
@@ -85,6 +86,9 @@ export const profiles = pgTable(
     profileVisibility: profileVisibilityEnum("profile_visibility")
       .notNull()
       .default("public"),
+    showActivityToFriends: boolean("show_activity_to_friends")
+      .notNull()
+      .default(true),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

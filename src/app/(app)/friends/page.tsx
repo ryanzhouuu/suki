@@ -1,8 +1,10 @@
+import { FriendActivityFeed } from "@/components/friends/friend-activity-feed";
 import { FriendCard } from "@/components/friends/friend-card";
 import { FriendRequestList } from "@/components/friends/friend-request-list";
 import { FriendSearch } from "@/components/friends/friend-search";
 import { ControlRail, WidePageFrame } from "@/components/layout/page-frame";
 import { requireProfile } from "@/lib/auth/session";
+import { getFriendActivityFeed } from "@/lib/friends/activity";
 import {
   listAcceptedFriends,
   listFriendRequests,
@@ -11,9 +13,10 @@ import {
 export default async function FriendsPage() {
   const { user } = await requireProfile();
 
-  const [friends, requests] = await Promise.all([
+  const [friends, requests, activity] = await Promise.all([
     listAcceptedFriends(user.id),
     listFriendRequests(user.id),
+    getFriendActivityFeed(user.id),
   ]);
 
   const pendingCount = requests.incoming.length + requests.outgoing.length;
@@ -49,7 +52,15 @@ export default async function FriendsPage() {
           </>
         }
       >
-        <section>
+        <section className="space-y-4">
+          <h2 className="text-lg font-semibold">Activity</h2>
+          <FriendActivityFeed
+            initialItems={activity.items}
+            initialCursor={activity.nextCursor}
+          />
+        </section>
+
+        <section className="mt-8">
           <div className="flex items-baseline justify-between gap-4">
             <h2 className="text-lg font-semibold">
               Your friends

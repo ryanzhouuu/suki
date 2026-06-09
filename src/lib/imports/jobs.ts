@@ -277,6 +277,7 @@ async function importChunk(admin: Admin, job: ImportJob): Promise<ImportJob> {
     if (isCompleted) {
       void logUserEvent(job.user_id, USER_EVENT_TYPES.animeCompleted, {
         animeId: anime.id,
+        metadata: { source: "import" },
       });
     }
   }

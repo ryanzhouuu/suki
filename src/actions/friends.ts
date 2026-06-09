@@ -2,9 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireProfile } from "@/lib/auth/session";
+import { requireAuthUser, requireProfile } from "@/lib/auth/session";
 import { USER_EVENT_TYPES } from "@/lib/constants";
 import { logUserEvent } from "@/lib/events/log";
+import { getFriendActivityFeed, type FeedPage } from "@/lib/friends/activity";
 import {
   getFriendshipBetween,
   searchProfilesWithFriendship,
@@ -295,4 +296,12 @@ export async function removeFriend(
       error: e instanceof Error ? e.message : "Could not remove friend.",
     };
   }
+}
+
+/** Loads the next page of the viewer's friend activity feed (cursor-based). */
+export async function loadFriendActivity(
+  cursor: string | null,
+): Promise<FeedPage> {
+  const user = await requireAuthUser();
+  return getFriendActivityFeed(user.id, { cursor });
 }
