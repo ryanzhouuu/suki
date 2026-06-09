@@ -3,8 +3,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
-      // Avatar uploads allow up to 2 MB; default Server Action limit is 1 MB.
-      bodySizeLimit: "3mb",
+      // Default Server Action limit is 1 MB. Avatars allow ~3 MB; MyAnimeList
+      // XML import uploads (large lists) can be larger, so allow up to 6 MB.
+      bodySizeLimit: "6mb",
     },
   },
   images: {

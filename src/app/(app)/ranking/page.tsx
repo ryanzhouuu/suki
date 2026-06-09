@@ -2,9 +2,11 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import { RankingPanel } from "@/components/ranking/ranking-panel";
+import { ImportPreparingPanel } from "@/components/imports/import-preparing-panel";
 import { WidePageFrame } from "@/components/layout/page-frame";
 import { requireProfile } from "@/lib/auth/session";
 import { RANKING_ALGORITHM_VERSION } from "@/lib/constants";
+import { getPreparingImportJob } from "@/lib/imports/gating";
 import { getNextComparisonPair } from "@/lib/ranking/prompt";
 import { getGenresBySeriesIds } from "@/lib/series/genres";
 import { getCompletedSeriesForUser } from "@/lib/series/queries";
@@ -13,6 +15,19 @@ import { createClient } from "@/lib/supabase/server";
 export default async function RankingPage() {
   const { user } = await requireProfile();
   const supabase = await createClient();
+
+  const preparingJob = await getPreparingImportJob(user.id);
+  if (preparingJob) {
+    return (
+      <WidePageFrame className="space-y-10">
+        <div>
+          <p className="eyebrow">Express your taste</p>
+          <h1 className="mt-1.5 text-3xl font-semibold sm:text-4xl">Ranking</h1>
+        </div>
+        <ImportPreparingPanel job={preparingJob} />
+      </WidePageFrame>
+    );
+  }
 
   const completedSeries = await getCompletedSeriesForUser(user.id);
 

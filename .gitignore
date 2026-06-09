@@ -58,3 +58,8 @@ next-env.d.ts
 .cursor/
 AGENTS.md
 CLAUDE.md
+
+# local agent tooling / MCP (may contain secrets — never commit)
+.mcp.json
+.agents/
+.codex/

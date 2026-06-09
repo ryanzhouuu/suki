@@ -1,8 +1,10 @@
+import Link from "next/link";
 import { Suspense } from "react";
 
 import { LibraryPanel } from "@/components/library/library-panel";
 import { LibraryTabs } from "@/components/library/library-tabs";
 import { WidePageFrame } from "@/components/layout/page-frame";
+import { Button } from "@/components/ui/button";
 import { requireProfile } from "@/lib/auth/session";
 import {
   ANIME_ENTRY_STATUSES,
@@ -95,12 +97,17 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
         <div className="rounded-card border border-dashed border-line-strong p-10 text-center">
           <p className="font-display text-xl text-ink">Nothing here yet</p>
           <p className="mt-1 text-sm text-muted">
-            Head to{" "}
+            Import an existing list, or{" "}
             <a href="/search" className="font-semibold text-accent hover:underline">
               search
             </a>{" "}
-            to start building your list.
+            to build one from scratch.
           </p>
+          <div className="mt-5 flex justify-center">
+            <Link href="/import">
+              <Button>Import your list</Button>
+            </Link>
+          </div>
         </div>
       ) : (
         <Suspense fallback={null}>

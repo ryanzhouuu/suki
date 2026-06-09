@@ -56,6 +56,23 @@ export const seriesOverrideActionEnum = pgEnum("series_override_action", [
   "exclude_from_auto_group",
 ]);
 
+export const importSourceEnum = pgEnum("import_source", [
+  "anilist",
+  "mal_xml",
+  "plain_text",
+]);
+
+export const importStatusEnum = pgEnum("import_status", [
+  "pending",
+  "parsing",
+  "needs_review",
+  "importing",
+  "series_backfill",
+  "done",
+  "failed",
+  "canceled",
+]);
+
 export const profiles = pgTable(
   "profiles",
   {
@@ -240,6 +257,32 @@ export const userEvents = pgTable("user_events", {
   animeId: uuid("anime_id").references(() => anime.id, { onDelete: "set null" }),
   metadata: jsonb("metadata").notNull().default({}),
   createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const animeImportJobs = pgTable("anime_import_jobs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull(),
+  source: importSourceEnum("source").notNull(),
+  status: importStatusEnum("status").notNull().default("pending"),
+  total: integer("total").notNull().default(0),
+  processed: integer("processed").notNull().default(0),
+  matched: integer("matched").notNull().default(0),
+  needsReviewCount: integer("needs_review_count").notNull().default(0),
+  unmatched: integer("unmatched").notNull().default(0),
+  imported: integer("imported").notNull().default(0),
+  skipped: integer("skipped").notNull().default(0),
+  sourceInput: jsonb("source_input").notNull().default({}),
+  stagedRows: jsonb("staged_rows").notNull().default([]),
+  backfillAnimeIds: uuid("backfill_anime_ids").array().notNull().default([]),
+  retryCount: integer("retry_count").notNull().default(0),
+  error: text("error"),
+  heartbeatAt: timestamp("heartbeat_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
 });
