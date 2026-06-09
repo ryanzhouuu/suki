@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { AnimePoster } from "@/components/anime/anime-poster";
 import { DiscoverRow } from "@/components/home/discover-row";
+import { FriendActivityTeaser } from "@/components/home/friend-activity-teaser";
 import { HomeHero } from "@/components/home/home-hero";
 import { RecommendationsPreview } from "@/components/home/recommendations-preview";
 import { WidePageFrame } from "@/components/layout/page-frame";
@@ -64,6 +65,8 @@ export default async function HomePage() {
       ) : null}
 
       <RecommendationsPreview userId={user.id} />
+
+      <FriendActivityTeaser userId={user.id} />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <section className="animate-rise lg:col-span-2 [animation-delay:240ms]">
