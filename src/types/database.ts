@@ -735,6 +735,72 @@ export type Database = {
           },
         ];
       };
+      anime_import_jobs: {
+        Row: {
+          backfill_anime_ids: string[];
+          created_at: string;
+          error: string | null;
+          heartbeat_at: string | null;
+          id: string;
+          imported: number;
+          matched: number;
+          needs_review_count: number;
+          processed: number;
+          retry_count: number;
+          skipped: number;
+          source: Database["public"]["Enums"]["import_source"];
+          source_input: Json;
+          staged_rows: Json;
+          status: Database["public"]["Enums"]["import_status"];
+          total: number;
+          unmatched: number;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          backfill_anime_ids?: string[];
+          created_at?: string;
+          error?: string | null;
+          heartbeat_at?: string | null;
+          id?: string;
+          imported?: number;
+          matched?: number;
+          needs_review_count?: number;
+          processed?: number;
+          retry_count?: number;
+          skipped?: number;
+          source: Database["public"]["Enums"]["import_source"];
+          source_input?: Json;
+          staged_rows?: Json;
+          status?: Database["public"]["Enums"]["import_status"];
+          total?: number;
+          unmatched?: number;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          backfill_anime_ids?: string[];
+          created_at?: string;
+          error?: string | null;
+          heartbeat_at?: string | null;
+          id?: string;
+          imported?: number;
+          matched?: number;
+          needs_review_count?: number;
+          processed?: number;
+          retry_count?: number;
+          skipped?: number;
+          source?: Database["public"]["Enums"]["import_source"];
+          source_input?: Json;
+          staged_rows?: Json;
+          status?: Database["public"]["Enums"]["import_status"];
+          total?: number;
+          unmatched?: number;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -761,6 +827,16 @@ export type Database = {
         | "dropped"
         | "plan_to_watch";
       friendship_status: "pending" | "accepted" | "declined" | "blocked";
+      import_source: "anilist" | "mal_xml" | "plain_text";
+      import_status:
+        | "pending"
+        | "parsing"
+        | "needs_review"
+        | "importing"
+        | "series_backfill"
+        | "done"
+        | "failed"
+        | "canceled";
       profile_visibility: "public" | "friends_only" | "private";
       ranking_confidence: "low" | "medium" | "high";
       series_map_source: "anilist_auto" | "manual_override" | "singleton";
@@ -799,6 +875,17 @@ export const Constants = {
         "plan_to_watch",
       ],
       friendship_status: ["pending", "accepted", "declined", "blocked"],
+      import_source: ["anilist", "mal_xml", "plain_text"],
+      import_status: [
+        "pending",
+        "parsing",
+        "needs_review",
+        "importing",
+        "series_backfill",
+        "done",
+        "failed",
+        "canceled",
+      ],
       profile_visibility: ["public", "friends_only", "private"],
       ranking_confidence: ["low", "medium", "high"],
       series_map_source: ["anilist_auto", "manual_override", "singleton"],
