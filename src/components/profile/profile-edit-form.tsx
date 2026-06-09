@@ -48,6 +48,23 @@ export function ProfileEditForm({ profile, action }: ProfileEditFormProps) {
           <Label htmlFor="bio">Bio</Label>
           <Input id="bio" name="bio" defaultValue={profile.bio ?? ""} maxLength={300} />
         </div>
+        <label className="flex items-start gap-3 rounded-xl border border-line bg-surface-2/40 p-3">
+          <input
+            type="checkbox"
+            name="show_activity_to_friends"
+            defaultChecked={profile.show_activity_to_friends}
+            className="mt-0.5 h-4 w-4 shrink-0 accent-accent"
+          />
+          <span className="text-sm">
+            <span className="font-medium text-ink">
+              Show my activity to friends
+            </span>
+            <span className="mt-0.5 block text-xs text-muted">
+              Let accepted friends see when you complete, plan, or rank anime in
+              their activity feed.
+            </span>
+          </span>
+        </label>
         <p className="text-xs text-faint">
           Username <strong className="text-muted">@{profile.username}</strong>{" "}
           cannot be changed in the MVP.

@@ -68,6 +68,9 @@ export async function updateProfile(
   const user = await requireAuthUser();
   const displayName = String(formData.get("display_name") ?? "").trim() || null;
   const bio = String(formData.get("bio") ?? "").trim() || null;
+  // Unchecked checkboxes don't submit, so presence == opted in.
+  const showActivityToFriends =
+    formData.get("show_activity_to_friends") === "on";
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -75,6 +78,7 @@ export async function updateProfile(
     .update({
       display_name: displayName,
       bio,
+      show_activity_to_friends: showActivityToFriends,
     })
     .eq("user_id", user.id);
 
