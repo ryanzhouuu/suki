@@ -69,6 +69,22 @@ export const USER_EVENT_TYPES = {
   libraryEntryRemoved: "library_entry_removed",
 } as const;
 
+/** Raw event types the friend activity feed considers (everything else is noise). */
+export const FEED_WORTHY_EVENT_TYPES = [
+  USER_EVENT_TYPES.animeCompleted,
+  USER_EVENT_TYPES.animeAdded,
+  USER_EVENT_TYPES.seriesComparisonCreated,
+] as const;
+
+/** Only events newer than this surface in the feed. */
+export const FEED_LOOKBACK_DAYS = 30;
+/** Raw events fetched per feed page (grouping collapses these into fewer items). */
+export const FEED_PAGE_SIZE = 60;
+/** A comparison surfaces only if the winner is currently within this rank. */
+export const FEED_RANKING_TOP_N = 5;
+/** Max cover thumbnails shown per grouped feed item. */
+export const FEED_MAX_COVERS = 4;
+
 export const WATCHLIST_PRIORITY_LABELS = {
   low: "Low",
   medium: "Medium",

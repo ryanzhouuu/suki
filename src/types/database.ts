@@ -518,6 +518,7 @@ export type Database = {
           created_at: string;
           display_name: string | null;
           profile_visibility: Database["public"]["Enums"]["profile_visibility"];
+          show_activity_to_friends: boolean;
           updated_at: string;
           user_id: string;
           username: string;
@@ -529,6 +530,7 @@ export type Database = {
           created_at?: string;
           display_name?: string | null;
           profile_visibility?: Database["public"]["Enums"]["profile_visibility"];
+          show_activity_to_friends?: boolean;
           updated_at?: string;
           user_id: string;
           username: string;
@@ -540,6 +542,7 @@ export type Database = {
           created_at?: string;
           display_name?: string | null;
           profile_visibility?: Database["public"]["Enums"]["profile_visibility"];
+          show_activity_to_friends?: boolean;
           updated_at?: string;
           user_id?: string;
           username?: string;
