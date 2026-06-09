@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import type { ProfileActionState } from "@/actions/profile";
@@ -71,6 +72,19 @@ export function ProfileEditForm({ profile, action }: ProfileEditFormProps) {
           {pending ? "Saving…" : "Save changes"}
         </Button>
       </form>
+      <div className="flex items-center justify-between gap-3 border-t border-line pt-6">
+        <div>
+          <p className="text-sm font-semibold text-ink">Import a list</p>
+          <p className="text-xs text-muted">
+            Bring titles in from AniList, MyAnimeList, or plain text.
+          </p>
+        </div>
+        <Link href="/import">
+          <Button type="button" variant="secondary" size="sm">
+            Import
+          </Button>
+        </Link>
+      </div>
     </div>
   );
 }
