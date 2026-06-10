@@ -1,6 +1,12 @@
+import { Suspense } from "react";
+
 import Link from "next/link";
 
 import { AnimePoster } from "@/components/anime/anime-poster";
+import {
+  AiringTracker,
+  AiringTrackerSkeleton,
+} from "@/components/home/airing-tracker";
 import { DiscoverRow } from "@/components/home/discover-row";
 import { FriendActivityTeaser } from "@/components/home/friend-activity-teaser";
 import { HomeHero } from "@/components/home/home-hero";
@@ -67,6 +73,10 @@ export default async function HomePage() {
       <RecommendationsPreview userId={user.id} />
 
       <FriendActivityTeaser userId={user.id} />
+
+      <Suspense fallback={<AiringTrackerSkeleton />}>
+        <AiringTracker userId={user.id} />
+      </Suspense>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <section className="animate-rise lg:col-span-2 [animation-delay:240ms]">
