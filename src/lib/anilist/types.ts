@@ -126,3 +126,16 @@ export type AniListImportSearchResult = {
     media: AniListMediaDetail[] | null;
   } | null;
 };
+
+export type AniListAiringMedia = {
+  id: number;
+  episodes: number | null;
+  status: string | null;
+  nextAiringEpisode: { episode: number; airingAt: number } | null;
+};
+
+export type AniListAiringResult = {
+  Page: {
+    media: AniListAiringMedia[] | null;
+  } | null;
+};

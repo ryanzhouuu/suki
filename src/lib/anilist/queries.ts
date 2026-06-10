@@ -218,3 +218,20 @@ export const ANIME_RELATIONS_QUERY = `
     }
   }
 `;
+
+/** Batched airing info for many watching titles in one request (perPage max 50). */
+export const ANIME_AIRING_QUERY = `
+  query AnimeAiring($ids: [Int]) {
+    Page(page: 1, perPage: 50) {
+      media(id_in: $ids, type: ANIME) {
+        id
+        episodes
+        status
+        nextAiringEpisode {
+          episode
+          airingAt
+        }
+      }
+    }
+  }
+`;
