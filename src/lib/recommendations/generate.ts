@@ -2,7 +2,10 @@ import { randomUUID } from "node:crypto";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 
-import { getVectorCandidates } from "./candidates";
+import {
+  getVectorCandidates,
+  getVectorCandidatesForEmbedding,
+} from "./candidates";
 import {
   EMBEDDING_MODEL,
   RECOMMENDATION_ALGORITHM_VERSION,
@@ -23,7 +26,15 @@ import { buildRunInputHash } from "./run-input-hash";
 import { sampleAdventurous } from "./sampler";
 import { buildTasteProfile } from "./taste-profile";
 import { upsertUserTasteEmbedding } from "./taste-embedding";
-import { isEmbeddingConfigured } from "./embedding-provider";
+import {
+  createEmbeddingProvider,
+  isEmbeddingConfigured,
+} from "./embedding-provider";
+import {
+  blendEmbeddings,
+  moodBlendWeight,
+  resolveMoodSeedText,
+} from "./mood";
 import { parseExplanationDetails } from "./explanation-details";
 import type { ScoredRecommendation } from "./types";
 
@@ -79,10 +90,21 @@ export async function generateRecommendations(
     }
   }
 
-  await upsertUserTasteEmbedding(profile);
+  const tasteEmbedding = await upsertUserTasteEmbedding(profile);
 
   const exclusions = await getRecommendationExclusions(userId);
-  const candidates = await getVectorCandidates(profile, exclusions);
+  const candidates = prefs.mood
+    ? await getVectorCandidatesForEmbedding(
+        blendEmbeddings(
+          tasteEmbedding,
+          (await createEmbeddingProvider().embed([
+            resolveMoodSeedText(prefs.mood),
+          ]))[0],
+          moodBlendWeight(prefs.adventurousness),
+        ),
+        exclusions,
+      )
+    : await getVectorCandidates(profile, exclusions);
 
   const filtered = filterCandidatesByRequest(candidates, prefs);
   const pool = filtered.length > 0 ? filtered : candidates;

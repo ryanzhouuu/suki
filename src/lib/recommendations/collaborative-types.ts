@@ -22,6 +22,8 @@ export const DEFAULT_COLLABORATIVE_RECOMMENDATION_PREFS: CollaborativeRecommenda
     genres: [],
     lengthBucket: null,
     format: null,
+    mood: null,
+    adventurousness: "balanced",
     mode: "best_shared_match",
   };
 

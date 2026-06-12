@@ -3,22 +3,38 @@ import { createSeededRandom } from "./seeded-random";
 import type { ReasonCode } from "./constants";
 import {
   isEmptyRequestPrefs,
+  type AdventurousnessLevel,
   type RecommendationRequestPrefs,
 } from "./request-prefs";
 import { matchesRequestPrefs } from "./request-filter";
 import type { ScoredRecommendation } from "./types";
 
-const STRONG_RATIO = 0.6;
-const DIVERSE_RATIO = 0.25;
-const WILDCARD_RATIO = 0.15;
+type Ratios = { strong: number; diverse: number };
 
-function slotCounts(limit: number): {
+/** `balanced` matches the historical 0.6 / 0.25 / 0.15 split exactly. */
+function ratiosForLevel(level: AdventurousnessLevel): Ratios {
+  switch (level) {
+    case "safe":
+      return { strong: 0.75, diverse: 0.2 };
+    case "adventurous":
+      return { strong: 0.45, diverse: 0.3 };
+    case "balanced":
+    default:
+      return { strong: 0.6, diverse: 0.25 };
+  }
+}
+
+function slotCounts(
+  limit: number,
+  level: AdventurousnessLevel,
+): {
   strong: number;
   diverse: number;
   wildcard: number;
 } {
-  const strong = Math.max(1, Math.round(limit * STRONG_RATIO));
-  const diverse = Math.max(0, Math.round(limit * DIVERSE_RATIO));
+  const { strong: strongRatio, diverse: diverseRatio } = ratiosForLevel(level);
+  const strong = Math.max(1, Math.round(limit * strongRatio));
+  const diverse = Math.max(0, Math.round(limit * diverseRatio));
   const wildcard = Math.max(0, limit - strong - diverse);
   return { strong, diverse, wildcard };
 }
@@ -115,7 +131,7 @@ export function sampleAdventurous(
   const rand = createSeededRandom(seed);
   const sorted = [...scored].sort((a, b) => b.finalScore - a.finalScore);
   const { strong: strongN, diverse: diverseN, wildcard: wildcardN } =
-    slotCounts(limit);
+    slotCounts(limit, prefs.adventurousness);
 
   const used = new Set<string>();
   const result: ScoredRecommendation[] = [];
