@@ -90,4 +90,19 @@ describe("sampleAdventurous", () => {
       10,
     );
   });
+
+  it("gives a larger wildcard share when adventurousness is high", () => {
+    const wildcardCount = (level: "safe" | "adventurous") => {
+      const sampled = sampleAdventurous(
+        pool,
+        { ...EMPTY_REQUEST_PREFS, adventurousness: level },
+        "share-seed",
+        20,
+      );
+      return sampled.filter((r) =>
+        r.reasonCodes.includes(REASON_CODES.wildcardPick),
+      ).length;
+    };
+    assert.ok(wildcardCount("adventurous") > wildcardCount("safe"));
+  });
 });

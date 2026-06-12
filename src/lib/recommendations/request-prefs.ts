@@ -1,5 +1,7 @@
 import { normalizeGenreParams } from "@/lib/anilist/genres";
 
+import { MOOD_PRESET_KEYS } from "./mood";
+
 /** Length buckets for next-watch requests. */
 export const LENGTH_BUCKETS = ["movie", "short", "cour", "long"] as const;
 export type LengthBucket = (typeof LENGTH_BUCKETS)[number];
@@ -20,16 +22,34 @@ export type AnimeFormat = (typeof ANIME_FORMATS)[number];
 
 const FORMAT_SET = new Set<string>(ANIME_FORMATS);
 
+/** Steers how surprising the results are: blend weight + sampler variance. */
+export const ADVENTUROUSNESS_LEVELS = [
+  "safe",
+  "balanced",
+  "adventurous",
+] as const;
+export type AdventurousnessLevel = (typeof ADVENTUROUSNESS_LEVELS)[number];
+
+const ADVENTUROUSNESS_SET = new Set<string>(ADVENTUROUSNESS_LEVELS);
+
+/** Max length accepted for a free-text mood; keeps the embed call cheap. */
+const MOOD_TEXT_MAX_LENGTH = 200;
+
 export type RecommendationRequestPrefs = {
   genres: string[];
   lengthBucket: LengthBucket | null;
   format: AnimeFormat | null;
+  /** Preset key or raw free text; null when no mood is requested. */
+  mood: string | null;
+  adventurousness: AdventurousnessLevel;
 };
 
 export const EMPTY_REQUEST_PREFS: RecommendationRequestPrefs = {
   genres: [],
   lengthBucket: null,
   format: null,
+  mood: null,
+  adventurousness: "balanced",
 };
 
 export function isEmptyRequestPrefs(prefs: RecommendationRequestPrefs): boolean {
@@ -48,6 +68,8 @@ export function serializeRequestPrefs(
     genres: [...prefs.genres].sort(),
     lengthBucket: prefs.lengthBucket,
     format: prefs.format,
+    mood: prefs.mood,
+    adventurousness: prefs.adventurousness,
   };
 }
 
@@ -78,8 +100,29 @@ export function parseRecommendationRequestPrefs(
     format = rawFormat as AnimeFormat;
   }
 
+  // Free text wins over a selected preset chip.
+  const moodText = String(formData.get("moodText") ?? "")
+    .trim()
+    .slice(0, MOOD_TEXT_MAX_LENGTH);
+  const moodPreset = String(formData.get("moodPreset") ?? "").trim();
+  let mood: string | null = null;
+  if (moodText) {
+    mood = moodText;
+  } else if (moodPreset && MOOD_PRESET_KEYS.has(moodPreset)) {
+    mood = moodPreset;
+  }
+
+  const rawAdventurousness = String(
+    formData.get("adventurousness") ?? "balanced",
+  ).trim();
+  const adventurousness: AdventurousnessLevel = ADVENTUROUSNESS_SET.has(
+    rawAdventurousness,
+  )
+    ? (rawAdventurousness as AdventurousnessLevel)
+    : "balanced";
+
   return {
     ok: true,
-    prefs: { genres, lengthBucket, format },
+    prefs: { genres, lengthBucket, format, mood, adventurousness },
   };
 }

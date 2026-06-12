@@ -44,6 +44,8 @@ describe("filterCandidatesByRequest", () => {
       genres: ["Horror"],
       lengthBucket: null,
       format: null,
+      mood: null,
+      adventurousness: "balanced",
     };
     const items = [
       anime({ genres: ["Horror"] }),
@@ -61,6 +63,8 @@ describe("filterCandidatesByRequest", () => {
         genres: [],
         lengthBucket: null,
         format: null,
+        mood: null,
+        adventurousness: "balanced",
       }).length,
       2,
     );
@@ -74,6 +78,8 @@ describe("matchesRequestPrefs", () => {
         genres: [],
         lengthBucket: null,
         format: "OVA",
+        mood: null,
+        adventurousness: "balanced",
       }),
     );
     assert.ok(
@@ -81,6 +87,8 @@ describe("matchesRequestPrefs", () => {
         genres: [],
         lengthBucket: null,
         format: "OVA",
+        mood: null,
+        adventurousness: "balanced",
       }),
     );
   });

@@ -25,6 +25,7 @@ export const REASON_CODES = {
   requestGenreMatch: "request_genre_match",
   requestLengthMatch: "request_length_match",
   requestFormatMatch: "request_format_match",
+  moodMatch: "mood_match",
   collaborativeBothMatch: "collaborative_both_match",
   collaborativeViewerMatch: "collaborative_viewer_match",
   collaborativeFriendMatch: "collaborative_friend_match",

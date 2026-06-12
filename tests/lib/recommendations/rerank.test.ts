@@ -74,6 +74,8 @@ describe("rerankCandidates", () => {
       genres: ["Romance"],
       lengthBucket: null,
       format: null,
+      mood: null,
+      adventurousness: "balanced",
     };
     const match = rerankCandidates(
       baseProfile,
@@ -118,6 +120,42 @@ describe("buildExplanation", () => {
     const rec = rerankCandidates(baseProfile, [candidate()])[0];
     rec.reasonCodes = [REASON_CODES.wildcardPick];
     assert.match(buildExplanation(rec, baseProfile), /adventurous/i);
+  });
+
+  it("tags strong matches as mood matches when a mood is set", () => {
+    const prefs: RecommendationRequestPrefs = {
+      genres: [],
+      lengthBucket: null,
+      format: null,
+      mood: "cozy",
+      adventurousness: "balanced",
+    };
+    const rec = rerankCandidates(
+      baseProfile,
+      [candidate({ genres: [], similarityScore: 0.9 })],
+      prefs,
+    )[0];
+    assert.ok(rec.reasonCodes.includes(REASON_CODES.moodMatch));
+    assert.match(buildExplanation(rec, baseProfile, prefs), /cozy pick/i);
+  });
+
+  it("quotes free-text moods in the explanation", () => {
+    const prefs: RecommendationRequestPrefs = {
+      genres: [],
+      lengthBucket: null,
+      format: null,
+      mood: "something that'll wreck me",
+      adventurousness: "balanced",
+    };
+    const rec = rerankCandidates(
+      baseProfile,
+      [candidate({ genres: [], similarityScore: 0.9 })],
+      prefs,
+    )[0];
+    assert.match(
+      buildExplanation(rec, baseProfile, prefs),
+      /tuned to "something that'll wreck me"/i,
+    );
   });
 });
 

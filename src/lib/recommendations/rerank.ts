@@ -6,6 +6,7 @@ import {
 } from "./constants";
 import { matchesAnyGenre } from "@/lib/filters/genre";
 
+import { MOOD_PRESET_KEYS, moodLabel } from "./mood";
 import { matchesLengthBucket } from "./request-filter";
 import {
   EMPTY_REQUEST_PREFS,
@@ -103,6 +104,11 @@ export function rerankCandidates(
 
     if (candidate.similarityScore >= 0.72) {
       reasonCodes.push(REASON_CODES.semanticMatch);
+      // Similarity is against the mood-blended vector, so a strong match here is
+      // also a strong mood match.
+      if (prefs.mood) {
+        reasonCodes.push(REASON_CODES.moodMatch);
+      }
     }
 
     rerankScore = clamp01(rerankScore);
@@ -158,6 +164,12 @@ export function buildExplanation(
 
   if (rec.reasonCodes.includes(REASON_CODES.diversePick)) {
     return `A varied suggestion that still fits your request and taste profile.`;
+  }
+
+  if (rec.reasonCodes.includes(REASON_CODES.moodMatch) && prefs.mood) {
+    return MOOD_PRESET_KEYS.has(prefs.mood)
+      ? `A ${moodLabel(prefs.mood)} pick that still matches your taste.`
+      : `A pick tuned to "${prefs.mood}" that still matches your taste.`;
   }
 
   if (rec.reasonCodes.includes(REASON_CODES.requestGenreMatch) && prefs.genres[0]) {
