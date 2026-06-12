@@ -79,6 +79,8 @@ describe("collaborativePrefsToRequestPrefs", () => {
       genres: [],
       format: null,
       lengthBucket: null,
+      mood: null,
+      adventurousness: "balanced",
     };
     const request = collaborativePrefsToRequestPrefs(prefs);
     assert.equal(request.lengthBucket, "short");
@@ -92,6 +94,8 @@ describe("rerankCollaborativeCandidates", () => {
       genres: [],
       format: null,
       lengthBucket: null,
+      mood: null,
+      adventurousness: "balanced",
     };
 
     const rec = rerankCollaborativeCandidates(

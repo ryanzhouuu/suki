@@ -9,6 +9,8 @@ const prefs: CollaborativeRecommendationPrefs = {
   genres: ["Drama"],
   format: null,
   lengthBucket: null,
+  mood: null,
+  adventurousness: "balanced",
 };
 
 describe("buildCollaborativeRunInputHash", () => {

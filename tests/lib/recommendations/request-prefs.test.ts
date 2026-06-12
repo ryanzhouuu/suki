@@ -39,17 +39,53 @@ describe("parseRecommendationRequestPrefs", () => {
     const result = parseRecommendationRequestPrefs(form);
     assert.equal(result.ok, false);
   });
+
+  it("resolves a valid mood preset and adventurousness level", () => {
+    const form = new FormData();
+    form.append("moodPreset", "cozy");
+    form.append("adventurousness", "adventurous");
+    const result = parseRecommendationRequestPrefs(form);
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+    assert.equal(result.prefs.mood, "cozy");
+    assert.equal(result.prefs.adventurousness, "adventurous");
+  });
+
+  it("lets free text override a selected preset", () => {
+    const form = new FormData();
+    form.append("moodPreset", "cozy");
+    form.append("moodText", "  something that'll wreck me  ");
+    const result = parseRecommendationRequestPrefs(form);
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+    assert.equal(result.prefs.mood, "something that'll wreck me");
+  });
+
+  it("ignores unknown presets and invalid adventurousness", () => {
+    const form = new FormData();
+    form.append("moodPreset", "not-a-mood");
+    form.append("adventurousness", "reckless");
+    const result = parseRecommendationRequestPrefs(form);
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+    assert.equal(result.prefs.mood, null);
+    assert.equal(result.prefs.adventurousness, "balanced");
+  });
 });
 
 describe("serializeRequestPrefs", () => {
-  it("sorts genres for stable serialization", () => {
+  it("sorts genres and includes mood + adventurousness", () => {
     const serialized = serializeRequestPrefs({
       genres: ["Romance", "Action"],
       lengthBucket: "short",
       format: "TV",
+      mood: "cozy",
+      adventurousness: "safe",
     });
     assert.deepEqual(serialized.genres, ["Action", "Romance"]);
     assert.equal(serialized.lengthBucket, "short");
     assert.equal(serialized.format, "TV");
+    assert.equal(serialized.mood, "cozy");
+    assert.equal(serialized.adventurousness, "safe");
   });
 });
