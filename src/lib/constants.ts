@@ -54,6 +54,7 @@ export const USER_EVENT_TYPES = {
   animeCompleted: "anime_completed",
   comparisonCreated: "comparison_created",
   seriesComparisonCreated: "series_comparison_created",
+  seriesRankingReset: "series_ranking_reset",
   rankingViewed: "ranking_viewed",
   friendRequestSent: "friend_request_sent",
   friendRequestAccepted: "friend_request_accepted",

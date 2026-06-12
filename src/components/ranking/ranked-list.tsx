@@ -1,4 +1,5 @@
 import { AnimePoster } from "@/components/anime/anime-poster";
+import { RerankButton } from "@/components/ranking/rerank-button";
 import { CONFIDENCE_LABELS } from "@/lib/constants";
 import type { Tables } from "@/types/database";
 
@@ -70,6 +71,10 @@ export function RankedList({ rankings, genresBySeriesId }: RankedListProps) {
                 {CONFIDENCE_LABELS[row.confidence]}
               </p>
             </div>
+            <RerankButton
+              seriesId={row.series_id}
+              title={series.canonical_title}
+            />
           </li>
         );
       })}

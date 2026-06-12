@@ -116,6 +116,39 @@ export async function submitComparison(
   return {};
 }
 
+export async function resetSeriesRanking(
+  seriesId: string,
+): Promise<RankingActionState> {
+  const user = await requireAuthUser();
+  const supabase = await createClient();
+
+  // Hard-delete every comparison involving this series for this user.
+  // This also removes any skipped pairs, so they re-surface in the prompt loop.
+  const { error } = await supabase
+    .from("pairwise_series_comparisons")
+    .delete()
+    .eq("user_id", user.id)
+    .or(`left_series_id.eq.${seriesId},right_series_id.eq.${seriesId}`);
+  if (error) return { error: error.message };
+
+  await logUserEvent(user.id, USER_EVENT_TYPES.seriesRankingReset, {
+    metadata: { seriesId },
+  });
+
+  try {
+    await recomputeUserRanking(user.id);
+  } catch (e) {
+    return {
+      error:
+        e instanceof Error ? e.message : "Ranking failed to recompute.",
+    };
+  }
+
+  revalidatePath("/ranking");
+  revalidatePath("/home");
+  return {};
+}
+
 export async function skipComparison(
   leftSeriesId: string,
   rightSeriesId: string,
