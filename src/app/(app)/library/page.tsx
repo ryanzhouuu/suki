@@ -3,6 +3,7 @@ import { Suspense } from "react";
 
 import { LibraryPanel } from "@/components/library/library-panel";
 import { LibraryTabs } from "@/components/library/library-tabs";
+import { WatchlistShuffle } from "@/components/library/watchlist-shuffle";
 import { WidePageFrame } from "@/components/layout/page-frame";
 import { Button } from "@/components/ui/button";
 import { requireProfile } from "@/lib/auth/session";
@@ -83,6 +84,11 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
       )
     : undefined;
 
+  // The shuffle "decision helper" lives on the (ungrouped) plan-to-watch tab,
+  // where `entries` is already exactly the plan-to-watch list.
+  const showShuffle =
+    status === "plan_to_watch" && !grouped && entries.length > 0;
+
   return (
     <WidePageFrame className="space-y-6">
       <div>
@@ -105,6 +111,8 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
       <Suspense fallback={null}>
         <LibraryTabs />
       </Suspense>
+
+      {showShuffle ? <WatchlistShuffle entries={entries} /> : null}
 
       {entries.length === 0 ? (
         <div className="rounded-card border border-dashed border-line-strong p-10 text-center">
