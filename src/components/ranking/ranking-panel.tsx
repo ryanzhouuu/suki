@@ -5,6 +5,12 @@ import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from
 import { fetchComparisonPair } from "@/actions/ranking";
 import { ComparisonView } from "@/components/ranking/comparison-view";
 import { RankedList } from "@/components/ranking/ranked-list";
+import {
+  RankingViewToggle,
+  useRankingView,
+  type RankingView,
+} from "@/components/ranking/ranking-view-toggle";
+import { TierListView } from "@/components/ranking/tier-list-view";
 import { FilterMatchCount } from "@/components/filters/filter-match-count";
 import { GenreFilter } from "@/components/filters/genre-filter";
 import { ControlRail } from "@/components/layout/page-frame";
@@ -22,6 +28,7 @@ type RankingPanelProps = {
   rankings: RankedSeriesRow[];
   genresBySeriesId: Record<string, string[]>;
   completedSeriesCount: number;
+  initialView: RankingView;
 };
 
 export function RankingPanel({
@@ -29,9 +36,11 @@ export function RankingPanel({
   rankings,
   genresBySeriesId,
   completedSeriesCount,
+  initialView,
 }: RankingPanelProps) {
   const { genres, setGenres, genreKey, isFiltering: genreFiltering } =
     useGenreFilters();
+  const { view, setView } = useRankingView(initialView);
   const [pair, setPair] = useState<SeriesComparisonPair | null>(initialPair);
   const [pairError, setPairError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -155,7 +164,12 @@ export function RankingPanel({
         ) : null}
 
         <section>
-          <h2 className="mb-4 text-xl font-semibold sm:text-2xl">Your ranking</h2>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-xl font-semibold sm:text-2xl">Your ranking</h2>
+            {rankings.length > 0 ? (
+              <RankingViewToggle view={view} onChange={setView} />
+            ) : null}
+          </div>
           {genreFiltering ? (
             <div className="mb-3">
               <FilterMatchCount
@@ -165,11 +179,15 @@ export function RankingPanel({
               />
             </div>
           ) : null}
-          <RankedList
-            rankings={filteredRankings}
-            genresBySeriesId={genresBySeriesId}
-            editable
-          />
+          {view === "tiers" ? (
+            <TierListView rankings={filteredRankings} />
+          ) : (
+            <RankedList
+              rankings={filteredRankings}
+              genresBySeriesId={genresBySeriesId}
+              editable
+            />
+          )}
         </section>
       </div>
     </ControlRail>

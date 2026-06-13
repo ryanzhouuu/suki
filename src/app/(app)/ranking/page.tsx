@@ -14,8 +14,14 @@ import { getGenresBySeriesIds } from "@/lib/series/genres";
 import { getCompletedSeriesForUser } from "@/lib/series/queries";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function RankingPage() {
+type RankingPageProps = {
+  searchParams: Promise<{ view?: string }>;
+};
+
+export default async function RankingPage({ searchParams }: RankingPageProps) {
   const { user, profile } = await requireProfile();
+  const { view } = await searchParams;
+  const initialView = view === "tiers" ? "tiers" : "list";
   const supabase = await createClient();
   const shareUrl = `${env.siteUrl()}/u/${profile.username}`;
 
@@ -94,6 +100,7 @@ export default async function RankingPage() {
           rankings={rankings}
           genresBySeriesId={genresBySeriesId}
           completedSeriesCount={completedSeriesCount}
+          initialView={initialView}
         />
       </Suspense>
     </WidePageFrame>
