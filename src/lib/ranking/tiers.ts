@@ -12,13 +12,15 @@ export type Tier = (typeof TIERS)[number];
 /**
  * Elo-score floors for each tier, relative to the 1500 baseline. A score lands
  * in the first (highest) tier whose floor it clears; anything below C's floor
- * is D. "Wider S/D tails" — S and D are intentionally harder to reach.
+ * is D. Bands are tuned to the observed score spread (real rankings cluster
+ * tightly around 1500, roughly 1340–1650) so all five tiers actually fill —
+ * symmetric ±25 / ±75 around the baseline.
  */
 export const TIER_THRESHOLDS: Record<Exclude<Tier, "D">, number> = {
-  S: 1750,
-  A: 1600,
-  B: 1450,
-  C: 1300,
+  S: 1575,
+  A: 1525,
+  B: 1475,
+  C: 1425,
 };
 
 export function tierForScore(score: number): Tier {

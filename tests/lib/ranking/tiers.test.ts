@@ -27,17 +27,17 @@ function row(
 
 describe("tierForScore", () => {
   it("places scores at each band floor in the right tier", () => {
-    assert.equal(tierForScore(1750), "S");
-    assert.equal(tierForScore(1600), "A");
-    assert.equal(tierForScore(1450), "B");
-    assert.equal(tierForScore(1300), "C");
-    assert.equal(tierForScore(1299), "D");
+    assert.equal(tierForScore(1575), "S");
+    assert.equal(tierForScore(1525), "A");
+    assert.equal(tierForScore(1475), "B");
+    assert.equal(tierForScore(1425), "C");
+    assert.equal(tierForScore(1424), "D");
   });
 
   it("is exclusive at the upper boundary of each band", () => {
-    assert.equal(tierForScore(1749), "A");
-    assert.equal(tierForScore(1599), "B");
-    assert.equal(tierForScore(1449), "C");
+    assert.equal(tierForScore(1574), "A");
+    assert.equal(tierForScore(1524), "B");
+    assert.equal(tierForScore(1474), "C");
   });
 
   it("treats the 1500 baseline as B", () => {
@@ -57,10 +57,10 @@ describe("groupRankingsIntoTiers", () => {
 
   it("buckets rows by score into the matching tier", () => {
     const groups = groupRankingsIntoTiers([
-      row({ rank: 1, score: 1800 }),
-      row({ rank: 2, score: 1650 }),
+      row({ rank: 1, score: 1620 }),
+      row({ rank: 2, score: 1540 }),
       row({ rank: 3, score: 1500 }),
-      row({ rank: 4, score: 1200 }),
+      row({ rank: 4, score: 1380 }),
     ]);
     const byTier = Object.fromEntries(groups.map((g) => [g.tier, g.rows]));
     assert.equal(byTier.S.length, 1);
@@ -72,9 +72,9 @@ describe("groupRankingsIntoTiers", () => {
 
   it("preserves ascending rank order within a tier", () => {
     const groups = groupRankingsIntoTiers([
-      row({ rank: 3, score: 1620 }),
-      row({ rank: 1, score: 1700 }),
-      row({ rank: 2, score: 1650 }),
+      row({ rank: 3, score: 1530 }),
+      row({ rank: 1, score: 1570 }),
+      row({ rank: 2, score: 1550 }),
     ]);
     const a = groups.find((g) => g.tier === "A")!;
     assert.deepEqual(
