@@ -11,10 +11,13 @@ import {
   STATUS_LABELS,
   type AnimeEntryStatus,
 } from "@/lib/constants";
-import { getUserLibraryEntries } from "@/lib/library/queries";
+import {
+  getSeriesRefsByAnimeIds,
+  getUserLibraryEntries,
+} from "@/lib/library/queries";
 
 type LibraryPageProps = {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; group?: string }>;
 };
 
 function StatCell({
@@ -50,18 +53,22 @@ function StatCell({
 
 export default async function LibraryPage({ searchParams }: LibraryPageProps) {
   const { user } = await requireProfile();
-  const { status: statusParam } = await searchParams;
+  const { status: statusParam, group: groupParam } = await searchParams;
 
   const status =
     statusParam && statusParam !== "all"
       ? (statusParam as AnimeEntryStatus)
       : undefined;
 
-  // When a status filter is active we still want full counts for the strip;
-  // on the "all" tab the unfiltered fetch already serves both.
+  const grouped = groupParam === "series";
+
+  // In grouped mode a series card can span statuses, so we always fetch the
+  // full library and let the panel filter groups by status (any-match).
+  // Otherwise: when a status filter is active we still want full counts for the
+  // strip; on the "all" tab the unfiltered fetch already serves both.
   const [entries, allEntries] = await Promise.all([
-    getUserLibraryEntries(user.id, status),
-    status ? getUserLibraryEntries(user.id) : Promise.resolve(null),
+    getUserLibraryEntries(user.id, grouped ? undefined : status),
+    status && !grouped ? getUserLibraryEntries(user.id) : Promise.resolve(null),
   ]);
 
   const countSource = allEntries ?? entries;
@@ -69,6 +76,12 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
     acc[entry.status] = (acc[entry.status] ?? 0) + 1;
     return acc;
   }, {});
+
+  const seriesByAnimeId = grouped
+    ? Object.fromEntries(
+        await getSeriesRefsByAnimeIds(entries.map((entry) => entry.anime.id)),
+      )
+    : undefined;
 
   return (
     <WidePageFrame className="space-y-6">
@@ -111,7 +124,11 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
         </div>
       ) : (
         <Suspense fallback={null}>
-          <LibraryPanel entries={entries} status={status} />
+          <LibraryPanel
+            entries={entries}
+            status={status}
+            seriesByAnimeId={seriesByAnimeId}
+          />
         </Suspense>
       )}
     </WidePageFrame>
