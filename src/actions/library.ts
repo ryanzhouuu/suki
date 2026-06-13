@@ -85,7 +85,7 @@ function scheduleLogEvent(
 }
 
 /** Use cached row when present — avoids AniList + series crawl on status changes. */
-async function resolveAnimeForLibraryEntry(anilistId: number) {
+export async function resolveAnimeForLibraryEntry(anilistId: number) {
   const supabase = await createClient();
   const { data: cached } = await supabase
     .from("anime")
