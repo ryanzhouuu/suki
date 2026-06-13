@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { AnimeLibrarySection } from "@/components/anime/anime-library-section";
 import { AnimePoster } from "@/components/anime/anime-poster";
+import { BackButton } from "@/components/anime/back-button";
 import { getAuthUser } from "@/lib/auth/session";
 import { getAnimeForDisplay } from "@/lib/anime/get-for-display";
 import { getUserEntryForAnime } from "@/lib/library/queries";
@@ -56,12 +57,10 @@ export default async function AnimeDetailPage({ params }: AnimeDetailPageProps) 
         )}
         <div className="absolute inset-0 bg-linear-to-t from-paper via-paper/40 to-transparent" />
         <div className="absolute inset-x-0 top-0 mx-auto max-w-6xl px-4 pt-5">
-          <Link
-            href={user ? "/home" : "/"}
+          <BackButton
+            fallbackHref={user ? "/home" : "/"}
             className="inline-flex items-center gap-1.5 rounded-full bg-paper/80 px-3.5 py-1.5 text-sm font-medium text-ink backdrop-blur-md transition-colors hover:text-accent"
-          >
-            ← Back
-          </Link>
+          />
         </div>
       </div>
 

@@ -12,6 +12,7 @@ import { ProfileTabs } from "@/components/profile/profile-tabs";
 import { WidePageFrame } from "@/components/layout/page-frame";
 import { RankedList } from "@/components/ranking/ranked-list";
 import { getAuthUser } from "@/lib/auth/session";
+import { STATUS_LABELS, type AnimeEntryStatus } from "@/lib/constants";
 import { env } from "@/lib/env";
 import { getFriendshipBetween } from "@/lib/friends/queries";
 import { friendshipStatusForViewer } from "@/lib/friends/relationship";
@@ -125,19 +126,15 @@ export default async function PublicProfilePage({
     notFound();
   }
 
-  const { profile, entries, rankings, stats } = data;
+  const { profile, entries, allRankings, stats } = data;
   const isEditing = isOwnProfile && edit === "1";
 
-  const seriesIds = rankings.map((r) => r.series_id);
+  const seriesIds = allRankings.map((r) => r.series_id);
   const genresMap =
     seriesIds.length > 0 ? await getGenresBySeriesIds(seriesIds) : new Map();
   const genresBySeriesId = Object.fromEntries(genresMap);
 
-  const watching = entries.filter((e) => e.status === "watching").slice(0, 8);
-  const watchlist = entries
-    .filter((e) => e.status === "plan_to_watch")
-    .slice(0, 8);
-  const completedHighlights = entries
+  const completedSorted = entries
     .filter((e) => e.status === "completed")
     .sort((a, b) => {
       const aScore = a.personal_score ? Number(a.personal_score) : -1;
@@ -146,10 +143,27 @@ export default async function PublicProfilePage({
       const aDate = a.completed_at ?? "";
       const bDate = b.completed_at ?? "";
       return bDate.localeCompare(aDate);
-    })
-    .slice(0, 8);
+    });
 
-  const libraryCount = watching.length + watchlist.length + completedHighlights.length;
+  // Full library grouped by status (entries arrive ordered by updated_at desc).
+  const libraryOrder: AnimeEntryStatus[] = [
+    "watching",
+    "plan_to_watch",
+    "completed",
+    "paused",
+    "dropped",
+  ];
+  const librarySections = libraryOrder
+    .map((status) => ({
+      status,
+      entries:
+        status === "completed"
+          ? completedSorted
+          : entries.filter((e) => e.status === status),
+    }))
+    .filter((section) => section.entries.length > 0);
+
+  const libraryCount = entries.length;
   const hasLibrarySections = libraryCount > 0;
 
   const overviewContent = (
@@ -169,27 +183,20 @@ export default async function PublicProfilePage({
   );
 
   const libraryContent = hasLibrarySections ? (
-    <div className="grid min-w-0 gap-4 lg:grid-cols-3">
-      <ProfileAnimeSection
-        eyebrow="Now watching"
-        title="Watching"
-        entries={watching}
-        layout="list"
-      />
-      <ProfileAnimeSection
-        eyebrow="Up next"
-        title="Plan to watch"
-        entries={watchlist}
-        layout="list"
-      />
-      <ProfileAnimeSection
-        eyebrow="Completed"
-        title="Highlights"
-        entries={completedHighlights}
-        layout="list"
-        showScore
-        showCompletedDate
-      />
+    <div className="min-w-0 space-y-4">
+      {librarySections.map((section) => (
+        <ProfileAnimeSection
+          key={section.status}
+          eyebrow={`${section.entries.length} ${
+            section.entries.length === 1 ? "title" : "titles"
+          }`}
+          title={STATUS_LABELS[section.status]}
+          entries={section.entries}
+          layout="grid"
+          showScore={section.status === "completed"}
+          showCompletedDate={section.status === "completed"}
+        />
+      ))}
     </div>
   ) : (
     <section className="rounded-card border border-dashed border-line-strong bg-surface/50 p-8 text-center">
@@ -199,9 +206,13 @@ export default async function PublicProfilePage({
 
   const rankingContent = (
     <section className="rounded-card border border-line bg-surface p-5 sm:p-6">
-      <p className="eyebrow">Top ranked</p>
+      <p className="eyebrow">Full ranking</p>
       <h2 className="mb-4 mt-1 text-2xl font-semibold">Favorites</h2>
-      <RankedList rankings={rankings} genresBySeriesId={genresBySeriesId} />
+      <RankedList
+        rankings={allRankings}
+        genresBySeriesId={genresBySeriesId}
+        editable={isOwnProfile}
+      />
     </section>
   );
 
@@ -239,7 +250,7 @@ export default async function PublicProfilePage({
             {
               id: "rankings",
               label: "Rankings",
-              count: rankings.length,
+              count: allRankings.length,
               content: rankingContent,
             },
           ]}

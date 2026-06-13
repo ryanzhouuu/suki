@@ -10,9 +10,15 @@ type RankedSeriesRow = Tables<"derived_series_rankings"> & {
 type RankedListProps = {
   rankings: RankedSeriesRow[];
   genresBySeriesId?: Record<string, string[]>;
+  /** Show the re-rank control. Only the list's owner can re-rank. */
+  editable?: boolean;
 };
 
-export function RankedList({ rankings, genresBySeriesId }: RankedListProps) {
+export function RankedList({
+  rankings,
+  genresBySeriesId,
+  editable = false,
+}: RankedListProps) {
   if (rankings.length === 0) {
     return (
       <div className="rounded-card border border-dashed border-line-strong p-8 text-center">
@@ -71,10 +77,12 @@ export function RankedList({ rankings, genresBySeriesId }: RankedListProps) {
                 {CONFIDENCE_LABELS[row.confidence]}
               </p>
             </div>
-            <RerankButton
-              seriesId={row.series_id}
-              title={series.canonical_title}
-            />
+            {editable ? (
+              <RerankButton
+                seriesId={row.series_id}
+                title={series.canonical_title}
+              />
+            ) : null}
           </li>
         );
       })}

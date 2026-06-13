@@ -168,6 +168,7 @@ export function RankingPanel({
           <RankedList
             rankings={filteredRankings}
             genresBySeriesId={genresBySeriesId}
+            editable
           />
         </section>
       </div>
