@@ -20,14 +20,21 @@ export default async function AnimeDetailPage({ params }: AnimeDetailPageProps) 
     notFound();
   }
 
-  let anime;
-  try {
-    anime = await getAnimeForDisplay(anilistId);
-  } catch {
+  // The catalog/AniList fetch and the (cached) auth read are independent —
+  // overlap them. getUserEntryForAnime still follows, since it needs both ids.
+  const [animeResult, user] = await Promise.all([
+    getAnimeForDisplay(anilistId).then(
+      (value) => ({ ok: true as const, anime: value }),
+      () => ({ ok: false as const }),
+    ),
+    getAuthUser(),
+  ]);
+
+  if (!animeResult.ok) {
     notFound();
   }
 
-  const user = await getAuthUser();
+  const anime = animeResult.anime;
   const entry =
     user && anime.id
       ? await getUserEntryForAnime(user.id, anime.id)

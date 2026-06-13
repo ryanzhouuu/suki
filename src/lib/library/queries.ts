@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { createClient } from "@/lib/supabase/server";
 import type { AnimeEntryStatus } from "@/lib/constants";
 import type { SeriesRef } from "@/lib/library/group";
@@ -7,7 +9,11 @@ export type LibraryEntry = Tables<"user_anime_entries"> & {
   anime: Tables<"anime">;
 };
 
-export async function getUserLibraryEntries(
+/**
+ * Deduped per request — cache() keys on (userId, status), so repeated reads
+ * for the same user/status within one render share a single fetch.
+ */
+export const getUserLibraryEntries = cache(async function (
   userId: string,
   status?: AnimeEntryStatus,
 ): Promise<LibraryEntry[]> {
@@ -30,7 +36,7 @@ export async function getUserLibraryEntries(
   }
 
   return (data ?? []) as LibraryEntry[];
-}
+});
 
 /**
  * Resolve each anime id to its mapped series (canonical title/cover) for the

@@ -74,9 +74,12 @@ export default async function PublicProfilePage({
 }: PublicProfilePageProps) {
   const { username } = await params;
   const { edit } = await searchParams;
-  const viewer = await getAuthUser();
 
-  const baseProfile = await getProfileByUsername(username);
+  // Independent reads — run together rather than chaining auth → profile.
+  const [viewer, baseProfile] = await Promise.all([
+    getAuthUser(),
+    getProfileByUsername(username),
+  ]);
   if (!baseProfile) {
     notFound();
   }
@@ -85,23 +88,20 @@ export default async function PublicProfilePage({
 
   let friendshipId: string | null = null;
   let friendshipStatus = friendshipStatusForViewer(null, viewer?.id ?? "");
-  let tasteSimilarity = null;
 
   if (viewer && viewer.id !== baseProfile.user_id) {
     const friendship = await getFriendshipBetween(viewer.id, baseProfile.user_id);
     friendshipId = friendship?.id ?? null;
     friendshipStatus = friendshipStatusForViewer(friendship, viewer.id);
-
-    if (friendshipStatus === "friends") {
-      tasteSimilarity = await getTasteSimilarity(viewer.id, baseProfile.user_id);
-    }
   }
+
+  const isFriend =
+    viewer != null && !isOwnProfile && friendshipStatus === "friends";
 
   const canSeeFull =
     isOwnProfile ||
     baseProfile.profile_visibility === "public" ||
-    (baseProfile.profile_visibility === "friends_only" &&
-      friendshipStatus === "friends");
+    (baseProfile.profile_visibility === "friends_only" && isFriend);
 
   if (!canSeeFull) {
     return (
@@ -118,9 +118,14 @@ export default async function PublicProfilePage({
     );
   }
 
-  const data = await getPublicProfileData(username, {
-    viewerId: viewer?.id ?? null,
-  });
+  // Taste similarity (embeddings + both libraries) is independent of the
+  // profile data read — fetch them concurrently.
+  const [data, tasteSimilarity] = await Promise.all([
+    getPublicProfileData(username, { viewerId: viewer?.id ?? null }),
+    isFriend && viewer
+      ? getTasteSimilarity(viewer.id, baseProfile.user_id)
+      : Promise.resolve(null),
+  ]);
 
   if (!data) {
     notFound();
