@@ -3,6 +3,7 @@ import Link from "next/link";
 import { signOut } from "@/actions/auth";
 import { DesktopNav, MobileNav } from "@/components/layout/main-nav";
 import { APP_NAME } from "@/lib/constants";
+import { getUnreadRecommendationCount } from "@/lib/friend-recommendations/queries";
 import type { Tables } from "@/types/database";
 
 type AppShellProps = {
@@ -11,9 +12,14 @@ type AppShellProps = {
   isSeriesAdmin?: boolean;
 };
 
-export function AppShell({ children, profile, isSeriesAdmin }: AppShellProps) {
+export async function AppShell({ children, profile, isSeriesAdmin }: AppShellProps) {
   const initial =
     (profile.display_name || profile.username || "?")[0]?.toUpperCase() ?? "?";
+
+  const unreadRecommendations = await getUnreadRecommendationCount(
+    profile.user_id,
+  );
+  const navBadges = { "/friends": unreadRecommendations };
 
   return (
     <div className="flex min-h-full flex-col">
@@ -32,7 +38,7 @@ export function AppShell({ children, profile, isSeriesAdmin }: AppShellProps) {
             </span>
           </Link>
 
-          <DesktopNav />
+          <DesktopNav badges={navBadges} />
 
           <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
             {isSeriesAdmin ? (
@@ -104,7 +110,7 @@ export function AppShell({ children, profile, isSeriesAdmin }: AppShellProps) {
         </div>
       </div>
 
-      <MobileNav />
+      <MobileNav badges={navBadges} />
     </div>
   );
 }

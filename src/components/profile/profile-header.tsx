@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { RecommendFromProfileButton } from "@/components/friend-recommendations/recommend-from-profile-button";
 import { FriendActionButton } from "@/components/friends/friend-action-button";
 import { TasteSimilarityBadge } from "@/components/friends/taste-similarity-badge";
 import { ProfileEditSection } from "@/components/profile/profile-edit-section";
@@ -124,13 +125,22 @@ export function ProfileHeader({
                 </>
               ) : null
             ) : viewerId ? (
-              <FriendActionButton
-                targetUserId={profile.user_id}
-                targetUsername={profile.username}
-                friendshipId={friendshipId}
-                status={friendshipStatus}
-                isOwnProfile={isOwnProfile}
-              />
+              <>
+                <FriendActionButton
+                  targetUserId={profile.user_id}
+                  targetUsername={profile.username}
+                  friendshipId={friendshipId}
+                  status={friendshipStatus}
+                  isOwnProfile={isOwnProfile}
+                />
+                {friendshipStatus === "friends" ? (
+                  <RecommendFromProfileButton
+                    recipientUserId={profile.user_id}
+                    recipientUsername={profile.username}
+                    recipientName={displayName}
+                  />
+                ) : null}
+              </>
             ) : (
               <Link
                 href="/auth/login"

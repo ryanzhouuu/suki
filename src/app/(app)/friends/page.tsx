@@ -1,9 +1,11 @@
+import { RecommendationInbox } from "@/components/friend-recommendations/recommendation-inbox";
 import { FriendActivityFeed } from "@/components/friends/friend-activity-feed";
 import { FriendCard } from "@/components/friends/friend-card";
 import { FriendRequestList } from "@/components/friends/friend-request-list";
 import { FriendSearch } from "@/components/friends/friend-search";
 import { ControlRail, WidePageFrame } from "@/components/layout/page-frame";
 import { requireProfile } from "@/lib/auth/session";
+import { getReceivedRecommendations } from "@/lib/friend-recommendations/queries";
 import { getFriendActivityFeed } from "@/lib/friends/activity";
 import {
   listAcceptedFriends,
@@ -13,10 +15,11 @@ import {
 export default async function FriendsPage() {
   const { user } = await requireProfile();
 
-  const [friends, requests, activity] = await Promise.all([
+  const [friends, requests, activity, recommendations] = await Promise.all([
     listAcceptedFriends(user.id),
     listFriendRequests(user.id),
     getFriendActivityFeed(user.id),
+    getReceivedRecommendations(user.id),
   ]);
 
   const pendingCount = requests.incoming.length + requests.outgoing.length;
@@ -29,6 +32,8 @@ export default async function FriendsPage() {
           Friends
         </h1>
       </header>
+
+      <RecommendationInbox recommendations={recommendations} />
 
       <ControlRail
         sidebarLabel="Find and manage friends"
