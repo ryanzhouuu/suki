@@ -68,6 +68,7 @@ export const USER_EVENT_TYPES = {
   collaborativeRecommendationRefreshed: "collaborative_recommendation_refreshed",
   libraryEntryUpdated: "library_entry_updated",
   libraryEntryRemoved: "library_entry_removed",
+  watchlistShuffled: "watchlist_shuffled",
 } as const;
 
 /** Raw event types the friend activity feed considers (everything else is noise). */
