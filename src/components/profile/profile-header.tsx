@@ -4,6 +4,8 @@ import { FriendActionButton } from "@/components/friends/friend-action-button";
 import { TasteSimilarityBadge } from "@/components/friends/taste-similarity-badge";
 import { ProfileEditSection } from "@/components/profile/profile-edit-section";
 import { ProfileVisibilityBadge } from "@/components/profile/profile-visibility-badge";
+import { ShareButton } from "@/components/share/share-button";
+import { env } from "@/lib/env";
 import type { FriendshipUiStatus } from "@/lib/friends/relationship";
 import type { TasteSimilarityResult } from "@/lib/friends/taste-similarity";
 import type { Tables } from "@/types/database";
@@ -113,7 +115,13 @@ export function ProfileHeader({
           <div className="mt-5 flex flex-wrap items-center gap-2">
             {isOwnProfile ? (
               !isEditing ? (
-                <ProfileEditSection profile={profile} editing={false} />
+                <>
+                  <ProfileEditSection profile={profile} editing={false} />
+                  <ShareButton
+                    url={`${env.siteUrl()}/u/${profile.username}`}
+                    title={`${displayName} on Suki`}
+                  />
+                </>
               ) : null
             ) : viewerId ? (
               <FriendActionButton

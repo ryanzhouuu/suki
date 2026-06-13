@@ -4,7 +4,9 @@ import { Suspense } from "react";
 import { RankingPanel } from "@/components/ranking/ranking-panel";
 import { ImportPreparingPanel } from "@/components/imports/import-preparing-panel";
 import { WidePageFrame } from "@/components/layout/page-frame";
+import { ShareButton } from "@/components/share/share-button";
 import { requireProfile } from "@/lib/auth/session";
+import { env } from "@/lib/env";
 import { RANKING_ALGORITHM_VERSION } from "@/lib/constants";
 import { getPreparingImportJob } from "@/lib/imports/gating";
 import { getNextComparisonPair } from "@/lib/ranking/prompt";
@@ -13,8 +15,9 @@ import { getCompletedSeriesForUser } from "@/lib/series/queries";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function RankingPage() {
-  const { user } = await requireProfile();
+  const { user, profile } = await requireProfile();
   const supabase = await createClient();
+  const shareUrl = `${env.siteUrl()}/u/${profile.username}`;
 
   const preparingJob = await getPreparingImportJob(user.id);
   if (preparingJob) {
@@ -56,9 +59,12 @@ export default async function RankingPage() {
 
   return (
     <WidePageFrame className="space-y-10">
-      <div>
-        <p className="eyebrow">Express your taste</p>
-        <h1 className="mt-1.5 text-3xl font-semibold sm:text-4xl">Ranking</h1>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="eyebrow">Express your taste</p>
+          <h1 className="mt-1.5 text-3xl font-semibold sm:text-4xl">Ranking</h1>
+        </div>
+        <ShareButton url={shareUrl} title="My anime rankings on Suki" />
       </div>
 
       {rankingsError ? (

@@ -12,6 +12,8 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "s4.anilist.co" },
       { protocol: "https", hostname: "img1.ak.crunchyroll.com" },
+      // Supabase Storage public URLs (avatars/banners): <project-ref>.supabase.co
+      { protocol: "https", hostname: "*.supabase.co" },
     ],
   },
 };
