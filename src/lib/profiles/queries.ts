@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { RANKING_ALGORITHM_VERSION } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/types/database";
@@ -9,7 +11,8 @@ export type RankedSeriesRow = Tables<"derived_series_rankings"> & {
   series: Tables<"series"> | null;
 };
 
-export async function getProfileByUsername(username: string) {
+/** Deduped per request — the page and `getPublicProfileData` share one read. */
+export const getProfileByUsername = cache(async (username: string) => {
   const supabase = await createClient();
   const { data } = await supabase
     .from("profiles")
@@ -18,7 +21,7 @@ export async function getProfileByUsername(username: string) {
     .maybeSingle();
 
   return data;
-}
+});
 
 async function getRecentComparisonCount(userId: string): Promise<number> {
   const supabase = await createClient();
