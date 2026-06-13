@@ -11,6 +11,7 @@ import { DiscoverRow } from "@/components/home/discover-row";
 import { FriendActivityTeaser } from "@/components/home/friend-activity-teaser";
 import { HomeHero } from "@/components/home/home-hero";
 import { RecommendationsPreview } from "@/components/home/recommendations-preview";
+import { WatchlistShuffle } from "@/components/library/watchlist-shuffle";
 import { WidePageFrame } from "@/components/layout/page-frame";
 import { getLatestAnime, getPopularAnime } from "@/lib/anilist/discover";
 import { requireProfile } from "@/lib/auth/session";
@@ -37,13 +38,15 @@ function uniqueCoverUrls(
 export default async function HomePage() {
   const { user, profile } = await requireProfile();
 
-  const [watching, completedSeries, pair, latest, popular] = await Promise.all([
-    getUserLibraryEntries(user.id, "watching"),
-    getCompletedSeriesForUser(user.id),
-    getNextComparisonPair(user.id),
-    getLatestAnime().catch(() => []),
-    getPopularAnime().catch(() => []),
-  ]);
+  const [watching, planToWatch, completedSeries, pair, latest, popular] =
+    await Promise.all([
+      getUserLibraryEntries(user.id, "watching"),
+      getUserLibraryEntries(user.id, "plan_to_watch"),
+      getCompletedSeriesForUser(user.id),
+      getNextComparisonPair(user.id),
+      getLatestAnime().catch(() => []),
+      getPopularAnime().catch(() => []),
+    ]);
 
   const greetingName = profile.display_name || profile.username;
   const heroBackdropUrls = uniqueCoverUrls([...latest, ...popular], 6);
@@ -67,6 +70,12 @@ export default async function HomePage() {
       {popular.length > 0 ? (
         <div className="animate-rise [animation-delay:120ms]">
           <DiscoverRow eyebrow="Discover" title="Popular" items={popular} />
+        </div>
+      ) : null}
+
+      {planToWatch.length > 0 ? (
+        <div className="animate-rise [animation-delay:160ms]">
+          <WatchlistShuffle entries={planToWatch} compact />
         </div>
       ) : null}
 

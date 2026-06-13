@@ -1,6 +1,8 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
   date,
+  index,
   integer,
   jsonb,
   numeric,
@@ -62,6 +64,11 @@ export const importSourceEnum = pgEnum("import_source", [
   "mal_xml",
   "plain_text",
 ]);
+
+export const friendRecommendationStatusEnum = pgEnum(
+  "friend_recommendation_status",
+  ["pending", "added", "dismissed"],
+);
 
 export const importStatusEnum = pgEnum("import_status", [
   "pending",
@@ -264,6 +271,37 @@ export const userEvents = pgTable("user_events", {
     .notNull()
     .defaultNow(),
 });
+
+export const animeRecommendations = pgTable(
+  "anime_recommendations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    senderId: uuid("sender_id").notNull(),
+    recipientId: uuid("recipient_id").notNull(),
+    animeId: uuid("anime_id")
+      .notNull()
+      .references(() => anime.id, { onDelete: "cascade" }),
+    note: text("note"),
+    status: friendRecommendationStatusEnum("status")
+      .notNull()
+      .default("pending"),
+    seenAt: timestamp("seen_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    respondedAt: timestamp("responded_at", { withTimezone: true }),
+  },
+  (table) => [
+    uniqueIndex("anime_recommendations_unique_pending")
+      .on(table.senderId, table.recipientId, table.animeId)
+      .where(sql`status = 'pending'`),
+    index("anime_recommendations_recipient_idx").on(
+      table.recipientId,
+      table.status,
+      table.createdAt.desc(),
+    ),
+  ],
+);
 
 export const animeImportJobs = pgTable("anime_import_jobs", {
   id: uuid("id").primaryKey().defaultRandom(),

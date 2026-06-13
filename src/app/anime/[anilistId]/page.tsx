@@ -4,8 +4,10 @@ import { notFound } from "next/navigation";
 import { AnimeLibrarySection } from "@/components/anime/anime-library-section";
 import { AnimePoster } from "@/components/anime/anime-poster";
 import { BackButton } from "@/components/anime/back-button";
+import { RecommendFromAnimeButton } from "@/components/friend-recommendations/recommend-from-anime-button";
 import { getAuthUser } from "@/lib/auth/session";
 import { getAnimeForDisplay } from "@/lib/anime/get-for-display";
+import { listAcceptedFriends } from "@/lib/friends/queries";
 import { getUserEntryForAnime } from "@/lib/library/queries";
 
 type AnimeDetailPageProps = {
@@ -35,10 +37,13 @@ export default async function AnimeDetailPage({ params }: AnimeDetailPageProps) 
   }
 
   const anime = animeResult.anime;
-  const entry =
+  const [entry, friends] =
     user && anime.id
-      ? await getUserEntryForAnime(user.id, anime.id)
-      : null;
+      ? await Promise.all([
+          getUserEntryForAnime(user.id, anime.id),
+          listAcceptedFriends(user.id),
+        ])
+      : [null, []];
   const title = anime.english_title || anime.romaji_title;
 
   const description = anime.description
@@ -124,11 +129,23 @@ export default async function AnimeDetailPage({ params }: AnimeDetailPageProps) 
         ) : null}
 
         {user ? (
-          <AnimeLibrarySection
-            anilistId={anilistId}
-            entry={entry}
-            anime={anime}
-          />
+          <div className="space-y-4">
+            <AnimeLibrarySection
+              anilistId={anilistId}
+              entry={entry}
+              anime={anime}
+            />
+            <RecommendFromAnimeButton
+              anilistId={anilistId}
+              animeTitle={title}
+              friends={friends.map((f) => ({
+                userId: f.profile.user_id,
+                username: f.profile.username,
+                displayName: f.profile.display_name,
+                avatarUrl: f.profile.avatar_url,
+              }))}
+            />
+          </div>
         ) : (
           <p className="text-sm text-muted">
             <Link href="/auth/login" className="font-semibold text-accent hover:underline">
