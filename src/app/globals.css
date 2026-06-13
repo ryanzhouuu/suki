@@ -574,3 +574,143 @@ select {
     right: -20%;
   }
 }
+
+/* —— Tier board: a single-accent vermilion heat ramp, S → D —— */
+.tier-board {
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-card);
+  box-shadow: 0 18px 34px -28px rgb(var(--shadow-color) / 0.55);
+}
+
+.tier-row {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--line);
+}
+
+.tier-row:last-child {
+  border-bottom: 0;
+}
+
+/* Per-tier heat, mixed from the one vermilion accent so the ramp stays cohesive. */
+.tier-row[data-tier="S"] {
+  --tier-bg: var(--accent);
+  --tier-ink: var(--on-accent);
+}
+.tier-row[data-tier="A"] {
+  --tier-bg: color-mix(in srgb, var(--accent) 64%, var(--surface));
+  --tier-ink: var(--on-accent);
+}
+.tier-row[data-tier="B"] {
+  --tier-bg: color-mix(in srgb, var(--accent) 34%, var(--surface));
+  --tier-ink: var(--ink);
+}
+.tier-row[data-tier="C"] {
+  --tier-bg: color-mix(in srgb, var(--accent) 15%, var(--surface));
+  --tier-ink: var(--muted);
+}
+.tier-row[data-tier="D"] {
+  --tier-bg: var(--surface-2);
+  --tier-ink: var(--faint);
+}
+
+.tier-label {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  flex-shrink: 0;
+  gap: 0.1rem;
+  background: var(--tier-bg);
+  color: var(--tier-ink);
+  isolation: isolate;
+}
+
+/* Faint editorial hatch over the colored gutter for paper texture. */
+.tier-label::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.16;
+  background-image: repeating-linear-gradient(
+    -18deg,
+    transparent,
+    transparent 6px,
+    color-mix(in srgb, var(--ink) 22%, transparent) 6px,
+    color-mix(in srgb, var(--ink) 22%, transparent) 7px
+  );
+}
+
+.tier-label__letter {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 1.7rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.tier-label__count {
+  font-family: var(--font-sans), sans-serif;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+}
+
+.tier-strip {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  padding: 0.6rem 0.7rem;
+  background: var(--surface);
+}
+
+.tier-strip__covers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.tier-strip__cover {
+  border-radius: 0.5rem;
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tier-strip__cover:hover {
+  transform: translateY(-3px) rotate(-1.5deg);
+}
+
+/* Thin rankings shouldn't look over-confident — dim low-confidence picks. */
+.tier-strip__cover--low {
+  opacity: 0.4;
+  filter: grayscale(0.3);
+}
+
+.tier-strip__empty {
+  font-family: var(--font-display), Georgia, serif;
+  font-style: italic;
+  font-size: 0.85rem;
+  color: var(--faint);
+  padding-left: 0.2rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tier-strip__cover {
+    transition: none;
+  }
+}
+
+@media (width >= 640px) {
+  .tier-label {
+    width: 4rem;
+  }
+  .tier-label__letter {
+    font-size: 2rem;
+  }
+}

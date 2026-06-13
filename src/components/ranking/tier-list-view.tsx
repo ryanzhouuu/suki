@@ -1,6 +1,6 @@
 import { AnimePoster } from "@/components/anime/anime-poster";
 import { CONFIDENCE_LABELS } from "@/lib/constants";
-import { type Tier, groupRankingsIntoTiers } from "@/lib/ranking/tiers";
+import { groupRankingsIntoTiers } from "@/lib/ranking/tiers";
 import type { Tables } from "@/types/database";
 
 type RankedSeriesRow = Tables<"derived_series_rankings"> & {
@@ -9,15 +9,6 @@ type RankedSeriesRow = Tables<"derived_series_rankings"> & {
 
 type TierListViewProps = {
   rankings: RankedSeriesRow[];
-};
-
-/** Tier badge styling, S (strongest) → D (faintest). */
-const TIER_STYLES: Record<Tier, string> = {
-  S: "bg-accent text-on-accent",
-  A: "bg-success/90 text-on-accent",
-  B: "bg-accent-soft text-accent",
-  C: "bg-surface-2 text-muted",
-  D: "bg-surface-2 text-faint",
 };
 
 export function TierListView({ rankings }: TierListViewProps) {
@@ -34,24 +25,23 @@ export function TierListView({ rankings }: TierListViewProps) {
   const tiers = groupRankingsIntoTiers(rankings);
 
   return (
-    <div className="overflow-hidden rounded-card border border-line">
-      {tiers.map(({ tier, rows }) => (
+    <div className="tier-board">
+      {tiers.map(({ tier, rows }, index) => (
         <div
           key={tier}
-          className="flex items-stretch border-b border-line last:border-b-0"
+          data-tier={tier}
+          className="tier-row animate-rise"
+          style={{ animationDelay: `${index * 55}ms` }}
         >
-          <div
-            className={`flex w-14 shrink-0 items-center justify-center font-display text-2xl font-semibold ${TIER_STYLES[tier]}`}
-          >
-            {tier}
+          <div className="tier-label">
+            <span className="tier-label__letter">{tier}</span>
+            <span className="tier-label__count">{rows.length}</span>
           </div>
-          <div className="min-h-[88px] flex-1 bg-surface p-2.5">
+          <div className="tier-strip">
             {rows.length === 0 ? (
-              <div className="flex h-full min-h-[68px] items-center text-sm text-faint">
-                —
-              </div>
+              <span className="tier-strip__empty">empty</span>
             ) : (
-              <ul className="flex flex-wrap gap-2">
+              <ul className="tier-strip__covers">
                 {rows.map((row) => {
                   const series = row.series;
                   if (!series) return null;
@@ -64,12 +54,14 @@ export function TierListView({ rankings }: TierListViewProps) {
                           ? `${series.canonical_title} · ${CONFIDENCE_LABELS.low}`
                           : series.canonical_title
                       }
-                      className={lowConfidence ? "opacity-50" : undefined}
                     >
                       <AnimePoster
                         src={series.cover_image_url}
                         alt={series.canonical_title}
                         size="sm"
+                        className={`tier-strip__cover${
+                          lowConfidence ? " tier-strip__cover--low" : ""
+                        }`}
                       />
                     </li>
                   );
