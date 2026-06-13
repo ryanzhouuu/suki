@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/types/database";
 
@@ -5,8 +7,13 @@ export type SeriesWithEntryCount = Tables<"series"> & {
   entryCount: number;
 };
 
-/** Distinct series the user has at least one completed entry for. */
-export async function getCompletedSeriesForUser(
+/**
+ * Distinct series the user has at least one completed entry for.
+ *
+ * Deduped per request — the home page reads this directly and again through
+ * getNextComparisonPair within one render, so they share a single fetch.
+ */
+export const getCompletedSeriesForUser = cache(async function (
   userId: string,
 ): Promise<SeriesWithEntryCount[]> {
   const supabase = await createClient();
@@ -44,7 +51,7 @@ export async function getCompletedSeriesForUser(
   }
 
   return [...bySeries.values()];
-}
+});
 
 export async function userHasCompletedSeries(
   userId: string,
