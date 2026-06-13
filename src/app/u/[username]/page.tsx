@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -5,21 +6,66 @@ import { ProfileActivityPanel } from "@/components/profile/profile-activity-pane
 import { ProfileAnimeSection } from "@/components/profile/profile-anime-section";
 import { ProfileEditSection } from "@/components/profile/profile-edit-section";
 import { ProfileHeader } from "@/components/profile/profile-header";
+import { ProfileRestrictedCard } from "@/components/profile/profile-restricted-card";
 import { ProfileStatsPanel } from "@/components/profile/profile-stats-panel";
 import { ProfileTabs } from "@/components/profile/profile-tabs";
 import { WidePageFrame } from "@/components/layout/page-frame";
 import { RankedList } from "@/components/ranking/ranked-list";
 import { getAuthUser } from "@/lib/auth/session";
+import { env } from "@/lib/env";
 import { getFriendshipBetween } from "@/lib/friends/queries";
 import { friendshipStatusForViewer } from "@/lib/friends/relationship";
 import { getTasteSimilarity } from "@/lib/friends/taste-similarity";
-import { getPublicProfileData } from "@/lib/profiles/queries";
+import { getProfileByUsername, getPublicProfileData } from "@/lib/profiles/queries";
+import { getShareCardData } from "@/lib/profiles/share-card";
 import { getGenresBySeriesIds } from "@/lib/series/genres";
 
 type PublicProfilePageProps = {
   params: Promise<{ username: string }>;
   searchParams: Promise<{ edit?: string }>;
 };
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ username: string }>;
+}): Promise<Metadata> {
+  const { username } = await params;
+  const card = await getShareCardData(username);
+  if (!card) return {};
+
+  const base: Metadata = { metadataBase: new URL(env.siteUrl()) };
+
+  if (!card.isPublic) {
+    return {
+      ...base,
+      title: "Private profile",
+      description:
+        "Track anime, build your watchlist, and rank your favorites on Suki.",
+    };
+  }
+
+  const detail = [
+    card.topGenres.length > 0 ? card.topGenres.join(" · ") : null,
+    card.completedCount > 0 ? `${card.completedCount} completed` : null,
+  ].filter(Boolean);
+  const description =
+    detail.length > 0
+      ? `${detail.join(" · ")} — taste profile on Suki.`
+      : `${card.displayName}'s taste profile on Suki.`;
+
+  return {
+    ...base,
+    title: `${card.displayName} (@${card.username})`,
+    description,
+    openGraph: {
+      title: `${card.displayName} (@${card.username}) on Suki`,
+      description,
+      type: "profile",
+    },
+    twitter: { card: "summary_large_image" },
+  };
+}
 
 export default async function PublicProfilePage({
   params,
@@ -28,6 +74,49 @@ export default async function PublicProfilePage({
   const { username } = await params;
   const { edit } = await searchParams;
   const viewer = await getAuthUser();
+
+  const baseProfile = await getProfileByUsername(username);
+  if (!baseProfile) {
+    notFound();
+  }
+
+  const isOwnProfile = viewer?.id === baseProfile.user_id;
+
+  let friendshipId: string | null = null;
+  let friendshipStatus = friendshipStatusForViewer(null, viewer?.id ?? "");
+  let tasteSimilarity = null;
+
+  if (viewer && viewer.id !== baseProfile.user_id) {
+    const friendship = await getFriendshipBetween(viewer.id, baseProfile.user_id);
+    friendshipId = friendship?.id ?? null;
+    friendshipStatus = friendshipStatusForViewer(friendship, viewer.id);
+
+    if (friendshipStatus === "friends") {
+      tasteSimilarity = await getTasteSimilarity(viewer.id, baseProfile.user_id);
+    }
+  }
+
+  const canSeeFull =
+    isOwnProfile ||
+    baseProfile.profile_visibility === "public" ||
+    (baseProfile.profile_visibility === "friends_only" &&
+      friendshipStatus === "friends");
+
+  if (!canSeeFull) {
+    return (
+      <WidePageFrame className={viewer ? "min-w-0" : "min-w-0 py-10"}>
+        <ProfileRestrictedCard profile={baseProfile} showSignIn={!viewer} />
+        {!viewer ? (
+          <p className="border-t border-line pt-8 text-center text-sm text-muted">
+            <Link href="/" className="font-medium text-accent hover:underline">
+              ← Back to Suki
+            </Link>
+          </p>
+        ) : null}
+      </WidePageFrame>
+    );
+  }
+
   const data = await getPublicProfileData(username, {
     viewerId: viewer?.id ?? null,
   });
@@ -37,22 +126,7 @@ export default async function PublicProfilePage({
   }
 
   const { profile, entries, rankings, stats } = data;
-  const isOwnProfile = viewer?.id === profile.user_id;
   const isEditing = isOwnProfile && edit === "1";
-
-  let friendshipId: string | null = null;
-  let friendshipStatus = friendshipStatusForViewer(null, viewer?.id ?? "");
-  let tasteSimilarity = null;
-
-  if (viewer && viewer.id !== profile.user_id) {
-    const friendship = await getFriendshipBetween(viewer.id, profile.user_id);
-    friendshipId = friendship?.id ?? null;
-    friendshipStatus = friendshipStatusForViewer(friendship, viewer.id);
-
-    if (friendshipStatus === "friends") {
-      tasteSimilarity = await getTasteSimilarity(viewer.id, profile.user_id);
-    }
-  }
 
   const seriesIds = rankings.map((r) => r.series_id);
   const genresMap =
