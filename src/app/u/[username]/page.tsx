@@ -198,6 +198,7 @@ export default async function PublicProfilePage({
           title={STATUS_LABELS[section.status]}
           entries={section.entries}
           layout="grid"
+          collapsible
           showScore={section.status === "completed"}
           showCompletedDate={section.status === "completed"}
         />
@@ -217,6 +218,7 @@ export default async function PublicProfilePage({
         rankings={allRankings}
         genresBySeriesId={genresBySeriesId}
         editable={isOwnProfile}
+        collapsible
       />
     </section>
   );
