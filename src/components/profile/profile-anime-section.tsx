@@ -1,7 +1,12 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 
 import { AnimePoster } from "@/components/anime/anime-poster";
 import type { LibraryEntry } from "@/lib/library/queries";
+
+const DEFAULT_VISIBLE = 10;
 
 type ProfileAnimeSectionProps = {
   id?: string;
@@ -12,6 +17,8 @@ type ProfileAnimeSectionProps = {
   showCompletedDate?: boolean;
   /** "grid" shows a 2-up grid; "list" stacks a single column (for side-by-side columns). */
   layout?: "grid" | "list";
+  /** When set, collapse to the first N entries with a show all/less toggle. */
+  collapsible?: boolean;
   className?: string;
 };
 
@@ -35,9 +42,16 @@ export function ProfileAnimeSection({
   showScore = false,
   showCompletedDate = false,
   layout = "grid",
+  collapsible = false,
   className = "",
 }: ProfileAnimeSectionProps) {
+  const [expanded, setExpanded] = useState(false);
+
   if (entries.length === 0) return null;
+
+  const canCollapse = collapsible && entries.length > DEFAULT_VISIBLE;
+  const visibleEntries =
+    canCollapse && !expanded ? entries.slice(0, DEFAULT_VISIBLE) : entries;
 
   return (
     <section
@@ -55,7 +69,7 @@ export function ProfileAnimeSection({
           layout === "grid" ? "sm:grid-cols-2" : "content-start"
         }`}
       >
-        {entries.map((entry) => {
+        {visibleEntries.map((entry) => {
           const titleText = entryTitle(entry);
           const meta: string[] = [];
 
@@ -95,6 +109,17 @@ export function ProfileAnimeSection({
           );
         })}
       </ul>
+      {canCollapse ? (
+        <button
+          type="button"
+          onClick={() => setExpanded((prev) => !prev)}
+          className="mt-4 self-start text-sm font-medium text-accent transition-colors hover:underline"
+        >
+          {expanded
+            ? "Show less"
+            : `Show all ${entries.length}`}
+        </button>
+      ) : null}
     </section>
   );
 }

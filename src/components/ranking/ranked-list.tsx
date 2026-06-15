@@ -1,7 +1,13 @@
+"use client";
+
+import { useState } from "react";
+
 import { AnimePoster } from "@/components/anime/anime-poster";
 import { RerankButton } from "@/components/ranking/rerank-button";
 import { CONFIDENCE_LABELS } from "@/lib/constants";
 import type { Tables } from "@/types/database";
+
+const DEFAULT_VISIBLE = 10;
 
 type RankedSeriesRow = Tables<"derived_series_rankings"> & {
   series: Tables<"series"> | null;
@@ -12,13 +18,18 @@ type RankedListProps = {
   genresBySeriesId?: Record<string, string[]>;
   /** Show the re-rank control. Only the list's owner can re-rank. */
   editable?: boolean;
+  /** When set, collapse to the first N rows with a show all/less toggle. */
+  collapsible?: boolean;
 };
 
 export function RankedList({
   rankings,
   genresBySeriesId,
   editable = false,
+  collapsible = false,
 }: RankedListProps) {
+  const [expanded, setExpanded] = useState(false);
+
   if (rankings.length === 0) {
     return (
       <div className="rounded-card border border-dashed border-line-strong p-8 text-center">
@@ -29,9 +40,14 @@ export function RankedList({
     );
   }
 
+  const canCollapse = collapsible && rankings.length > DEFAULT_VISIBLE;
+  const visibleRankings =
+    canCollapse && !expanded ? rankings.slice(0, DEFAULT_VISIBLE) : rankings;
+
   return (
+    <>
     <ol className="space-y-2">
-      {rankings.map((row) => {
+      {visibleRankings.map((row) => {
         const series = row.series;
         if (!series) return null;
         const top = row.rank <= 3;
@@ -87,5 +103,15 @@ export function RankedList({
         );
       })}
     </ol>
+    {canCollapse ? (
+      <button
+        type="button"
+        onClick={() => setExpanded((prev) => !prev)}
+        className="mt-4 text-sm font-medium text-accent transition-colors hover:underline"
+      >
+        {expanded ? "Show less" : `Show all ${rankings.length}`}
+      </button>
+    ) : null}
+    </>
   );
 }
