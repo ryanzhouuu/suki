@@ -42,10 +42,14 @@ export const NAV_ITEMS = [
   { href: "/friends", label: "Friends", mobileLabel: "Friends" },
 ] as const;
 
-export const RANKING_ALGORITHM_VERSION = "elo_series_v1";
+export const RANKING_ALGORITHM_VERSION = "bt_series_v1";
+/** @deprecated Sequential-Elo series rankings; kept for audit/rollback only */
+export const LEGACY_ELO_SERIES_RANKING_ALGORITHM_VERSION = "elo_series_v1";
 /** @deprecated Season-level rankings; kept for audit only */
 export const LEGACY_ANIME_RANKING_ALGORITHM_VERSION = "elo_v1";
 export const ELO_INITIAL_SCORE = 1500;
+/** Gaussian-prior strength for the Bradley-Terry fit (src/lib/ranking/bradley-terry.ts). */
+export const BT_PRIOR_LAMBDA = 0.03;
 
 export const USER_EVENT_TYPES = {
   animeAdded: "anime_added",
