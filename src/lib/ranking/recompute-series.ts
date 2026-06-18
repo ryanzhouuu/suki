@@ -1,8 +1,11 @@
 import { RANKING_ALGORITHM_VERSION } from "@/lib/constants";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-import { betaToScore, fitBradleyTerry } from "./bradley-terry";
-import { confidenceFromComparisonCount } from "./elo";
+import {
+  betaToScore,
+  confidenceFromUncertainty,
+  fitBradleyTerry,
+} from "./bradley-terry";
 import { resolvedComparisonsFromRows } from "./preference-graph";
 
 async function getCompletedSeriesIds(
@@ -36,7 +39,7 @@ export async function recomputeUserSeriesRanking(userId: string) {
     series_id: string;
     rank: number;
     score: number;
-    confidence: ReturnType<typeof confidenceFromComparisonCount>;
+    confidence: ReturnType<typeof confidenceFromUncertainty>;
     comparison_count: number;
     uncertainty: number;
   }[] = [];
@@ -57,7 +60,7 @@ export async function recomputeUserSeriesRanking(userId: string) {
         series_id: seriesId,
         rank: index + 1,
         score: betaToScore(state.beta),
-        confidence: confidenceFromComparisonCount(state.comparisonCount),
+        confidence: confidenceFromUncertainty(state.uncertainty),
         comparison_count: state.comparisonCount,
         uncertainty: state.uncertainty,
       }));

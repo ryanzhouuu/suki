@@ -1,4 +1,5 @@
 import { BT_PRIOR_LAMBDA, ELO_INITIAL_SCORE } from "@/lib/constants";
+import type { Enums } from "@/types/database";
 
 import type { ResolvedComparison } from "./preference-graph";
 
@@ -52,6 +53,25 @@ export function expectedProb(betaA: number, betaB: number): number {
  */
 export function betaToScore(beta: number): number {
   return ELO_INITIAL_SCORE + (400 / Math.LN10) * beta;
+}
+
+/** Uncertainty (1/H_ii) at or below this reads as a well-pinned position. */
+export const HIGH_MAX_UNCERTAINTY = 1.5;
+/** Above HIGH and at/below this is still settling; beyond it is barely placed. */
+export const MEDIUM_MAX_UNCERTAINTY = 5.0;
+
+/**
+ * Map a series' uncertainty to a confidence label. Unlike raw comparison count,
+ * this reflects how *pinned-down* the position is: a series compared many times
+ * only against far-apart opponents stays uncertain and reads medium/low. The
+ * thresholds track the BT uncertainty scale, which depends on BT_PRIOR_LAMBDA.
+ */
+export function confidenceFromUncertainty(
+  uncertainty: number,
+): Enums<"ranking_confidence"> {
+  if (uncertainty <= HIGH_MAX_UNCERTAINTY) return "high";
+  if (uncertainty <= MEDIUM_MAX_UNCERTAINTY) return "medium";
+  return "low";
 }
 
 type Adjacency = Map<string, { opponent: string; won: boolean }[]>;
