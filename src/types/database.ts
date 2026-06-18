@@ -274,6 +274,7 @@ export type Database = {
           rank: number
           score: number
           series_id: string
+          uncertainty: number | null
           user_id: string
         }
         Insert: {
@@ -285,6 +286,7 @@ export type Database = {
           rank: number
           score: number
           series_id: string
+          uncertainty?: number | null
           user_id: string
         }
         Update: {
@@ -296,6 +298,7 @@ export type Database = {
           rank?: number
           score?: number
           series_id?: string
+          uncertainty?: number | null
           user_id?: string
         }
         Relationships: [
@@ -760,6 +763,10 @@ export type Database = {
           anime_id: string
           similarity: number
         }[]
+      }
+      replace_user_series_rankings: {
+        Args: { p_algorithm_version: string; p_rows: Json; p_user_id: string }
+        Returns: undefined
       }
     }
     Enums: {

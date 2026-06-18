@@ -157,7 +157,7 @@ export function RankingPanel({
               <p className="rounded-card border border-dashed border-line-strong p-6 text-sm text-muted">
                 {genreFiltering
                   ? "No more pairs to compare for the selected genres. Clear the filter or complete more series in those genres."
-                  : "No more unique pairs to compare right now. Check your ranking below or complete more series."}
+                  : "You're all caught up — your ranking looks settled. Complete more series, or reset one below to keep refining."}
               </p>
             ) : null}
           </section>

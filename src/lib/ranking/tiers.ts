@@ -10,24 +10,29 @@ export const TIERS = ["S", "A", "B", "C", "D"] as const;
 export type Tier = (typeof TIERS)[number];
 
 /**
- * Elo-score floors for each tier, relative to the 1500 baseline. A score lands
- * in the first (highest) tier whose floor it clears; anything below C's floor
- * is D. Bands are tuned to the observed score spread (real rankings cluster
- * tightly around 1500, roughly 1340–1650) so all five tiers actually fill —
- * symmetric ±25 / ±75 around the baseline.
+ * Tier floors expressed as **z-scores** — standard deviations above/below the
+ * user's own mean score — rather than absolute score thresholds. Bradley-Terry
+ * score spread varies widely between users (a few decisive comparisons produce a
+ * very wide spread; a thin ranking barely separates at all), so absolute bands
+ * can't fit everyone. Normalizing per user keeps all five tiers meaningful
+ * regardless of spread, and an undifferentiated ranking (zero spread) collapses
+ * to all-B instead of looking falsely confident.
+ *
+ * Bands are symmetric around the mean: roughly S/D ≈ top/bottom 16%,
+ * A/C the next ~22% each, B the central ~24% for a normal-ish distribution.
  */
-export const TIER_THRESHOLDS: Record<Exclude<Tier, "D">, number> = {
-  S: 1575,
-  A: 1525,
-  B: 1475,
-  C: 1425,
+export const TIER_ZSCORE_FLOORS: Record<Exclude<Tier, "D">, number> = {
+  S: 1.0,
+  A: 0.3,
+  B: -0.3,
+  C: -1.0,
 };
 
-export function tierForScore(score: number): Tier {
-  if (score >= TIER_THRESHOLDS.S) return "S";
-  if (score >= TIER_THRESHOLDS.A) return "A";
-  if (score >= TIER_THRESHOLDS.B) return "B";
-  if (score >= TIER_THRESHOLDS.C) return "C";
+export function tierForZScore(z: number): Tier {
+  if (z >= TIER_ZSCORE_FLOORS.S) return "S";
+  if (z >= TIER_ZSCORE_FLOORS.A) return "A";
+  if (z >= TIER_ZSCORE_FLOORS.B) return "B";
+  if (z >= TIER_ZSCORE_FLOORS.C) return "C";
   return "D";
 }
 
@@ -37,9 +42,10 @@ export type TierGroup = {
 };
 
 /**
- * Bucket ranked series into the five fixed tiers. Always returns all five
- * groups in S→D order (empty ones included), and preserves the incoming rank
- * order within each tier.
+ * Bucket a single user's ranked series into the five fixed tiers using
+ * per-user z-score bands (see {@link TIER_ZSCORE_FLOORS}). Always returns all
+ * five groups in S→D order (empty ones included), and preserves the incoming
+ * rank order within each tier.
  */
 export function groupRankingsIntoTiers(
   rankings: RankedSeriesRow[],
@@ -53,8 +59,22 @@ export function groupRankingsIntoTiers(
   };
 
   const ordered = [...rankings].sort((a, b) => a.rank - b.rank);
+
+  const scores = ordered.map((row) => row.score);
+  const mean =
+    scores.length > 0
+      ? scores.reduce((sum, score) => sum + score, 0) / scores.length
+      : 0;
+  const variance =
+    scores.length > 0
+      ? scores.reduce((sum, score) => sum + (score - mean) ** 2, 0) /
+        scores.length
+      : 0;
+  const std = Math.sqrt(variance);
+
   for (const row of ordered) {
-    groups[tierForScore(row.score)].push(row);
+    const z = std > 0 ? (row.score - mean) / std : 0;
+    groups[tierForZScore(z)].push(row);
   }
 
   return TIERS.map((tier) => ({ tier, rows: groups[tier] }));

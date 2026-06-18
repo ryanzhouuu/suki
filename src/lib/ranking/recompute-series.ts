@@ -1,11 +1,12 @@
-import { ELO_INITIAL_SCORE, RANKING_ALGORITHM_VERSION } from "@/lib/constants";
+import { RANKING_ALGORITHM_VERSION } from "@/lib/constants";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 import {
-  applyComparison,
-  confidenceFromComparisonCount,
-  type EloEntityState,
-} from "./elo";
+  betaToScore,
+  confidenceFromUncertainty,
+  fitBradleyTerry,
+} from "./bradley-terry";
+import { resolvedComparisonsFromRows } from "./preference-graph";
 
 async function getCompletedSeriesIds(
   admin: ReturnType<typeof createAdminClient>,
@@ -32,68 +33,45 @@ export async function recomputeUserSeriesRanking(userId: string) {
   const admin = createAdminClient();
   const seriesIds = await getCompletedSeriesIds(admin, userId);
 
-  if (seriesIds.length === 0) {
-    await admin
-      .from("derived_series_rankings")
-      .delete()
+  // Even with no completed series we call the RPC with an empty row set so it
+  // clears any stale ranking rows for this user/version.
+  let rows: {
+    series_id: string;
+    rank: number;
+    score: number;
+    confidence: ReturnType<typeof confidenceFromUncertainty>;
+    comparison_count: number;
+    uncertainty: number;
+  }[] = [];
+
+  if (seriesIds.length > 0) {
+    const { data: comparisons } = await admin
+      .from("pairwise_series_comparisons")
+      .select("left_series_id, right_series_id, winner_series_id")
       .eq("user_id", userId)
-      .eq("algorithm_version", RANKING_ALGORITHM_VERSION);
-    return;
-  }
+      .not("winner_series_id", "is", null);
 
-  const scores = new Map<string, EloEntityState>();
-  for (const seriesId of seriesIds) {
-    scores.set(seriesId, {
-      entityId: seriesId,
-      score: ELO_INITIAL_SCORE,
-      comparisonCount: 0,
-    });
-  }
+    const edges = resolvedComparisonsFromRows(comparisons ?? []);
+    const fit = fitBradleyTerry(seriesIds, edges);
 
-  const { data: comparisons } = await admin
-    .from("pairwise_series_comparisons")
-    .select("left_series_id, right_series_id, winner_series_id")
-    .eq("user_id", userId)
-    .not("winner_series_id", "is", null)
-    .order("created_at", { ascending: true });
-
-  for (const comparison of comparisons ?? []) {
-    const winnerId = comparison.winner_series_id;
-    if (!winnerId) continue;
-
-    const loserId =
-      winnerId === comparison.left_series_id
-        ? comparison.right_series_id
-        : comparison.left_series_id;
-
-    if (!scores.has(winnerId) || !scores.has(loserId)) continue;
-
-    applyComparison(scores, winnerId, loserId);
-  }
-
-  const ranked = [...scores.values()].sort((a, b) => b.score - a.score);
-
-  await admin
-    .from("derived_series_rankings")
-    .delete()
-    .eq("user_id", userId)
-    .eq("algorithm_version", RANKING_ALGORITHM_VERSION);
-
-  if (ranked.length > 0) {
-    const { error } = await admin.from("derived_series_rankings").insert(
-      ranked.map((entry, index) => ({
-        user_id: userId,
-        series_id: entry.entityId,
+    rows = [...fit.entries()]
+      .sort((a, b) => b[1].beta - a[1].beta)
+      .map(([seriesId, state], index) => ({
+        series_id: seriesId,
         rank: index + 1,
-        score: entry.score,
-        confidence: confidenceFromComparisonCount(entry.comparisonCount),
-        comparison_count: entry.comparisonCount,
-        algorithm_version: RANKING_ALGORITHM_VERSION,
-        computed_at: new Date().toISOString(),
-      })),
-    );
-    if (error) throw new Error(error.message);
+        score: betaToScore(state.beta),
+        confidence: confidenceFromUncertainty(state.uncertainty),
+        comparison_count: state.comparisonCount,
+        uncertainty: state.uncertainty,
+      }));
   }
+
+  const { error } = await admin.rpc("replace_user_series_rankings", {
+    p_user_id: userId,
+    p_algorithm_version: RANKING_ALGORITHM_VERSION,
+    p_rows: rows,
+  });
+  if (error) throw new Error(error.message);
 }
 
 /** Series-level ranking recompute (primary). */

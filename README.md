@@ -107,7 +107,7 @@ docs/
 
 1. **Foundation** — Auth, onboarding, profiles, AniList search ✓
 2. **Tracking** — Library, statuses, progress, anime detail ✓
-3. **Ranking** — Pairwise comparisons by **series** (not individual seasons), Elo recompute, ranked list ✓ (requires `SUPABASE_SECRET_KEY`)
+3. **Ranking** — Pairwise comparisons by **series** (not individual seasons), Bradley-Terry recompute with active-sampling comparisons and uncertainty-based confidence, ranked + tier-list views ✓ (requires `SUPABASE_SECRET_KEY`)
 4. **Social** — Public profiles ✓ · Friends (requests, search, taste compare) ✓
 5. **Recommendation readiness** — Embeddings + pgvector recommendations ✓ · Analytics *(later)*
 
@@ -125,6 +125,7 @@ docs/
 | `npm run db:generate` | Generate Drizzle migrations from schema |
 | `npm run db:studio` | Drizzle Studio (requires `DATABASE_URL`) |
 | `npm run backfill:series` | Map existing anime → series via AniList relations, recompute rankings |
+| `npm run backfill:bt-rankings` | Recompute every user's Bradley-Terry series ranking (no AniList remapping) |
 | `npm run backfill:embeddings` | Embed cached anime for vector search (requires `OPENAI_API_KEY`) |
 | `npm run seed:catalog` | Cache + embed ~60 popular/trending titles (quick catalog boost) |
 | `npm run backfill:popular` | Cache top 300 popular anime from AniList (`--metadata-only` skips embeddings; optional limit arg) |

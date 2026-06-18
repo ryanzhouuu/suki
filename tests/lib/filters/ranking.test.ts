@@ -18,6 +18,7 @@ function row(seriesId: string, rank = 1): Row {
     score: 1500,
     comparison_count: 0,
     confidence: "low",
+    uncertainty: null,
     algorithm_version: "elo_series_v1",
     computed_at: new Date().toISOString(),
     series: null,

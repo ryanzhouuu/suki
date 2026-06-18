@@ -247,6 +247,7 @@ export const derivedSeriesRankings = pgTable(
     score: numeric("score", { precision: 10, scale: 4 }).notNull(),
     confidence: rankingConfidenceEnum("confidence").notNull().default("low"),
     comparisonCount: integer("comparison_count").notNull().default(0),
+    uncertainty: numeric("uncertainty", { precision: 12, scale: 6 }),
     algorithmVersion: text("algorithm_version").notNull().default("elo_series_v1"),
     computedAt: timestamp("computed_at", { withTimezone: true })
       .notNull()
