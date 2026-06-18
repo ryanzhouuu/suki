@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import {
   betaToScore,
+  confidenceFromUncertainty,
   expectedProb,
   fitBradleyTerry,
 } from "@/lib/ranking/bradley-terry";
@@ -124,6 +125,22 @@ describe("fitBradleyTerry", () => {
 
     assert.equal(result.size, 2);
     assert.equal(result.get("a")!.comparisonCount, 1);
+  });
+});
+
+describe("confidenceFromUncertainty", () => {
+  it("maps each band to the right label", () => {
+    assert.equal(confidenceFromUncertainty(0.5), "high");
+    assert.equal(confidenceFromUncertainty(1.5), "high");
+    assert.equal(confidenceFromUncertainty(3), "medium");
+    assert.equal(confidenceFromUncertainty(5), "medium");
+    assert.equal(confidenceFromUncertainty(7.2), "low");
+    assert.equal(confidenceFromUncertainty(33), "low");
+  });
+
+  it("is exclusive at each band's upper boundary", () => {
+    assert.equal(confidenceFromUncertainty(1.51), "medium");
+    assert.equal(confidenceFromUncertainty(5.01), "low");
   });
 });
 
