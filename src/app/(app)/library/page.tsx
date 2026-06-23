@@ -56,8 +56,10 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
   const { user } = await requireProfile();
   const { status: statusParam, group: groupParam } = await searchParams;
 
+  // Only accept a real enum value; anything else (incl. "all" or garbage) shows
+  // the full library rather than casting an invalid value into the enum query.
   const status =
-    statusParam && statusParam !== "all"
+    statusParam && (ANIME_ENTRY_STATUSES as readonly string[]).includes(statusParam)
       ? (statusParam as AnimeEntryStatus)
       : undefined;
 
