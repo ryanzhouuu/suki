@@ -1,6 +1,7 @@
 import { cache } from "react";
 
 import { RANKING_ALGORITHM_VERSION } from "@/lib/constants";
+import { escapeIlikePattern } from "@/lib/db/ilike";
 import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/types/database";
 
@@ -17,7 +18,7 @@ export const getProfileByUsername = cache(async (username: string) => {
   const { data } = await supabase
     .from("profiles")
     .select("*")
-    .ilike("username", username)
+    .ilike("username", escapeIlikePattern(username))
     .maybeSingle();
 
   return data;

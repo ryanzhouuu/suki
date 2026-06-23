@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { cache } from "react";
 
 import { RANKING_ALGORITHM_VERSION, type ProfileVisibility } from "@/lib/constants";
+import { escapeIlikePattern } from "@/lib/db/ilike";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Tables } from "@/types/database";
 
@@ -170,7 +171,7 @@ export const getShareCardData = cache(async function getShareCardData(
   const { data: profile } = await supabase
     .from("profiles")
     .select("username, display_name, avatar_url, profile_visibility, user_id")
-    .ilike("username", username)
+    .ilike("username", escapeIlikePattern(username))
     .maybeSingle();
   if (!profile) return null;
 
