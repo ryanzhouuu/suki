@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // c8 coverage output (npm run test:coverage) — not source.
+    "coverage/**",
   ]),
 ]);
 
