@@ -1,13 +1,10 @@
+import { escapeIlikePattern } from "@/lib/db/ilike";
 import {
   friendshipStatusForViewer,
   type FriendshipUiStatus,
 } from "@/lib/friends/relationship";
 import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/types/database";
-
-export function escapeIlikePattern(value: string): string {
-  return value.replace(/[%_\\]/g, "\\$&");
-}
 
 export type FriendProfile = Pick<
   Tables<"profiles">,

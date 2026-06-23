@@ -103,7 +103,11 @@ export const profiles = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (table) => [uniqueIndex("profiles_username_lower_idx").on(table.username)],
+  (table) => [
+    // Matches the SQL migration: unique on lower(username) for case-insensitive
+    // username uniqueness. Keep as an expression index, not a raw-column index.
+    uniqueIndex("profiles_username_lower_idx").on(sql`lower(${table.username})`),
+  ],
 );
 
 export const anime = pgTable("anime", {
