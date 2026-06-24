@@ -1,147 +1,61 @@
 # Suki
 
-Anime tracking with pairwise rankings, public taste profiles, and friends — built with Next.js, Supabase, and AniList.
+**Suki is an anime tracker built around one idea: a ranked list is more honest than a bunch of 1–10 scores.**
 
-Product and architecture details: [`docs/design.md`](./docs/design.md).
+Instead of asking you to rate each show in a vacuum, Suki has you make quick head-to-head choices — *this one or that one?* — and turns those comparisons into a ranked list of your taste. It groups seasons and movies into the franchises they belong to, learns what you like, recommends what to watch next, and lets you compare taste with friends.
 
-## Stack
+*(「好き」/ suki — "to like.")*
 
-- **Frontend:** Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS
-- **Backend:** Next.js server components, route handlers, and server actions
-- **Database:** Supabase Postgres with Row Level Security
-- **Auth:** Supabase Auth
-- **Metadata:** AniList GraphQL API
-- **ORM:** Drizzle (typed queries alongside Supabase client)
+---
 
-## Getting started
+## What you can do
 
-### 1. Environment variables
+### Track what you watch
+A personal library of everything you're watching, have completed, plan to watch, or dropped — with per-episode progress, statuses, and personal scores. Metadata (titles, covers, episode counts, genres) comes live from [AniList](https://anilist.co). A **Group by show** view collapses every season, movie, and OVA of a franchise into a single card, so your library reads as *shows you've watched* rather than a wall of "Season 2"s.
 
-Copy the example file and fill in values from your [Supabase dashboard](https://supabase.com/dashboard):
+### Rank by taste, not by guessing
+It's difficult to rate shows 1-10 consistently and accurately. Suki instead asks you to compare two series at a time and builds a ranking from your choices:
 
-```bash
-cp .env.example .env.local
-```
+- **Series-based.** All of *Jujutsu Kaisen*'s seasons and movies are one rankable entry — you're ranking *shows*, not episodes.
+- **Bradley–Terry model.** Your pairwise picks feed a statistical ranking model that also tracks **how confident** it is about each placement, so a thinly-compared series isn't presented as gospel.
+- **Smart prompts.** The comparison engine actively picks the matchups that will teach it the most, so you reach a meaningful ranking in fewer taps.
+- **Two views.** See your taste as a clean **ranked list** or as an **S / A / B / C / D tier board** — the screenshot-friendly version.
 
-| Variable | Where to find it |
-|----------|------------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Project Settings → API → Project URL |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Project Settings → API → **Publishable** key (`sb_publishable_...`) |
-| `SUPABASE_SECRET_KEY` | Project Settings → API → **Secret** key (`sb_secret_...`, server only) |
-| `DATABASE_URL` | Project Settings → Database → Connection string (pooler URI recommended) |
-| `OPENAI_API_KEY` | [OpenAI API keys](https://platform.openai.com/api-keys) — server only; recommendations and friend taste comparison |
-| `NEXT_PUBLIC_SITE_URL` | App URL for auth redirects (e.g. `http://localhost:3000`) |
-| `SERIES_ADMIN_EMAILS` | Optional comma-separated emails for `/admin/series` |
+### Find your next watch
+- **Personalized recommendations** powered by an embedding-based taste profile and vector search over a catalog of anime.
+- **Mood steering.** Nudge a recommendation run by vibe — cozy, hype, something that'll wreck you — with curated presets or free text, plus an **adventurousness** control that trades safe picks for surprising ones.
+- **Filters** by genre, length (movie / short / standard / long), and format.
+- **"What should I watch?" shuffle.** Can't decide? Spin your plan-to-watch list — optionally constrained by how much time you have — and get one pick.
 
-Supabase has two key *types*, not one replacing the other:
+### Keep up with what's airing
+A Home tracker for the currently-airing shows you're watching: next-episode countdowns, an "episodes behind" badge, and a one-tap **+1 episode** that auto-completes a show when you finish it.
 
-- **Publishable** — safe in the browser; Row Level Security applies (replaces legacy `anon`).
-- **Secret** — server/backend only; full access, bypasses RLS (replaces legacy `service_role`).
+### Compare taste with friends
+- **Public taste profiles** at `/u/:username` — top-ranked series, stats, and recent activity.
+- **Friends** with requests and search.
+- **Taste compare.** Line up your ranking against a friend's to see where you agree and clash.
+- **Recommend to a friend.** Generate a shared pick the two of you are both likely to enjoy, with modes like *best shared match*, *short watch*, or *new to both*.
+- **Activity feed.** A lightweight, ambient feed of what friends have completed, ranked, or added — high-signal only, with privacy controls.
 
-Legacy env names (`NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`) still work if your project has not migrated yet.
+### Share your taste
+Profile and ranking links unfurl into a generated **taste card** (avatar, top-ranked covers, top genres) in Discord, Twitter, and iMessage — plus an in-app share button.
 
-### 2. Database
+### Bring your list with you
+Import an existing list so you don't start from an empty library:
+- **AniList** by username (live, exact matching — the smoothest path)
+- **MyAnimeList** XML export
+- **Plain text** — paste one title per line, with a review step for fuzzy matches
 
-The remote Supabase project should already have migrations applied:
+Imported scores are informational; Suki re-ranks everything through its own comparisons.
 
-- `initial_schema` — tables, enums, indexes
-- `row_level_security` — RLS policies
-- `series_layer` / `series_rls` — franchise grouping (`series`, `anime_series_map`) and series-level rankings
-- `recommendations_pgvector` — taste embeddings and vector search
-- `friendships_update_rls` — scoped friendship update policies (apply on deploy)
-- `avatars_storage` — public `avatars` bucket for profile photo uploads
+---
 
-SQL files are mirrored in [`supabase/migrations/`](./supabase/migrations/) for version control.
+## How it's built
 
-To apply on another project:
+- **Next.js 16** (App Router), **React 19**, **TypeScript**, **Tailwind CSS**
+- **Supabase** Postgres with Row Level Security, plus Supabase Auth
+- **Drizzle** for typed queries; **pgvector** for recommendation search
+- **OpenAI embeddings** for taste profiles and recommendations
+- **AniList GraphQL API** for anime metadata
 
-```bash
-# With Supabase CLI linked to your project
-supabase db push
-```
-
-Or run the SQL files in order via the SQL editor.
-
-### 3. Run the app
-
-```bash
-npm install
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000).
-
-### 4. Google OAuth (optional)
-
-1. In [Supabase Dashboard](https://supabase.com/dashboard) → **Authentication** → **Providers**, enable **Google** and add your OAuth client credentials.
-2. Under **Authentication** → **URL Configuration**, add `http://localhost:3000/auth/callback` to **Redirect URLs** (and your production callback URL).
-3. Set `NEXT_PUBLIC_SITE_URL` to match the app origin used in redirects.
-
-### 5. Avatar uploads
-
-Apply the `avatars_storage` migration (`supabase db push` or run the SQL in the Supabase SQL editor). Uploads go to the public `avatars` bucket; each user can only write files under `{user_id}/`.
-
-## Project structure
-
-```
-src/
-  app/
-    (app)/          # Main app shell (home, search, library, ranking, friends)
-    auth/           # Login & signup (Milestone 1)
-    u/[username]/   # Public profiles (Milestone 4)
-    anime/[anilistId]/
-  components/
-  lib/
-    anilist/        # AniList GraphQL client
-    db/             # Drizzle schema & connection
-    supabase/       # Browser, server, admin, middleware clients
-  types/
-    database.ts     # Supabase-generated types
-supabase/
-  migrations/       # Postgres schema + RLS
-docs/
-  design.md         # Full product & technical design
-```
-
-## Milestones (from design doc)
-
-1. **Foundation** — Auth, onboarding, profiles, AniList search ✓
-2. **Tracking** — Library, statuses, progress, anime detail ✓
-3. **Ranking** — Pairwise comparisons by **series** (not individual seasons), Bradley-Terry recompute with active-sampling comparisons and uncertainty-based confidence, ranked + tier-list views ✓ (requires `SUPABASE_SECRET_KEY`)
-4. **Social** — Public profiles ✓ · Friends (requests, search, taste compare) ✓
-5. **Recommendation readiness** — Embeddings + pgvector recommendations ✓ · Analytics *(later)*
-
-## Scripts
-
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start dev server |
-| `npm run build` | Production build |
-| `npm run lint` | ESLint |
-| `npm run typecheck` | TypeScript (`tsc --noEmit`) |
-| `npm test` | Unit tests (all `tests/**/*.test.ts`, mirroring `src/lib`) |
-| `npm run test:coverage` | Unit tests + coverage report (open `coverage/index.html`; scopes `src/lib`) |
-| `npm run test:coverage:check` | Fail if coverage drops below baseline thresholds (run after `test:coverage`) |
-| `npm run db:generate` | Generate Drizzle migrations from schema |
-| `npm run db:studio` | Drizzle Studio (requires `DATABASE_URL`) |
-| `npm run backfill:series` | Map existing anime → series via AniList relations, recompute rankings |
-| `npm run backfill:bt-rankings` | Recompute every user's Bradley-Terry series ranking (no AniList remapping) |
-| `npm run backfill:embeddings` | Embed cached anime for vector search (requires `OPENAI_API_KEY`) |
-| `npm run seed:catalog` | Cache + embed ~60 popular/trending titles (quick catalog boost) |
-| `npm run backfill:popular` | Cache top 300 popular anime from AniList (`--metadata-only` skips embeddings; optional limit arg) |
-## CI
-
-GitHub Actions runs `lint`, `test:coverage` (with HTML/lcov artifact), `typecheck`, and `build` on push/PR (see [`.github/workflows/ci.yml`](./.github/workflows/ci.yml)).
-
-Coverage measures **`src/lib`** with `all: true`, so every lib file counts toward the denominator. Pure helpers (ranking, series titles, friends taste math, search params) can reach high coverage; modules that only call Supabase, AniList, or OpenAI stay near 0% until you add integration tests or extract logic. Run `npm run test:coverage` and open `coverage/index.html` to see per-file gaps.
-
-## Security notes
-
-- Never commit `.env.local` or expose `SUPABASE_SECRET_KEY` to the client.
-- `derived_series_rankings` has no client INSERT policy — writes use the secret key on the server.
-- Rankings compare **series** (e.g. all Jujutsu Kaisen seasons/movies grouped). Set `SERIES_ADMIN_EMAILS` in `.env.local` to use `/admin/series` for overrides (or insert into `series_group_overrides` manually).
-- Public profiles and lists are readable by default per MVP design; account data stays private.
-
-## License
-
-Private — not published.
+Privacy by design: profiles and lists are public by default, but account data stays private and Row Level Security is enforced at the database. Rankings are computed server-side with a key that never reaches the browser.
