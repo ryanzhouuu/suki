@@ -12,6 +12,10 @@ import {
 } from "@/lib/recommendations/collaborative-types";
 import { GenreFilter } from "@/components/filters/genre-filter";
 import { Button } from "@/components/ui/button";
+import {
+  InlineSelect,
+  type InlineSelectOption,
+} from "@/components/ui/inline-select";
 import { Label } from "@/components/ui/label";
 import {
   ANIME_FORMATS,
@@ -33,6 +37,26 @@ const MODE_LABELS: Record<CollaborativeRecommendationMode, string> = {
   based_on_overlap: "Based on overlap",
   surprise_us: "Surprise us",
 };
+
+const MODE_OPTIONS: InlineSelectOption[] = COLLABORATIVE_RECOMMENDATION_MODES.map(
+  (value) => ({ value, label: MODE_LABELS[value] }),
+);
+
+const LENGTH_OPTIONS: InlineSelectOption[] = [
+  { value: "", label: "Any length" },
+  ...LENGTH_BUCKETS.map((bucket) => ({
+    value: bucket,
+    label: LENGTH_LABELS[bucket],
+  })),
+];
+
+const FORMAT_OPTIONS: InlineSelectOption[] = [
+  { value: "", label: "Any format" },
+  ...ANIME_FORMATS.map((format) => ({
+    value: format,
+    label: format.replace("_", " "),
+  })),
+];
 
 type CollaborativeRecommendationPreferencesFormProps = {
   friendUserId: string;
@@ -75,20 +99,15 @@ export function CollaborativeRecommendationPreferencesForm({
 
         <div className="space-y-1.5">
           <Label htmlFor="collaborationMode">Mode</Label>
-          <select
+          <InlineSelect
             id="collaborationMode"
+            ariaLabel="Mode"
             value={mode}
-            onChange={(e) =>
-              setMode(e.target.value as CollaborativeRecommendationMode)
+            options={MODE_OPTIONS}
+            onChange={(next) =>
+              setMode(next as CollaborativeRecommendationMode)
             }
-            className="w-full rounded-lg border border-line-strong bg-paper px-3 py-2 text-sm text-ink"
-          >
-            {COLLABORATIVE_RECOMMENDATION_MODES.map((value) => (
-              <option key={value} value={value}>
-                {MODE_LABELS[value]}
-              </option>
-            ))}
-          </select>
+          />
         </div>
 
         <GenreFilter selected={genres} onChange={setGenres} />
@@ -96,40 +115,26 @@ export function CollaborativeRecommendationPreferencesForm({
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="lengthBucket">Length</Label>
-            <select
+            <InlineSelect
               id="lengthBucket"
               name="lengthBucket"
+              ariaLabel="Length"
               value={lengthBucket}
-              onChange={(e) =>
-                setLengthBucket(e.target.value as LengthBucket | "")
-              }
-              className="w-full rounded-lg border border-line-strong bg-paper px-3 py-2 text-sm text-ink"
-            >
-              <option value="">Any length</option>
-              {LENGTH_BUCKETS.map((bucket) => (
-                <option key={bucket} value={bucket}>
-                  {LENGTH_LABELS[bucket]}
-                </option>
-              ))}
-            </select>
+              options={LENGTH_OPTIONS}
+              onChange={(next) => setLengthBucket(next as LengthBucket | "")}
+            />
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="format">Format</Label>
-            <select
+            <InlineSelect
               id="format"
               name="format"
+              ariaLabel="Format"
               value={format}
-              onChange={(e) => setFormat(e.target.value)}
-              className="w-full rounded-lg border border-line-strong bg-paper px-3 py-2 text-sm text-ink"
-            >
-              <option value="">Any format</option>
-              {ANIME_FORMATS.map((f) => (
-                <option key={f} value={f}>
-                  {f.replace("_", " ")}
-                </option>
-              ))}
-            </select>
+              options={FORMAT_OPTIONS}
+              onChange={setFormat}
+            />
           </div>
         </div>
 
