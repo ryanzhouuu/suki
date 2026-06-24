@@ -74,7 +74,7 @@ export function SeriesGroupCard({
       </button>
 
       {expanded ? (
-        <ul className="grid grid-cols-1 gap-2.5 border-t border-line p-2.5 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid grid-cols-2 gap-2.5 border-t border-line p-2.5 lg:grid-cols-3">
           {group.entries.map((entry) => (
             <EntryCard
               key={entry.id}

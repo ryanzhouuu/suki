@@ -119,11 +119,32 @@ export function LibraryPanel({
     >
       <div className="space-y-4">
         {editingEntry ? (
-          <EntryEditPanel
-            key={editingEntry.id}
-            entry={editingEntry}
-            onClose={() => setEditingEntryId(null)}
-          />
+          <>
+            <div className="hidden sm:block">
+              <EntryEditPanel
+                key={editingEntry.id}
+                entry={editingEntry}
+                onClose={() => setEditingEntryId(null)}
+              />
+            </div>
+            <div
+              className="fixed inset-0 z-40 bg-ink/35 backdrop-blur-[2px] sm:hidden"
+              role="presentation"
+              onClick={() => setEditingEntryId(null)}
+            />
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Edit library entry"
+              className="fixed inset-x-0 bottom-0 z-50 max-h-[86dvh] overflow-y-auto rounded-t-[1.1rem] border border-line bg-paper p-3 shadow-[0_-18px_40px_-24px_rgb(var(--shadow-color)/0.65)] sm:hidden"
+            >
+              <EntryEditPanel
+                key={`sheet-${editingEntry.id}`}
+                entry={editingEntry}
+                onClose={() => setEditingEntryId(null)}
+              />
+            </div>
+          </>
         ) : null}
 
         {isEmpty ? (
@@ -150,7 +171,7 @@ export function LibraryPanel({
             ))}
           </ul>
         ) : (
-          <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+          <ul className="grid grid-cols-2 gap-2.5 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
             {sorted.map((entry) => (
               <EntryCard
                 key={entry.id}

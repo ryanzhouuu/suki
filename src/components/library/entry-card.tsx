@@ -132,6 +132,7 @@ export function EntryCard({ entry, onEdit, isEditing = false }: EntryCardProps) 
                 size="sm"
                 variant="secondary"
                 disabled={pending}
+                className="px-2 text-[11px] sm:px-3 sm:text-xs"
                 onClick={() =>
                   startTransition(async () => {
                     await updateAnimeEntry(entry.id, {
@@ -151,6 +152,7 @@ export function EntryCard({ entry, onEdit, isEditing = false }: EntryCardProps) 
                   type="button"
                   size="sm"
                   disabled={pending}
+                  className="px-2 text-[11px] sm:px-3 sm:text-xs"
                   onClick={() => setStatus("completed")}
                 >
                   Done
@@ -167,6 +169,7 @@ export function EntryCard({ entry, onEdit, isEditing = false }: EntryCardProps) 
               size="sm"
               variant="secondary"
               disabled={pending}
+              className="px-2 text-[11px] sm:px-3 sm:text-xs"
               onClick={onEdit}
             >
               Edit
@@ -178,6 +181,7 @@ export function EntryCard({ entry, onEdit, isEditing = false }: EntryCardProps) 
               size="sm"
               variant="secondary"
               disabled={pending}
+              className="px-2 text-[11px] sm:px-3 sm:text-xs"
               onClick={() => setStatus("completed")}
             >
               Completed
@@ -188,6 +192,7 @@ export function EntryCard({ entry, onEdit, isEditing = false }: EntryCardProps) 
             size="sm"
             variant="ghost"
             disabled={pending}
+            className="px-2 text-[11px] sm:px-3 sm:text-xs"
             onClick={remove}
           >
             Remove
