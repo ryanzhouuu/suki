@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 
 import { ANILIST_GENRES } from "@/lib/anilist/genres";
 
@@ -39,6 +39,9 @@ export function GenreFilter({
   onChange,
   layout = "grid",
 }: GenreFilterProps) {
+  const id = useId();
+  const triggerId = `${id}-genre-filter-trigger`;
+  const panelId = `${id}-genre-filter-panel`;
   const selectedSet = new Set(selected);
   const [open, setOpen] = useState(() => selected.length > 0);
 
@@ -59,8 +62,8 @@ export function GenreFilter({
         <button
           type="button"
           aria-expanded={open}
-          aria-controls="genre-filter-panel"
-          id="genre-filter-trigger"
+          aria-controls={panelId}
+          id={triggerId}
           onClick={() => setOpen((v) => !v)}
           className="flex min-w-0 flex-1 items-start gap-2 text-left"
         >
@@ -91,9 +94,9 @@ export function GenreFilter({
       </div>
 
       <div
-        id="genre-filter-panel"
+        id={panelId}
         role="region"
-        aria-labelledby="genre-filter-trigger"
+        aria-labelledby={triggerId}
         hidden={!open}
         className={open ? "border-t border-line px-3 pb-3 pt-3" : "hidden"}
       >

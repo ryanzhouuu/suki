@@ -95,6 +95,7 @@ body {
   background-color: var(--paper);
   color: var(--ink);
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  overflow-x: clip;
   /* Layered warm atmosphere: soft vermilion bloom + paper grain. */
   background-image:
     radial-gradient(
@@ -272,6 +273,7 @@ select {
   top: calc(3.65rem + env(safe-area-inset-top, 0px));
   z-index: 10;
   display: flex;
+  max-width: 100%;
   gap: 0.3rem;
   overflow-x: auto;
   padding: 0.3rem;
@@ -289,7 +291,9 @@ select {
 
 .profile-tabbar__tab {
   display: inline-flex;
+  flex: 1 0 auto;
   align-items: center;
+  justify-content: center;
   gap: 0.4rem;
   white-space: nowrap;
   border-radius: 999px;
@@ -334,6 +338,10 @@ select {
     top: calc(4rem + env(safe-area-inset-top, 0px));
     width: fit-content;
   }
+
+  .profile-tabbar__tab {
+    flex: 0 0 auto;
+  }
 }
 
 /* Headline metric strip — the at-a-glance numbers above the bento. */
@@ -341,6 +349,7 @@ select {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem;
+  min-width: 0;
   border-radius: var(--radius-card);
   border: 1px solid var(--line);
   background:
@@ -356,7 +365,21 @@ select {
 
 .profile-metric {
   position: relative;
+  min-width: 0;
   padding-left: 0.9rem;
+}
+
+@media (width < 640px) {
+  .profile-metric-strip {
+    padding: 0.85rem;
+  }
+
+  .profile-metric {
+    display: flex;
+    align-items: baseline;
+    gap: 0.55rem;
+    padding-left: 0.65rem;
+  }
 }
 
 .profile-metric::before {

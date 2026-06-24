@@ -71,6 +71,7 @@ export function SearchResultCard({ media }: SearchResultCardProps) {
           <Button
             type="button"
             size="sm"
+            variant="secondary"
             disabled={pending}
             onClick={() => quickAdd("completed")}
           >

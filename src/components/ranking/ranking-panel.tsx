@@ -13,7 +13,6 @@ import {
 import { TierListView } from "@/components/ranking/tier-list-view";
 import { FilterMatchCount } from "@/components/filters/filter-match-count";
 import { GenreFilter } from "@/components/filters/genre-filter";
-import { ControlRail } from "@/components/layout/page-frame";
 import { CONFIDENCE_LABELS } from "@/lib/constants";
 import { filterRankingsByGenre, useGenreFilters } from "@/lib/filters";
 import type { SeriesComparisonPair } from "@/lib/ranking/prompt";
@@ -83,113 +82,130 @@ export function RankingPanel({
     return counts;
   }, [rankings]);
 
-  return (
-    <ControlRail
-      sidebarLabel="Ranking filters and progress"
-      sidebar={
-        <div className="space-y-4">
-          <div className="rounded-card border border-line bg-surface p-4">
-            <p className="eyebrow">Taste lab</p>
-            <dl className="mt-3 space-y-2.5 text-sm">
-              <div className="flex items-center justify-between gap-3">
-                <dt className="text-muted">Completed series</dt>
-                <dd className="font-display text-base font-semibold tabular-nums text-ink">
-                  {completedSeriesCount}
-                </dd>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <dt className="text-muted">Ranked series</dt>
-                <dd className="font-display text-base font-semibold tabular-nums text-ink">
-                  {rankings.length}
-                </dd>
-              </div>
-            </dl>
-            {rankings.length > 0 ? (
-              <ul className="mt-3 space-y-1.5 border-t border-line pt-3">
-                {(["high", "medium", "low"] as const).map((level) => (
-                  <li
-                    key={level}
-                    className="flex items-center justify-between gap-3 text-xs text-muted"
-                  >
-                    <span className="flex items-center gap-1.5">
-                      <span
-                        aria-hidden
-                        className={`h-1.5 w-1.5 rounded-full ${
-                          level === "high"
-                            ? "bg-success"
-                            : level === "medium"
-                              ? "bg-accent"
-                              : "bg-faint"
-                        }`}
-                      />
-                      {CONFIDENCE_LABELS[level]}
-                    </span>
-                    <span className="tabular-nums">{confidenceCounts[level]}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
+  const sidebar = (
+    <div className="space-y-4">
+      <div className="rounded-card border border-line bg-surface p-4">
+        <p className="eyebrow">Taste lab</p>
+        <dl className="mt-3 space-y-2.5 text-sm">
+          <div className="flex items-center justify-between gap-3">
+            <dt className="text-muted">Completed series</dt>
+            <dd className="font-display text-base font-semibold tabular-nums text-ink">
+              {completedSeriesCount}
+            </dd>
           </div>
-
-          {canCompare ? (
-            <GenreFilter selected={genres} onChange={setGenres} layout="wrap" />
-          ) : null}
-        </div>
-      }
-    >
-      <div className="space-y-10">
-        {canCompare ? (
-          <section className="rounded-card border border-line bg-linear-to-b from-surface to-paper/40 p-5 sm:p-7">
-            {pending && !pair ? (
-              <p className="text-sm text-muted">Loading comparison…</p>
-            ) : null}
-            {pairError ? (
-              <p className="rounded-card border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                {pairError}
-              </p>
-            ) : null}
-            {pair ? (
-              <ComparisonView
-                key={`${pair.left.id}:${pair.right.id}`}
-                pair={pair}
-              />
-            ) : !pending && !pairError ? (
-              <p className="rounded-card border border-dashed border-line-strong p-6 text-sm text-muted">
-                {genreFiltering
-                  ? "No more pairs to compare for the selected genres. Clear the filter or complete more series in those genres."
-                  : "You're all caught up — your ranking looks settled. Complete more series, or reset one below to keep refining."}
-              </p>
-            ) : null}
-          </section>
+          <div className="flex items-center justify-between gap-3">
+            <dt className="text-muted">Ranked series</dt>
+            <dd className="font-display text-base font-semibold tabular-nums text-ink">
+              {rankings.length}
+            </dd>
+          </div>
+        </dl>
+        {rankings.length > 0 ? (
+          <ul className="mt-3 space-y-1.5 border-t border-line pt-3">
+            {(["high", "medium", "low"] as const).map((level) => (
+              <li
+                key={level}
+                className="flex items-center justify-between gap-3 text-xs text-muted"
+              >
+                <span className="flex items-center gap-1.5">
+                  <span
+                    aria-hidden
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      level === "high"
+                        ? "bg-success"
+                        : level === "medium"
+                          ? "bg-accent"
+                          : "bg-faint"
+                    }`}
+                  />
+                  {CONFIDENCE_LABELS[level]}
+                </span>
+                <span className="tabular-nums">{confidenceCounts[level]}</span>
+              </li>
+            ))}
+          </ul>
         ) : null}
-
-        <section>
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-xl font-semibold sm:text-2xl">Your ranking</h2>
-            {rankings.length > 0 ? (
-              <RankingViewToggle view={view} onChange={setView} />
-            ) : null}
-          </div>
-          {genreFiltering ? (
-            <div className="mb-3">
-              <FilterMatchCount
-                matched={filteredRankings.length}
-                total={rankings.length}
-                noun="series"
-              />
-            </div>
-          ) : null}
-          {view === "tiers" ? (
-            <TierListView rankings={filteredRankings} />
-          ) : (
-            <RankedList
-              rankings={filteredRankings}
-              genresBySeriesId={genresBySeriesId}
-              editable
-            />
-          )}
-        </section>
       </div>
-    </ControlRail>
+
+      {canCompare ? (
+        <GenreFilter selected={genres} onChange={setGenres} layout="wrap" />
+      ) : null}
+    </div>
+  );
+
+  const comparisonSection = canCompare ? (
+    <section className="rounded-card border border-line bg-linear-to-b from-surface to-paper/40 p-4 sm:p-7">
+      {pending && !pair ? (
+        <p className="text-sm text-muted">Loading comparison…</p>
+      ) : null}
+      {pairError ? (
+        <p className="rounded-card border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {pairError}
+        </p>
+      ) : null}
+      {pair ? (
+        <ComparisonView
+          key={`${pair.left.id}:${pair.right.id}`}
+          pair={pair}
+        />
+      ) : !pending && !pairError ? (
+        <p className="rounded-card border border-dashed border-line-strong p-6 text-sm text-muted">
+          {genreFiltering
+            ? "No more pairs to compare for the selected genres. Clear the filter or complete more series in those genres."
+            : "You're all caught up — your ranking looks settled. Complete more series, or reset one below to keep refining."}
+        </p>
+      ) : null}
+    </section>
+  ) : null;
+
+  const rankingSection = (
+    <section>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-xl font-semibold sm:text-2xl">Your ranking</h2>
+        {rankings.length > 0 ? (
+          <RankingViewToggle view={view} onChange={setView} />
+        ) : null}
+      </div>
+      {genreFiltering ? (
+        <div className="mb-3">
+          <FilterMatchCount
+            matched={filteredRankings.length}
+            total={rankings.length}
+            noun="series"
+          />
+        </div>
+      ) : null}
+      {view === "tiers" ? (
+        <TierListView rankings={filteredRankings} />
+      ) : (
+        <RankedList
+          rankings={filteredRankings}
+          genresBySeriesId={genresBySeriesId}
+          editable
+        />
+      )}
+    </section>
+  );
+
+  return (
+    <div className="flex min-w-0 flex-col gap-4 lg:grid lg:grid-cols-[17rem_minmax(0,1fr)] lg:items-start lg:gap-8 xl:grid-cols-[19rem_minmax(0,1fr)] xl:gap-10">
+      <aside
+        aria-label="Ranking filters and progress"
+        className="relative z-10 hidden min-w-0 lg:sticky lg:top-20 lg:block"
+      >
+        {sidebar}
+      </aside>
+
+      <div className="min-w-0 space-y-5 sm:space-y-10">
+        {comparisonSection}
+        <details className="rounded-card border border-line bg-surface lg:hidden">
+          <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
+            Ranking filters and progress
+          </summary>
+          <div className="border-t border-line px-3 py-3">{sidebar}</div>
+        </details>
+        {rankingSection}
+      </div>
+    </div>
   );
 }

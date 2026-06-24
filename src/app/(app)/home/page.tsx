@@ -126,10 +126,10 @@ export default async function HomePage() {
                   )
                 : 0;
               return (
-                <li key={entry.id}>
+                <li key={entry.id} className="min-w-0">
                   <Link
                     href={`/anime/${entry.anime.anilist_id}`}
-                    className="group flex items-center gap-3 rounded-card border border-line bg-surface p-3 transition-all hover:border-accent hover:shadow-[0_8px_24px_-16px_rgb(var(--shadow-color)/0.35)]"
+                    className="group flex w-full min-w-0 items-center gap-3 rounded-card border border-line bg-surface p-3 transition-all hover:border-accent hover:shadow-[0_8px_24px_-16px_rgb(var(--shadow-color)/0.35)]"
                   >
                     <AnimePoster
                       src={entry.anime.cover_image_url}

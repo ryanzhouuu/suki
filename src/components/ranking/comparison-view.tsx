@@ -54,12 +54,12 @@ export function ComparisonView({ pair }: ComparisonViewProps) {
   }
 
   return (
-    <div className="space-y-7">
-      <p className="text-center text-sm text-muted">
+    <div className="space-y-4 sm:space-y-7">
+      <p className="text-center text-xs text-muted sm:text-sm">
         Rankings are by series — seasons and movies in the same franchise count
         as one title.
       </p>
-      <p className="text-center font-display text-xl font-medium sm:text-3xl">
+      <p className="text-center font-display text-lg font-medium sm:text-3xl">
         Which did you enjoy more?
       </p>
       {error ? (
@@ -67,32 +67,24 @@ export function ComparisonView({ pair }: ComparisonViewProps) {
           {error}
         </p>
       ) : null}
-      <div className="relative flex flex-col gap-3 sm:grid sm:grid-cols-2 sm:gap-4">
-        {([pair.left, pair.right] as const).map((series, index) => (
+      <div className="relative grid grid-cols-2 gap-2 sm:gap-4">
+        {([pair.left, pair.right] as const).map((series) => (
           <div key={series.id} className="contents">
-            {index === 1 ? (
-              <span
-                aria-hidden
-                className="flex items-center justify-center py-0.5 font-display text-sm font-semibold italic text-accent sm:hidden"
-              >
-                vs
-              </span>
-            ) : null}
             <button
               type="button"
               disabled={pending}
               onClick={() => pick(series.id)}
-              className="flex flex-col items-center gap-3 rounded-card border border-line bg-surface p-4 text-center transition-all hover:-translate-y-1 hover:border-accent hover:shadow-[0_18px_40px_-26px_rgb(var(--shadow-color)/0.5)] disabled:opacity-50 sm:p-5"
+              className="flex min-w-0 flex-col items-center gap-2 rounded-card border border-line bg-surface p-3 text-center transition-all hover:-translate-y-1 hover:border-accent hover:shadow-[0_18px_40px_-26px_rgb(var(--shadow-color)/0.5)] disabled:opacity-50 sm:gap-3 sm:p-5"
             >
               <AnimePoster
                 src={series.cover_image_url}
                 alt={series.canonical_title}
-                size="lg"
+                size="md"
               />
-              <span className="text-balance font-medium text-ink">
+              <span className="line-clamp-2 text-sm font-medium leading-snug text-ink sm:text-base">
                 {series.canonical_title}
               </span>
-              <span className="text-xs uppercase tracking-wide text-faint">
+              <span className="text-[10px] uppercase tracking-wide text-faint sm:text-xs">
                 {seriesSubtitle(series.entryCount)}
               </span>
             </button>
@@ -100,12 +92,12 @@ export function ComparisonView({ pair }: ComparisonViewProps) {
         ))}
         <span
           aria-hidden
-          className="pointer-events-none absolute left-1/2 top-1/2 hidden h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-paper font-display text-sm font-semibold italic text-accent shadow-sm sm:flex"
+          className="pointer-events-none absolute left-1/2 top-1/2 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-paper font-display text-xs font-semibold italic text-accent shadow-sm sm:h-11 sm:w-11 sm:text-sm"
         >
           vs
         </span>
       </div>
-      <div className="flex justify-center gap-2">
+      <div className="flex justify-center gap-2 pt-1 sm:pt-0">
         <Button
           type="button"
           variant="secondary"

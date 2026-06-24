@@ -115,7 +115,7 @@ export function FocusedRecommendations({
         className="animate-fade"
       />
 
-      <div className="relative z-10 space-y-5 pt-6 sm:pt-8">
+      <div className="relative z-10 space-y-4 pt-3 sm:space-y-5 sm:pt-8">
         <RecommendationsStage
           leading={
             <span className="hidden sm:inline-flex">
@@ -138,23 +138,45 @@ export function FocusedRecommendations({
             </span>
           }
         >
-          <FocusedRecommendationCard
-            key={current.id}
-            row={current}
-            index={safeIndex}
-            total={visibleItems.length}
-            onDismissed={handleDismissed}
-            contextLabel={contextLabel}
-            whyLabel={whyLabel}
-            backdrop={false}
-          />
+          <div className="relative">
+            {canScroll ? (
+              <>
+                <div className="absolute left-2 top-1/2 z-30 -translate-y-1/2 sm:hidden">
+                  <CarouselArrow
+                    direction="prev"
+                    label="Previous recommendation"
+                    disabled={!canScroll}
+                    onClick={goPrev}
+                  />
+                </div>
+                <div className="absolute right-2 top-1/2 z-30 -translate-y-1/2 sm:hidden">
+                  <CarouselArrow
+                    direction="next"
+                    label="Next recommendation"
+                    disabled={!canScroll}
+                    onClick={goNext}
+                  />
+                </div>
+              </>
+            ) : null}
+            <FocusedRecommendationCard
+              key={current.id}
+              row={current}
+              index={safeIndex}
+              total={visibleItems.length}
+              onDismissed={handleDismissed}
+              contextLabel={contextLabel}
+              whyLabel={whyLabel}
+              backdrop={false}
+            />
+          </div>
         </RecommendationsStage>
 
         {canScroll ? (
           <RecommendationsStage>
             <div>
               <p className="eyebrow mb-2">Up next</p>
-              <ul className="scrollbar-none flex gap-3 overflow-x-auto pb-1">
+              <ul className="scrollbar-none flex gap-3 overflow-x-auto px-1 pt-1 pb-2">
                 {visibleItems.map((row, index) => {
                   const active = index === safeIndex;
                   const title =
@@ -166,7 +188,7 @@ export function FocusedRecommendations({
                         aria-label={`Go to ${title}`}
                         aria-current={active ? "true" : undefined}
                         onClick={() => setActiveIndex(index)}
-                        className={`block overflow-hidden rounded-lg transition-all ${
+                        className={`block rounded-lg transition-all ${
                           active
                             ? "ring-2 ring-accent ring-offset-2 ring-offset-paper"
                             : "opacity-65 hover:opacity-100"
@@ -175,7 +197,7 @@ export function FocusedRecommendations({
                         <AnimePoster
                           src={row.anime.cover_image_url}
                           alt={title}
-                          size="md"
+                          size="sm"
                           className="rounded-lg"
                         />
                       </button>

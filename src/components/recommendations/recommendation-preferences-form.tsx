@@ -8,6 +8,10 @@ import {
 } from "@/actions/recommendations";
 import { GenreFilter } from "@/components/filters/genre-filter";
 import { Button } from "@/components/ui/button";
+import {
+  InlineSelect,
+  type InlineSelectOption,
+} from "@/components/ui/inline-select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MOOD_PRESETS, type MoodPresetKey } from "@/lib/recommendations/mood";
@@ -33,6 +37,22 @@ const ADVENTUROUSNESS_LABELS: Record<AdventurousnessLevel, string> = {
   balanced: "Balanced",
   adventurous: "Adventurous",
 };
+
+const LENGTH_OPTIONS: InlineSelectOption[] = [
+  { value: "", label: "Any length" },
+  ...LENGTH_BUCKETS.map((bucket) => ({
+    value: bucket,
+    label: LENGTH_LABELS[bucket],
+  })),
+];
+
+const FORMAT_OPTIONS: InlineSelectOption[] = [
+  { value: "", label: "Any format" },
+  ...ANIME_FORMATS.map((format) => ({
+    value: format,
+    label: format.replace("_", " "),
+  })),
+];
 
 const chipClass = (active: boolean) =>
   `rounded-full px-3 py-2 text-xs font-medium transition-colors ${
@@ -130,40 +150,26 @@ export function RecommendationPreferencesForm() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
           <div className="space-y-1.5">
             <Label htmlFor="lengthBucket">Length</Label>
-            <select
+            <InlineSelect
               id="lengthBucket"
               name="lengthBucket"
+              ariaLabel="Length"
               value={lengthBucket}
-              onChange={(e) =>
-                setLengthBucket(e.target.value as LengthBucket | "")
-              }
-              className="w-full rounded-lg border border-line-strong bg-paper px-3 py-2 text-sm text-ink"
-            >
-              <option value="">Any length</option>
-              {LENGTH_BUCKETS.map((bucket) => (
-                <option key={bucket} value={bucket}>
-                  {LENGTH_LABELS[bucket]}
-                </option>
-              ))}
-            </select>
+              options={LENGTH_OPTIONS}
+              onChange={(next) => setLengthBucket(next as LengthBucket | "")}
+            />
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="format">Format</Label>
-            <select
+            <InlineSelect
               id="format"
               name="format"
+              ariaLabel="Format"
               value={format}
-              onChange={(e) => setFormat(e.target.value)}
-              className="w-full rounded-lg border border-line-strong bg-paper px-3 py-2 text-sm text-ink"
-            >
-              <option value="">Any format</option>
-              {ANIME_FORMATS.map((f) => (
-                <option key={f} value={f}>
-                  {f.replace("_", " ")}
-                </option>
-              ))}
-            </select>
+              options={FORMAT_OPTIONS}
+              onChange={setFormat}
+            />
           </div>
         </div>
 

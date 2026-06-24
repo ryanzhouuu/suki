@@ -32,20 +32,20 @@ function StatCell({
 }) {
   return (
     <div
-      className={`rounded-card border px-3 py-2.5 transition-colors ${
+      className={`flex min-w-0 items-baseline justify-between gap-2 rounded-lg border px-2.5 py-2 transition-colors sm:block sm:rounded-card sm:px-3 sm:py-2.5 ${
         active
           ? "border-accent/45 bg-accent-soft/60"
           : "border-line bg-surface"
       }`}
     >
       <p
-        className={`font-display text-2xl leading-none font-semibold tabular-nums ${
+        className={`font-display text-xl leading-none font-semibold tabular-nums sm:text-2xl ${
           active ? "text-accent" : "text-ink"
         }`}
       >
         {value}
       </p>
-      <p className="mt-1.5 truncate text-[11px] font-medium uppercase tracking-wide text-muted">
+      <p className="truncate text-[10px] font-medium uppercase tracking-wide text-muted sm:mt-1.5 sm:text-[11px]">
         {label}
       </p>
     </div>
@@ -98,7 +98,7 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
         <h1 className="mt-1.5 text-3xl font-semibold sm:text-4xl">Library</h1>
       </div>
 
-      <dl className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
+      <dl className="grid grid-cols-3 gap-2 sm:gap-2.5 lg:grid-cols-6">
         <StatCell label="Total" value={countSource.length} active={!status} />
         {ANIME_ENTRY_STATUSES.map((s) => (
           <StatCell

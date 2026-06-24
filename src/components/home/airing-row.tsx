@@ -45,7 +45,7 @@ export function AiringRowItem({ row }: { row: AiringRow }) {
   }
 
   return (
-    <li className="group flex items-center gap-3 rounded-card border border-line bg-surface p-3 transition-all hover:border-accent">
+    <li className="group flex w-full min-w-0 items-center gap-2.5 rounded-card border border-line bg-surface p-3 transition-all hover:border-accent sm:gap-3">
       <Link
         href={`/anime/${row.anilistId}`}
         className="block shrink-0 overflow-hidden rounded-md"
@@ -75,6 +75,7 @@ export function AiringRowItem({ row }: { row: AiringRow }) {
         size="sm"
         variant="secondary"
         disabled={pending}
+        className="shrink-0 px-2.5 text-[11px] sm:px-3 sm:text-xs"
         onClick={bump}
       >
         +1 ep

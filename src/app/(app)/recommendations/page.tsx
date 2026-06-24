@@ -56,6 +56,7 @@ export default async function RecommendationsPage() {
       <ControlRail
         sidebarLabel="Recommendation preferences"
         sidebarClassName="lg:pt-10"
+        mobileDefaultOpen={items.length === 0}
         sidebar={
           <div className="space-y-4">
             <RecommendationPreferencesForm />

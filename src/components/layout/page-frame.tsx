@@ -13,7 +13,7 @@ export function WidePageFrame({
   className?: string;
 }) {
   return (
-    <div className="full-bleed px-4 sm:px-6 lg:px-8">
+    <div className="sm:full-bleed sm:px-6 lg:px-8">
       <div className={`mx-auto w-full max-w-7xl min-w-0 ${className}`}>
         {children}
       </div>
@@ -31,20 +31,24 @@ export function ControlRail({
   children,
   sidebarLabel = "Filters",
   sidebarClassName = "",
+  mobileDefaultOpen = false,
 }: {
   sidebar: ReactNode;
   children: ReactNode;
   sidebarLabel?: string;
   sidebarClassName?: string;
+  mobileDefaultOpen?: boolean;
 }) {
   return (
-    <div className="space-y-4 lg:grid lg:grid-cols-[17rem_minmax(0,1fr)] lg:items-start lg:gap-8 lg:space-y-0 xl:grid-cols-[19rem_minmax(0,1fr)] xl:gap-10">
-      <div className="min-w-0 lg:order-2">{children}</div>
+    <div className="flex min-w-0 flex-col gap-4 lg:grid lg:grid-cols-[17rem_minmax(0,1fr)] lg:items-start lg:gap-8 xl:grid-cols-[19rem_minmax(0,1fr)] xl:gap-10">
       <aside
         aria-label={sidebarLabel}
-        className={`relative z-10 lg:order-1 lg:mb-0 lg:sticky lg:top-20 ${sidebarClassName}`}
+        className={`relative z-10 min-w-0 lg:sticky lg:top-20 ${sidebarClassName}`}
       >
-        <details className="rounded-card border border-line bg-surface lg:hidden">
+        <details
+          open={mobileDefaultOpen}
+          className="rounded-card border border-line bg-surface lg:hidden"
+        >
           <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
             {sidebarLabel}
           </summary>
@@ -52,6 +56,7 @@ export function ControlRail({
         </details>
         <div className="hidden lg:block">{sidebar}</div>
       </aside>
+      <div className="min-w-0">{children}</div>
     </div>
   );
 }

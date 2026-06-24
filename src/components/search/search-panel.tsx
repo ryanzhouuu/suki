@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from "react";
 
 import { GenreFilter } from "@/components/filters/genre-filter";
-import { ControlRail, WidePageFrame } from "@/components/layout/page-frame";
+import { WidePageFrame } from "@/components/layout/page-frame";
 import { SearchResultCard } from "@/components/search/search-result-card";
 import {
   ANILIST_FORMATS,
@@ -74,6 +74,73 @@ export function SearchPanel() {
     setSort("relevance");
   }
 
+  const filters = (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-semibold text-ink">Filters</p>
+        {hasFilters || sort !== "relevance" ? (
+          <button
+            type="button"
+            onClick={resetFilters}
+            className="text-xs font-medium text-muted transition-colors hover:text-accent"
+          >
+            Clear all
+          </button>
+        ) : null}
+      </div>
+
+      <FilterSection label="Sort by">
+        <div className="flex flex-wrap gap-1.5">
+          {SEARCH_SORT_KEYS.map((key) => {
+            const active = sort === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                aria-pressed={active}
+                onClick={() => setSort(key)}
+                className={`rounded-full border px-3 py-2 text-xs font-medium transition-colors sm:py-1.5 ${
+                  active
+                    ? "border-accent bg-accent text-on-accent"
+                    : "border-line-strong bg-surface text-muted hover:border-accent hover:text-accent"
+                }`}
+              >
+                {SEARCH_SORT_LABELS[key]}
+              </button>
+            );
+          })}
+        </div>
+      </FilterSection>
+
+      <FilterSection label="Format">
+        <div className="flex flex-wrap gap-1.5">
+          {ANILIST_FORMATS.map((value) => {
+            const active = format === value;
+            return (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={active}
+                onClick={() => setFormat(active ? null : value)}
+                className={`rounded-full border px-3 py-2 text-xs font-medium transition-colors sm:py-1 ${
+                  active
+                    ? "border-accent bg-accent text-on-accent"
+                    : "border-line-strong bg-surface text-muted hover:border-accent hover:text-accent"
+                }`}
+              >
+                {ANILIST_FORMAT_LABELS[value]}
+              </button>
+            );
+          })}
+        </div>
+      </FilterSection>
+
+      <FilterSection label="Genre">
+        <GenreFilter selected={genres} onChange={setGenres} layout="wrap" />
+      </FilterSection>
+    </div>
+  );
+
   return (
     <WidePageFrame className="space-y-6">
       <div>
@@ -81,71 +148,14 @@ export function SearchPanel() {
         <h1 className="mt-1.5 text-3xl font-semibold sm:text-4xl">Search</h1>
       </div>
 
-      <ControlRail
-        sidebarLabel="Search filters"
-        sidebar={
-          <div className="space-y-5">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-sm font-semibold text-ink">Filters</p>
-              {hasFilters || sort !== "relevance" ? (
-                <button
-                  type="button"
-                  onClick={resetFilters}
-                  className="text-xs font-medium text-muted transition-colors hover:text-accent"
-                >
-                  Clear all
-                </button>
-              ) : null}
-            </div>
+      <div className="flex min-w-0 flex-col gap-4 lg:grid lg:grid-cols-[17rem_minmax(0,1fr)] lg:items-start lg:gap-8 xl:grid-cols-[19rem_minmax(0,1fr)] xl:gap-10">
+        <aside
+          aria-label="Search filters"
+          className="relative z-10 hidden min-w-0 lg:sticky lg:top-20 lg:block"
+        >
+          {filters}
+        </aside>
 
-            <FilterSection label="Sort by">
-              <select
-                value={sort}
-                onChange={(e) => setSort(e.target.value as SearchSortKey)}
-                aria-label="Sort results"
-                className="w-full rounded-lg border border-line-strong bg-paper px-3 py-2.5 text-base text-ink sm:text-sm"
-              >
-                {SEARCH_SORT_KEYS.map((key) => (
-                  <option key={key} value={key}>
-                    {SEARCH_SORT_LABELS[key]}
-                  </option>
-                ))}
-              </select>
-            </FilterSection>
-
-            <FilterSection label="Format">
-              <div className="flex flex-wrap gap-1.5">
-                {ANILIST_FORMATS.map((value) => {
-                  const active = format === value;
-                  return (
-                    <button
-                      key={value}
-                      type="button"
-                      aria-pressed={active}
-                      onClick={() => setFormat(active ? null : value)}
-                      className={`rounded-full border px-3 py-2 text-xs font-medium transition-colors sm:py-1 ${
-                        active
-                          ? "border-accent bg-accent text-on-accent"
-                          : "border-line-strong bg-surface text-muted hover:border-accent hover:text-accent"
-                      }`}
-                    >
-                      {ANILIST_FORMAT_LABELS[value]}
-                    </button>
-                  );
-                })}
-              </div>
-            </FilterSection>
-
-            <FilterSection label="Genre">
-              <GenreFilter
-                selected={genres}
-                onChange={setGenres}
-                layout="wrap"
-              />
-            </FilterSection>
-          </div>
-        }
-      >
         <div className="space-y-6">
           <div>
             <div className="relative">
@@ -163,6 +173,13 @@ export function SearchPanel() {
               <p className="mt-2 text-sm text-muted">Searching…</p>
             ) : null}
           </div>
+
+          <details className="rounded-card border border-line bg-surface lg:hidden">
+            <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
+              Search filters
+            </summary>
+            <div className="border-t border-line px-3 py-3">{filters}</div>
+          </details>
 
           {error ? (
             <p
@@ -200,7 +217,7 @@ export function SearchPanel() {
             </ul>
           ) : null}
         </div>
-      </ControlRail>
+      </div>
     </WidePageFrame>
   );
 }
