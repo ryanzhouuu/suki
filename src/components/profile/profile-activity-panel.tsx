@@ -22,23 +22,23 @@ function ActivityList({
 }) {
   if (entries.length === 0) return null;
   return (
-    <div>
+    <div className="min-w-0">
       <p className="text-xs font-medium uppercase tracking-wide text-muted">
         {label}
       </p>
-      <ul className="mt-2 space-y-1.5">
+      <ul className="mt-2 min-w-0 space-y-1.5">
         {entries.map((entry) => (
-          <li key={entry.id}>
+          <li key={entry.id} className="min-w-0">
             <Link
               href={`/anime/${entry.anime.anilist_id}`}
-              className="group flex items-center gap-2.5 rounded-xl border border-transparent bg-surface-2/40 px-2 py-1.5 transition-all hover:-translate-y-0.5 hover:border-line hover:bg-surface-2"
+              className="group flex w-full min-w-0 items-center gap-2.5 rounded-xl border border-transparent bg-surface-2/40 px-2 py-1.5 transition-all hover:-translate-y-0.5 hover:border-line hover:bg-surface-2"
             >
               <AnimePoster
                 src={entry.anime.cover_image_url}
                 alt={entryTitle(entry)}
                 size="sm"
               />
-              <span className="truncate text-sm font-medium text-ink group-hover:text-accent">
+              <span className="min-w-0 truncate text-sm font-medium text-ink group-hover:text-accent">
                 {entryTitle(entry)}
               </span>
             </Link>
@@ -63,12 +63,12 @@ export function ProfileActivityPanel({
 
   return (
     <section
-      className={`flex flex-col rounded-card border border-line bg-surface p-5 shadow-[0_16px_28px_-26px_rgb(var(--shadow-color)/0.5)] sm:p-6 ${className}`}
+      className={`flex min-w-0 flex-col rounded-card border border-line bg-surface p-5 shadow-[0_16px_28px_-26px_rgb(var(--shadow-color)/0.5)] sm:p-6 ${className}`}
     >
       <p className="eyebrow">Activity</p>
       <h3 className="mt-1 text-lg font-semibold">Recent updates</h3>
 
-      <div className="mt-4 grid flex-1 gap-5 sm:grid-cols-2">
+      <div className="mt-4 grid min-w-0 flex-1 gap-5 sm:grid-cols-2">
         <ActivityList
           label="Recently completed"
           entries={activity.recentlyCompleted}

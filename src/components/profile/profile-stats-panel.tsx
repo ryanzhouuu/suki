@@ -52,7 +52,7 @@ function BentoCard({
 }) {
   return (
     <section
-      className={`flex flex-col rounded-card border border-line bg-surface p-5 shadow-[0_16px_28px_-26px_rgb(var(--shadow-color)/0.5)] sm:p-6 ${className}`}
+      className={`flex min-w-0 flex-col rounded-card border border-line bg-surface p-5 shadow-[0_16px_28px_-26px_rgb(var(--shadow-color)/0.5)] sm:p-6 ${className}`}
     >
       <p className="eyebrow">{eyebrow}</p>
       <h3 className="mt-1 text-lg font-semibold">{title}</h3>
@@ -123,7 +123,7 @@ export function ProfileStatsPanel({
     });
 
   return (
-    <div className="space-y-4">
+    <div className="min-w-0 space-y-4">
       {headlineMetrics.length > 0 ? (
         <section className="profile-metric-strip">
           {headlineMetrics.slice(0, 5).map((metric) => (
@@ -132,7 +132,7 @@ export function ProfileStatsPanel({
         </section>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+      <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-6">
         {taste.topGenres.length > 0 ? (
           <BentoCard
             eyebrow="Taste"
