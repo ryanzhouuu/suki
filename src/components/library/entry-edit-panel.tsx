@@ -27,8 +27,6 @@ export function EntryEditPanel({ entry, onClose }: EntryEditPanelProps) {
   const [message, setMessage] = useState<string | null>(null);
 
   const anime = entry.anime;
-  const title =
-    anime.english_title || anime.romaji_title || anime.native_title || "Unknown";
 
   const [status, setStatus] = useState<AnimeEntryStatus>(entry.status);
   const [progressEpisodes, setProgressEpisodes] = useState(
@@ -107,17 +105,7 @@ export function EntryEditPanel({ entry, onClose }: EntryEditPanelProps) {
   }
 
   return (
-    <div className="rounded-card border border-line bg-surface p-4 sm:p-5">
-      <div className="mb-4 flex items-start justify-between gap-3">
-        <div>
-          <p className="eyebrow">Edit entry</p>
-          <h2 className="mt-1 text-lg font-semibold text-ink">{title}</h2>
-        </div>
-        <Button type="button" variant="ghost" size="sm" onClick={onClose}>
-          Close
-        </Button>
-      </div>
-
+    <div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5 sm:col-span-2">
           <Label htmlFor="entry-status">Status</Label>

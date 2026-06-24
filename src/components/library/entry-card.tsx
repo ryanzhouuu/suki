@@ -39,8 +39,10 @@ export function EntryCard({ entry, onEdit, isEditing = false }: EntryCardProps) 
     anime.native_title ||
     "Unknown";
   const total = anime.episodes;
+  const isWatching = displayStatus === "watching";
+  const hasTotal = total != null && total > 0;
   const progressPct =
-    total && entry.progress_episodes > 0
+    hasTotal && entry.progress_episodes > 0
       ? Math.min(100, Math.round((entry.progress_episodes / total) * 100))
       : 0;
 
@@ -106,7 +108,7 @@ export function EntryCard({ entry, onEdit, isEditing = false }: EntryCardProps) 
             <span className="h-1 w-1 rounded-full bg-accent" />
             {STATUS_LABELS[displayStatus as AnimeEntryStatus]}
           </span>
-          {entry.progress_episodes > 0 ? (
+          {!isWatching && entry.progress_episodes > 0 ? (
             <span>
               {entry.progress_episodes}
               {total ? ` / ${total}` : ""} eps
@@ -118,13 +120,30 @@ export function EntryCard({ entry, onEdit, isEditing = false }: EntryCardProps) 
           <p className="mt-1 line-clamp-2 text-[11px] text-muted">{meta.join(" · ")}</p>
         ) : null}
 
-        {displayStatus === "watching" && total ? (
+        {isWatching ? (
           <div className="mt-2">
+            <p className="mb-1 text-[11px] text-muted">
+              <span className="font-medium text-ink">
+                EP {entry.progress_episodes}
+              </span>
+              {hasTotal ? ` / ${total}` : " · ongoing"}
+            </p>
             <div className="h-0.5 overflow-hidden rounded-full bg-surface-2">
-              <div
-                className="h-full rounded-full bg-accent transition-[width]"
-                style={{ width: `${progressPct}%` }}
-              />
+              {hasTotal ? (
+                <div
+                  className="h-full rounded-full bg-accent transition-[width]"
+                  style={{ width: `${progressPct}%` }}
+                />
+              ) : (
+                <div
+                  aria-hidden
+                  className="h-full w-full rounded-full"
+                  style={{
+                    backgroundImage:
+                      "repeating-linear-gradient(90deg, var(--line-strong) 0 4px, transparent 4px 8px)",
+                  }}
+                />
+              )}
             </div>
             <div className="mt-1.5 flex flex-wrap gap-1">
               <Button
@@ -136,10 +155,9 @@ export function EntryCard({ entry, onEdit, isEditing = false }: EntryCardProps) 
                 onClick={() =>
                   startTransition(async () => {
                     await updateAnimeEntry(entry.id, {
-                      progressEpisodes: Math.min(
-                        entry.progress_episodes + 1,
-                        anime.episodes ?? entry.progress_episodes + 1,
-                      ),
+                      progressEpisodes: hasTotal
+                        ? Math.min(entry.progress_episodes + 1, total)
+                        : entry.progress_episodes + 1,
                     });
                     router.refresh();
                   })
@@ -147,7 +165,7 @@ export function EntryCard({ entry, onEdit, isEditing = false }: EntryCardProps) 
               >
                 +1 ep
               </Button>
-              {entry.progress_episodes >= total ? (
+              {hasTotal && entry.progress_episodes >= total ? (
                 <Button
                   type="button"
                   size="sm"
