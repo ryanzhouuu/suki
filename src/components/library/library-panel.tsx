@@ -11,6 +11,7 @@ import { FilterMatchCount } from "@/components/filters/filter-match-count";
 import { GenreFilter } from "@/components/filters/genre-filter";
 import { LibrarySortSelect } from "@/components/library/library-sort-select";
 import { ControlRail } from "@/components/layout/page-frame";
+import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useGenreFilters } from "@/lib/filters";
 import { filterLibraryEntries } from "@/lib/library/filter";
@@ -83,6 +84,12 @@ export function LibraryPanel({
   }, [grouped, entries, seriesByAnimeId, status, qFromUrl, genres, sort, direction]);
 
   const editingEntry = entries.find((entry) => entry.id === editingEntryId) ?? null;
+  const editingTitle = editingEntry
+    ? editingEntry.anime.english_title ||
+      editingEntry.anime.romaji_title ||
+      editingEntry.anime.native_title ||
+      "Unknown"
+    : "";
   const matchCount = grouped ? groups.length : sorted.length;
   const isEmpty = grouped ? groups.length === 0 : sorted.length === 0;
 
@@ -119,32 +126,19 @@ export function LibraryPanel({
     >
       <div className="space-y-4">
         {editingEntry ? (
-          <>
-            <div className="hidden sm:block">
-              <EntryEditPanel
-                key={editingEntry.id}
-                entry={editingEntry}
-                onClose={() => setEditingEntryId(null)}
-              />
-            </div>
-            <div
-              className="fixed inset-0 z-40 bg-ink/35 backdrop-blur-[2px] sm:hidden"
-              role="presentation"
-              onClick={() => setEditingEntryId(null)}
+          <Dialog
+            open
+            onClose={() => setEditingEntryId(null)}
+            title={editingTitle}
+            subtitle="Edit entry"
+            maxWidthClassName="max-w-2xl"
+          >
+            <EntryEditPanel
+              key={editingEntry.id}
+              entry={editingEntry}
+              onClose={() => setEditingEntryId(null)}
             />
-            <div
-              role="dialog"
-              aria-modal="true"
-              aria-label="Edit library entry"
-              className="fixed inset-x-0 bottom-0 z-50 max-h-[86dvh] overflow-y-auto rounded-t-[1.1rem] border border-line bg-paper p-3 shadow-[0_-18px_40px_-24px_rgb(var(--shadow-color)/0.65)] sm:hidden"
-            >
-              <EntryEditPanel
-                key={`sheet-${editingEntry.id}`}
-                entry={editingEntry}
-                onClose={() => setEditingEntryId(null)}
-              />
-            </div>
-          </>
+          </Dialog>
         ) : null}
 
         {isEmpty ? (
