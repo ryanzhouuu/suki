@@ -27,7 +27,7 @@ export async function AiringTracker({ userId }: { userId: string }) {
           </p>
         </div>
       ) : (
-        <ul className="grid gap-3 sm:grid-cols-2">
+        <ul className="grid min-w-0 gap-3 sm:grid-cols-2">
           {rows.map((row) => (
             <AiringRowItem key={row.entryId} row={row} />
           ))}
@@ -44,7 +44,7 @@ export function AiringTrackerSkeleton() {
         <p className="eyebrow">Now airing</p>
         <h2 className="mt-1 text-2xl font-semibold">Airing this week</h2>
       </div>
-      <ul className="grid gap-3 sm:grid-cols-2">
+      <ul className="grid min-w-0 gap-3 sm:grid-cols-2">
         {[0, 1].map((i) => (
           <li
             key={i}
