@@ -8,11 +8,13 @@ const display = Fraunces({
   variable: "--font-display",
   subsets: ["latin"],
   axes: ["SOFT", "opsz"],
+  display: "optional",
 });
 
 const sans = Hanken_Grotesk({
   variable: "--font-sans",
   subsets: ["latin"],
+  display: "optional",
 });
 
 export const metadata: Metadata = {

@@ -20,36 +20,113 @@ import { getUserLibraryEntries } from "@/lib/library/queries";
 import { getNextComparisonPair } from "@/lib/ranking/prompt";
 import { getCompletedSeriesForUser } from "@/lib/series/queries";
 
-function uniqueCoverUrls(
-  items: { coverUrl: string | null }[],
-  limit: number,
-): string[] {
-  const seen = new Set<string>();
-  const urls: string[] = [];
-  for (const item of items) {
-    if (!item.coverUrl || seen.has(item.coverUrl)) continue;
-    seen.add(item.coverUrl);
-    urls.push(item.coverUrl);
-    if (urls.length >= limit) break;
-  }
-  return urls;
+// ——— Streaming sections (render concurrently with the page shell) ———
+
+async function DiscoverSection() {
+  const [latest, popular] = await Promise.all([
+    getLatestAnime().catch(() => []),
+    getPopularAnime().catch(() => []),
+  ]);
+  return (
+    <>
+      {latest.length > 0 ? (
+        <div className="animate-rise [animation-delay:60ms]">
+          <DiscoverRow eyebrow="Discover" title="Latest" items={latest} />
+        </div>
+      ) : null}
+      {popular.length > 0 ? (
+        <div className="animate-rise [animation-delay:120ms]">
+          <DiscoverRow eyebrow="Discover" title="Popular" items={popular} />
+        </div>
+      ) : null}
+    </>
+  );
 }
+
+function DiscoverSectionSkeleton() {
+  return (
+    <div className="space-y-10">
+      {[0, 1].map((i) => (
+        <div key={i}>
+          <div className="mb-4">
+            <div className="h-3 w-14 animate-pulse rounded bg-surface-2" />
+            <div className="mt-1 h-7 w-24 animate-pulse rounded bg-surface-2" />
+          </div>
+          <div className="-mx-4 flex gap-3 overflow-hidden px-4">
+            {Array.from({ length: 8 }).map((_, j) => (
+              <div key={j} className="w-29 shrink-0 sm:w-32">
+                <div className="aspect-2/3 w-full animate-pulse rounded-lg bg-surface-2" />
+                <div className="mt-2 h-3 w-3/4 animate-pulse rounded bg-surface-2" />
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+async function WatchlistSection({ userId }: { userId: string }) {
+  const planToWatch = await getUserLibraryEntries(userId, "plan_to_watch");
+  if (planToWatch.length === 0) return null;
+  return (
+    <div className="animate-rise [animation-delay:160ms]">
+      <WatchlistShuffle entries={planToWatch} compact />
+    </div>
+  );
+}
+
+async function RankingSection({ userId }: { userId: string }) {
+  const [completedSeries, pair] = await Promise.all([
+    getCompletedSeriesForUser(userId),
+    getNextComparisonPair(userId),
+  ]);
+
+  if (pair && completedSeries.length >= 2) {
+    return (
+      <aside className="animate-rise flex flex-col gap-4 overflow-hidden rounded-card border border-accent/35 bg-linear-to-br from-accent-soft via-surface to-surface p-6 shadow-[0_16px_48px_-28px_rgb(var(--shadow-color)/0.4)] sm:flex-row sm:items-center sm:justify-between sm:gap-6 [animation-delay:180ms]">
+        <div className="min-w-0">
+          <p className="eyebrow">Ranking prompt</p>
+          <p className="mt-2 text-balance font-display text-lg font-medium leading-snug text-ink sm:text-xl">
+            {pair.left.canonical_title}{" "}
+            <span className="text-accent">vs</span>{" "}
+            {pair.right.canonical_title}
+          </p>
+          <p className="mt-2 text-sm text-muted">
+            Which did you enjoy more? It only takes a tap.
+          </p>
+        </div>
+        <Link
+          href="/ranking"
+          className="inline-flex w-fit shrink-0 items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-on-accent shadow-sm transition-colors hover:bg-accent-strong"
+        >
+          Decide now →
+        </Link>
+      </aside>
+    );
+  }
+
+  if (completedSeries.length < 2) {
+    return (
+      <aside className="animate-rise flex flex-col justify-center rounded-card border border-dashed border-line-strong bg-surface/50 p-6 [animation-delay:180ms]">
+        <p className="eyebrow">Ranking</p>
+        <p className="mt-2 text-sm text-muted">
+          Complete anime in at least two series to unlock pairwise rankings.
+        </p>
+      </aside>
+    );
+  }
+
+  return null;
+}
+
+// ——— Page ———
 
 export default async function HomePage() {
   const { user, profile } = await requireProfile();
-
-  const [watching, planToWatch, completedSeries, pair, latest, popular] =
-    await Promise.all([
-      getUserLibraryEntries(user.id, "watching"),
-      getUserLibraryEntries(user.id, "plan_to_watch"),
-      getCompletedSeriesForUser(user.id),
-      getNextComparisonPair(user.id),
-      getLatestAnime().catch(() => []),
-      getPopularAnime().catch(() => []),
-    ]);
+  const watching = await getUserLibraryEntries(user.id, "watching");
 
   const greetingName = profile.display_name || profile.username;
-  const heroBackdropUrls = uniqueCoverUrls([...latest, ...popular], 6);
   const headline = pickHeroHeadline(user.id);
 
   return (
@@ -58,30 +135,23 @@ export default async function HomePage() {
         greetingName={greetingName}
         watchingCount={watching.length}
         headline={headline}
-        backdropUrls={heroBackdropUrls}
       />
 
-      {latest.length > 0 ? (
-        <div className="animate-rise [animation-delay:60ms]">
-          <DiscoverRow eyebrow="Discover" title="Latest" items={latest} />
-        </div>
-      ) : null}
+      <Suspense fallback={<DiscoverSectionSkeleton />}>
+        <DiscoverSection />
+      </Suspense>
 
-      {popular.length > 0 ? (
-        <div className="animate-rise [animation-delay:120ms]">
-          <DiscoverRow eyebrow="Discover" title="Popular" items={popular} />
-        </div>
-      ) : null}
+      <Suspense fallback={null}>
+        <WatchlistSection userId={user.id} />
+      </Suspense>
 
-      {planToWatch.length > 0 ? (
-        <div className="animate-rise [animation-delay:160ms]">
-          <WatchlistShuffle entries={planToWatch} compact />
-        </div>
-      ) : null}
+      <Suspense fallback={null}>
+        <RecommendationsPreview userId={user.id} />
+      </Suspense>
 
-      <RecommendationsPreview userId={user.id} />
-
-      <FriendActivityTeaser userId={user.id} />
+      <Suspense fallback={null}>
+        <FriendActivityTeaser userId={user.id} />
+      </Suspense>
 
       <Suspense fallback={<AiringTrackerSkeleton />}>
         <AiringTracker userId={user.id} />
@@ -161,34 +231,9 @@ export default async function HomePage() {
         )}
       </section>
 
-      {pair && completedSeries.length >= 2 ? (
-        <aside className="animate-rise flex flex-col gap-4 overflow-hidden rounded-card border border-accent/35 bg-linear-to-br from-accent-soft via-surface to-surface p-6 shadow-[0_16px_48px_-28px_rgb(var(--shadow-color)/0.4)] sm:flex-row sm:items-center sm:justify-between sm:gap-6 [animation-delay:180ms]">
-          <div className="min-w-0">
-            <p className="eyebrow">Ranking prompt</p>
-            <p className="mt-2 text-balance font-display text-lg font-medium leading-snug text-ink sm:text-xl">
-              {pair.left.canonical_title}{" "}
-              <span className="text-accent">vs</span>{" "}
-              {pair.right.canonical_title}
-            </p>
-            <p className="mt-2 text-sm text-muted">
-              Which did you enjoy more? It only takes a tap.
-            </p>
-          </div>
-          <Link
-            href="/ranking"
-            className="inline-flex w-fit shrink-0 items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-on-accent shadow-sm transition-colors hover:bg-accent-strong"
-          >
-            Decide now →
-          </Link>
-        </aside>
-      ) : completedSeries.length < 2 ? (
-        <aside className="animate-rise flex flex-col justify-center rounded-card border border-dashed border-line-strong bg-surface/50 p-6 [animation-delay:180ms]">
-          <p className="eyebrow">Ranking</p>
-          <p className="mt-2 text-sm text-muted">
-            Complete anime in at least two series to unlock pairwise rankings.
-          </p>
-        </aside>
-      ) : null}
+      <Suspense fallback={null}>
+        <RankingSection userId={user.id} />
+      </Suspense>
     </WidePageFrame>
   );
 }

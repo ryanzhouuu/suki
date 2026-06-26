@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -6,21 +8,6 @@ import { LandingHero } from "@/components/home/landing-hero";
 import { getLatestAnime, getPopularAnime } from "@/lib/anilist/discover";
 import { getAuthUser } from "@/lib/auth/session";
 import { APP_NAME } from "@/lib/constants";
-
-function uniqueCoverUrls(
-  items: { coverUrl: string | null }[],
-  limit: number,
-): string[] {
-  const seen = new Set<string>();
-  const urls: string[] = [];
-  for (const item of items) {
-    if (!item.coverUrl || seen.has(item.coverUrl)) continue;
-    seen.add(item.coverUrl);
-    urls.push(item.coverUrl);
-    if (urls.length >= limit) break;
-  }
-  return urls;
-}
 
 const FEATURES = [
   {
@@ -40,16 +27,57 @@ const FEATURES = [
   },
 ] as const;
 
-export default async function PublicLandingPage() {
-  const user = await getAuthUser();
-  if (user) redirect("/home");
+// ——— Streaming section ———
 
+async function LandingDiscoverSection() {
   const [latest, popular] = await Promise.all([
     getLatestAnime().catch(() => []),
     getPopularAnime().catch(() => []),
   ]);
+  return (
+    <>
+      {latest.length > 0 ? (
+        <div className="animate-rise [animation-delay:240ms]">
+          <DiscoverRow eyebrow="Browse" title="Latest anime" items={latest} />
+        </div>
+      ) : null}
+      {popular.length > 0 ? (
+        <div className="animate-rise [animation-delay:300ms]">
+          <DiscoverRow eyebrow="Browse" title="Popular now" items={popular} />
+        </div>
+      ) : null}
+    </>
+  );
+}
 
-  const heroBackdropUrls = uniqueCoverUrls([...latest, ...popular], 6);
+function LandingDiscoverSkeleton() {
+  return (
+    <div className="space-y-10">
+      {[0, 1].map((i) => (
+        <div key={i}>
+          <div className="mb-4">
+            <div className="h-3 w-14 animate-pulse rounded bg-surface-2" />
+            <div className="mt-1 h-7 w-32 animate-pulse rounded bg-surface-2" />
+          </div>
+          <div className="-mx-4 flex gap-3 overflow-hidden px-4">
+            {Array.from({ length: 8 }).map((_, j) => (
+              <div key={j} className="w-29 shrink-0 sm:w-32">
+                <div className="aspect-2/3 w-full animate-pulse rounded-lg bg-surface-2" />
+                <div className="mt-2 h-3 w-3/4 animate-pulse rounded bg-surface-2" />
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ——— Page ———
+
+export default async function PublicLandingPage() {
+  const user = await getAuthUser();
+  if (user) redirect("/home");
 
   return (
     <div className="flex min-h-full flex-col">
@@ -81,7 +109,8 @@ export default async function PublicLandingPage() {
       </header>
 
       <main className="mx-auto w-full max-w-5xl min-w-0 flex-1 space-y-10 px-4 py-6 pb-12 sm:space-y-14 sm:py-10 sm:pb-16">
-        <LandingHero backdropUrls={heroBackdropUrls} />
+        {/* Hero renders immediately — no backdrop needed for initial paint */}
+        <LandingHero />
 
         <section className="grid gap-4 sm:grid-cols-3">
           {FEATURES.map((feature, index) => (
@@ -101,17 +130,9 @@ export default async function PublicLandingPage() {
           ))}
         </section>
 
-        {latest.length > 0 ? (
-          <div className="animate-rise [animation-delay:240ms]">
-            <DiscoverRow eyebrow="Browse" title="Latest anime" items={latest} />
-          </div>
-        ) : null}
-
-        {popular.length > 0 ? (
-          <div className="animate-rise [animation-delay:300ms]">
-            <DiscoverRow eyebrow="Browse" title="Popular now" items={popular} />
-          </div>
-        ) : null}
+        <Suspense fallback={<LandingDiscoverSkeleton />}>
+          <LandingDiscoverSection />
+        </Suspense>
 
         <section className="animate-rise rounded-card border border-accent/35 bg-linear-to-br from-accent-soft via-surface to-surface p-6 text-center sm:p-10 [animation-delay:360ms]">
           <p className="eyebrow">Get started in minutes</p>
