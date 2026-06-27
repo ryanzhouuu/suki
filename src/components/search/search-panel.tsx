@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
+import { getLibraryStatusMap } from "@/actions/library";
 import { GenreFilter } from "@/components/filters/genre-filter";
 import { WidePageFrame } from "@/components/layout/page-frame";
 import { SearchResultCard } from "@/components/search/search-result-card";
+import type { AnimeEntryStatus } from "@/lib/constants";
 import {
   ANILIST_FORMATS,
   ANILIST_FORMAT_LABELS,
@@ -56,6 +58,11 @@ export function SearchPanel() {
   const [query, setQuery] = useState("");
   const [format, setFormat] = useState<AniListFormat | null>(null);
   const [sort, setSort] = useState<SearchSortKey>("relevance");
+  const [libraryStatusMap, setLibraryStatusMap] = useState<Record<number, AnimeEntryStatus>>({});
+
+  useEffect(() => {
+    getLibraryStatusMap().then(setLibraryStatusMap).catch(() => {});
+  }, []);
 
   const { results, loading, error, isActive, trimmedQuery } = useAnilistSearch({
     query,
@@ -212,7 +219,7 @@ export function SearchPanel() {
           {results.length > 0 ? (
             <ul className="grid gap-3 xl:grid-cols-2">
               {results.map((media) => (
-                <SearchResultCard key={media.id} media={media} />
+                <SearchResultCard key={media.id} media={media} initialStatus={libraryStatusMap[media.id]} />
               ))}
             </ul>
           ) : null}
