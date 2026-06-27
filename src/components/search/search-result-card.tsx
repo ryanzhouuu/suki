@@ -1,25 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 
 import { addAnimeEntry } from "@/actions/library";
 import { AnimePoster } from "@/components/anime/anime-poster";
-import { Button } from "@/components/ui/button";
 import { getAniListDisplayTitle } from "@/lib/anilist/display";
 import type { AniListMediaSummary } from "@/lib/anilist/types";
 import { STATUS_LABELS, type AnimeEntryStatus } from "@/lib/constants";
 
+const STATUSES: AnimeEntryStatus[] = ["plan_to_watch", "watching", "completed"];
+
 type SearchResultCardProps = {
   media: AniListMediaSummary;
+  initialStatus?: AnimeEntryStatus;
 };
 
-export function SearchResultCard({ media }: SearchResultCardProps) {
+export function SearchResultCard({ media, initialStatus }: SearchResultCardProps) {
   const [pending, startTransition] = useTransition();
+  const [selectedStatus, setSelectedStatus] = useState<AnimeEntryStatus | null>(null);
+  const activeStatus = selectedStatus ?? initialStatus ?? null;
   const title = getAniListDisplayTitle(media.title);
   const genres = media.genres ?? [];
 
   function quickAdd(status: AnimeEntryStatus) {
+    setSelectedStatus(status);
     startTransition(async () => {
       await addAnimeEntry(media.id, status);
     });
@@ -34,6 +39,7 @@ export function SearchResultCard({ media }: SearchResultCardProps) {
           size="md"
         />
       </Link>
+
       <div className="min-w-0 flex-1">
         <Link
           href={`/anime/${media.id}`}
@@ -49,35 +55,27 @@ export function SearchResultCard({ media }: SearchResultCardProps) {
         {genres.length > 0 ? (
           <p className="mt-1 text-xs text-muted">{genres.slice(0, 4).join(" · ")}</p>
         ) : null}
-        <div className="mt-2.5 flex flex-wrap gap-1.5">
-          <Button
-            type="button"
-            size="sm"
-            variant="secondary"
-            disabled={pending}
-            onClick={() => quickAdd("plan_to_watch")}
-          >
-            {STATUS_LABELS.plan_to_watch}
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="secondary"
-            disabled={pending}
-            onClick={() => quickAdd("watching")}
-          >
-            {STATUS_LABELS.watching}
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="secondary"
-            disabled={pending}
-            onClick={() => quickAdd("completed")}
-          >
-            {STATUS_LABELS.completed}
-          </Button>
-        </div>
+      </div>
+
+      <div className="flex shrink-0 flex-col justify-center gap-1.5">
+        {STATUSES.map((status) => {
+          const isActive = activeStatus === status;
+          return (
+            <button
+              key={status}
+              type="button"
+              disabled={pending}
+              onClick={() => quickAdd(status)}
+              className={`w-30 rounded-md border px-2.5 py-1.5 text-left text-xs font-medium transition-colors disabled:opacity-60 ${
+                isActive
+                  ? "border-accent bg-accent text-on-accent"
+                  : "border-line-strong text-muted hover:border-accent hover:text-accent"
+              }`}
+            >
+              {STATUS_LABELS[status]}
+            </button>
+          );
+        })}
       </div>
     </li>
   );

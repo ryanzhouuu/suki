@@ -339,6 +339,30 @@ export async function updateAnimeEntry(
   return { message: "Updated." };
 }
 
+export async function getLibraryStatusMap(): Promise<Record<number, AnimeEntryStatus>> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return {};
+
+  const { data } = await supabase
+    .from("user_anime_entries")
+    .select("status, anime(anilist_id)")
+    .eq("user_id", user.id);
+
+  if (!data) return {};
+
+  const map: Record<number, AnimeEntryStatus> = {};
+  for (const entry of data) {
+    const anime = entry.anime as { anilist_id: number } | null;
+    if (anime?.anilist_id) {
+      map[anime.anilist_id] = entry.status as AnimeEntryStatus;
+    }
+  }
+  return map;
+}
+
 export async function removeAnimeEntry(entryId: string): Promise<LibraryActionState> {
   const user = await requireAuthUser();
   const supabase = await createClient();
