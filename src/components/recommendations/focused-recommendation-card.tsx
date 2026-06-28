@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 
@@ -9,7 +10,6 @@ import {
   logRecommendationClicked,
 } from "@/actions/recommendations";
 import { addAnimeEntry } from "@/actions/library";
-import { AnimePoster } from "@/components/anime/anime-poster";
 import { RecommendationBannerBackdrop } from "@/components/recommendations/recommendation-banner-backdrop";
 import { Button } from "@/components/ui/button";
 import { STATUS_LABELS } from "@/lib/constants";
@@ -84,13 +84,17 @@ export function FocusedRecommendationCard({
 
       <article className="relative z-10 overflow-hidden rounded-card border border-line/80 bg-surface/95 shadow-[0_18px_50px_-30px_rgb(var(--shadow-color)/0.45)] backdrop-blur-sm">
         <div className="grid grid-cols-[6.25rem_minmax(0,1fr)] gap-0 sm:grid-cols-[9rem_minmax(0,1fr)] lg:grid-cols-[minmax(200px,260px)_1fr]">
-          <div className="relative aspect-[2/3] bg-surface-2 lg:aspect-auto lg:min-h-[380px]">
-            <AnimePoster
-              src={anime.cover_image_url}
-              alt={title}
-              fill
-              className="rounded-none"
-            />
+          <div className="relative min-h-50 bg-surface-2 sm:min-h-70 lg:min-h-95">
+            {anime.cover_image_url ? (
+              <Image
+                src={anime.cover_image_url}
+                alt={title}
+                fill
+                sizes="(max-width: 640px) 100px, (max-width: 1024px) 144px, 260px"
+                className="object-cover"
+                unoptimized
+              />
+            ) : null}
           </div>
 
           <div className="flex min-w-0 flex-col p-3 sm:p-5 lg:p-7">
