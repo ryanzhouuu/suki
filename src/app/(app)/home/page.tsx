@@ -15,6 +15,7 @@ import { WatchlistShuffle } from "@/components/library/watchlist-shuffle";
 import { WidePageFrame } from "@/components/layout/page-frame";
 import { getLatestAnime, getPopularAnime } from "@/lib/anilist/discover";
 import { requireProfile } from "@/lib/auth/session";
+import { getRandomBackground } from "@/lib/home/background";
 import { pickHeroHeadline } from "@/lib/home/hero-copy";
 import { getUserLibraryEntries } from "@/lib/library/queries";
 import { getNextComparisonPair } from "@/lib/ranking/prompt";
@@ -128,6 +129,7 @@ export default async function HomePage() {
 
   const greetingName = profile.display_name || profile.username;
   const headline = pickHeroHeadline(user.id);
+  const bg = getRandomBackground();
 
   return (
     <WidePageFrame className="space-y-10 sm:space-y-14">
@@ -135,6 +137,7 @@ export default async function HomePage() {
         greetingName={greetingName}
         watchingCount={watching.length}
         headline={headline}
+        bgSrc={bg}
       />
 
       <Suspense fallback={<DiscoverSectionSkeleton />}>
