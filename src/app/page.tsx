@@ -7,6 +7,7 @@ import { DiscoverRow } from "@/components/home/discover-row";
 import { LandingHero } from "@/components/home/landing-hero";
 import { getLatestAnime, getPopularAnime } from "@/lib/anilist/discover";
 import { getAuthUser } from "@/lib/auth/session";
+import { getRandomBackground } from "@/lib/home/background";
 import { APP_NAME } from "@/lib/constants";
 
 const FEATURES = [
@@ -79,22 +80,25 @@ export default async function PublicLandingPage() {
   const user = await getAuthUser();
   if (user) redirect("/home");
 
+  const bg = getRandomBackground();
+
   return (
-    <div className="flex min-h-full flex-col">
-      <header className="border-b border-line bg-paper/80 pt-[env(safe-area-inset-top)] backdrop-blur-md">
+    <div className="relative flex min-h-full flex-col">
+      {/* Header floats transparently over the full-screen hero photo */}
+      <header className="absolute top-0 right-0 left-0 z-30 pt-[env(safe-area-inset-top)]">
         <div className="mx-auto flex h-14 max-w-5xl min-w-0 items-center justify-between gap-2 px-4 sm:h-16 sm:gap-4">
           <Link href="/" className="group flex min-w-0 items-center gap-2 sm:gap-2.5">
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-base font-semibold text-on-accent shadow-sm transition-transform group-hover:-rotate-6">
               好
             </span>
-            <span className="truncate font-display text-xl font-semibold tracking-tight text-ink sm:text-2xl">
+            <span className="truncate font-display text-xl font-semibold tracking-tight text-white sm:text-2xl">
               {APP_NAME}
             </span>
           </Link>
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <Link
               href="/auth/login"
-              className="rounded-full px-3 py-2 text-sm font-medium text-muted transition-colors hover:text-ink sm:px-3.5"
+              className="rounded-full px-3 py-2 text-sm font-medium text-white/75 transition-colors hover:text-white sm:px-3.5"
             >
               Sign in
             </Link>
@@ -108,10 +112,10 @@ export default async function PublicLandingPage() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-5xl min-w-0 flex-1 space-y-10 px-4 py-6 pb-12 sm:space-y-14 sm:py-10 sm:pb-16">
-        {/* Hero renders immediately — no backdrop needed for initial paint */}
-        <LandingHero />
+      {/* Full-screen hero — edge-to-edge, no container constraint */}
+      <LandingHero bgSrc={bg} />
 
+      <main className="mx-auto w-full max-w-5xl min-w-0 flex-1 space-y-10 px-4 py-6 pb-12 sm:space-y-14 sm:py-10 sm:pb-16">
         <section className="grid gap-4 sm:grid-cols-3">
           {FEATURES.map((feature, index) => (
             <article
