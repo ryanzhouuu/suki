@@ -19,7 +19,6 @@ export default async function RecommendationsPage() {
   if (!isEmbeddingConfigured()) {
     return (
       <div className="mx-auto max-w-lg space-y-4">
-        <p className="eyebrow">For you</p>
         <h1 className="text-4xl font-semibold">Recommendations</h1>
         <p className="rounded-card border border-dashed border-line-strong p-6 text-sm text-muted">
           Recommendations need <code className="text-ink">OPENAI_API_KEY</code>{" "}
@@ -45,21 +44,13 @@ export default async function RecommendationsPage() {
     pool.eligibleCount <= items.length + 2;
 
   return (
-    <WidePageFrame className="space-y-8">
-      <div className="max-w-2xl">
-        <p className="eyebrow">For you</p>
-        <h1 className="mt-1.5 text-3xl font-semibold sm:text-4xl">
-          Recommendations
-        </h1>
-      </div>
-
+    <WidePageFrame>
       <ControlRail
         sidebarLabel="Recommendation preferences"
-        sidebarClassName="lg:pt-10"
         mobileDefaultOpen={items.length === 0}
         sidebar={
           <div className="space-y-4">
-            <RecommendationPreferencesForm />
+            <RecommendationPreferencesForm title="Recommendations" />
 
             {showPoolHint ? (
               <div className="rounded-card border border-line bg-surface-2/50 p-4 text-sm text-muted">

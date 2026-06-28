@@ -38,7 +38,7 @@ export const NAV_ITEMS = [
   { href: "/search", label: "Search", mobileLabel: "Search" },
   { href: "/library", label: "Library", mobileLabel: "Library" },
   { href: "/ranking", label: "Ranking", mobileLabel: "Rank" },
-  { href: "/recommendations", label: "For you", mobileLabel: "Picks" },
+  { href: "/recommendations", label: "Recommendations", mobileLabel: "Picks" },
   { href: "/friends", label: "Friends", mobileLabel: "Friends" },
 ] as const;
 

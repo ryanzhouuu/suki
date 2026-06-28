@@ -112,6 +112,7 @@ export function FocusedRecommendations({
       <CinematicBackdrop
         key={current.id}
         imageUrl={current.anime.banner_image_url ?? current.anime.cover_image_url}
+        positionClassName="top-0 lg:-top-10"
         className="animate-fade"
       />
 

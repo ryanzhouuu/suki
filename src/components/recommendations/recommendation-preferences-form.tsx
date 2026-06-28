@@ -61,7 +61,11 @@ const chipClass = (active: boolean) =>
       : "border border-line-strong bg-paper text-muted hover:border-accent hover:text-accent"
   }`;
 
-export function RecommendationPreferencesForm() {
+export function RecommendationPreferencesForm({
+  title,
+}: {
+  title?: string;
+} = {}) {
   const [genres, setGenres] = useState<string[]>([]);
   const [lengthBucket, setLengthBucket] = useState<LengthBucket | "">("");
   const [format, setFormat] = useState<string>("");
@@ -79,6 +83,11 @@ export function RecommendationPreferencesForm() {
 
   return (
     <div className="w-full rounded-card border border-line bg-surface p-4 sm:p-5">
+      {title ? (
+        <h1 className="mb-4 border-b border-line pb-3 text-xl font-semibold text-ink sm:text-2xl">
+          {title}
+        </h1>
+      ) : null}
       <div className="mb-4">
         <h2 className="text-sm font-semibold text-ink">What do you want next?</h2>
         <p className="mt-1 text-xs text-muted">
