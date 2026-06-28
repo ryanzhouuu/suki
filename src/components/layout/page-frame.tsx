@@ -69,14 +69,17 @@ export function ControlRail({
 export function CinematicBackdrop({
   imageUrl,
   className = "",
+  positionClassName = "top-0",
 }: {
   imageUrl: string | null;
   className?: string;
+  /** Vertical placement of the layer. Override to pull it up under a sticky nav. */
+  positionClassName?: string;
 }) {
   return (
     <div
       aria-hidden
-      className={`pointer-events-none absolute top-0 right-[-50vw] left-[-50vw] z-0 h-[clamp(20rem,44vh,34rem)] overflow-hidden ${className}`}
+      className={`pointer-events-none absolute right-[-50vw] left-[-50vw] z-0 h-[clamp(20rem,44vh,34rem)] overflow-hidden ${positionClassName} ${className}`}
     >
       {imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
