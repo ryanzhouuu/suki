@@ -13,7 +13,7 @@ import { HomeHero } from "@/components/home/home-hero";
 import { RecommendationsPreview } from "@/components/home/recommendations-preview";
 import { WatchlistShuffle } from "@/components/library/watchlist-shuffle";
 import { WidePageFrame } from "@/components/layout/page-frame";
-import { getLatestAnime, getPopularAnime } from "@/lib/anilist/discover";
+import { getLatestAnime, getPopularAnime, getTrendingAnime } from "@/lib/anilist/discover";
 import { requireProfile } from "@/lib/auth/session";
 import { getRandomBackground } from "@/lib/home/background";
 import { pickHeroHeadline } from "@/lib/home/hero-copy";
@@ -24,19 +24,25 @@ import { getCompletedSeriesForUser } from "@/lib/series/queries";
 // ——— Streaming sections (render concurrently with the page shell) ———
 
 async function DiscoverSection() {
-  const [latest, popular] = await Promise.all([
+  const [trending, latest, popular] = await Promise.all([
+    getTrendingAnime().catch(() => []),
     getLatestAnime().catch(() => []),
     getPopularAnime().catch(() => []),
   ]);
   return (
     <>
-      {latest.length > 0 ? (
+      {trending.length > 0 ? (
         <div className="animate-rise [animation-delay:60ms]">
+          <DiscoverRow eyebrow="Discover" title="Trending" items={trending} />
+        </div>
+      ) : null}
+      {latest.length > 0 ? (
+        <div className="animate-rise [animation-delay:120ms]">
           <DiscoverRow eyebrow="Discover" title="Latest" items={latest} />
         </div>
       ) : null}
       {popular.length > 0 ? (
-        <div className="animate-rise [animation-delay:120ms]">
+        <div className="animate-rise [animation-delay:180ms]">
           <DiscoverRow eyebrow="Discover" title="Popular" items={popular} />
         </div>
       ) : null}
@@ -47,7 +53,7 @@ async function DiscoverSection() {
 function DiscoverSectionSkeleton() {
   return (
     <div className="space-y-10">
-      {[0, 1].map((i) => (
+      {[0, 1, 2].map((i) => (
         <div key={i}>
           <div className="mb-4">
             <div className="h-3 w-14 animate-pulse rounded bg-surface-2" />
