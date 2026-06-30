@@ -19,64 +19,103 @@ export type Database = {
           anilist_id: number
           average_score: number | null
           banner_image_url: string | null
+          country_of_origin: string | null
           cover_image_url: string | null
           description: string | null
           duration_minutes: number | null
+          end_date: Json | null
           english_title: string | null
           episodes: number | null
+          external_links: Json | null
+          favourites: number | null
           format: string | null
           genres: string[]
+          hashtag: string | null
           id: string
+          mean_score: number | null
           metadata_updated_at: string
           native_title: string | null
           popularity: number | null
+          rankings: Json | null
           romaji_title: string
           season: string | null
           season_year: number | null
+          site_url: string | null
           source: string | null
+          start_date: Json | null
           status: string | null
+          studios: Json | null
+          tags: Json | null
+          trailer: Json | null
+          trending: number | null
         }
         Insert: {
           anilist_id: number
           average_score?: number | null
           banner_image_url?: string | null
+          country_of_origin?: string | null
           cover_image_url?: string | null
           description?: string | null
           duration_minutes?: number | null
+          end_date?: Json | null
           english_title?: string | null
           episodes?: number | null
+          external_links?: Json | null
+          favourites?: number | null
           format?: string | null
           genres?: string[]
+          hashtag?: string | null
           id?: string
+          mean_score?: number | null
           metadata_updated_at?: string
           native_title?: string | null
           popularity?: number | null
+          rankings?: Json | null
           romaji_title: string
           season?: string | null
           season_year?: number | null
+          site_url?: string | null
           source?: string | null
+          start_date?: Json | null
           status?: string | null
+          studios?: Json | null
+          tags?: Json | null
+          trailer?: Json | null
+          trending?: number | null
         }
         Update: {
           anilist_id?: number
           average_score?: number | null
           banner_image_url?: string | null
+          country_of_origin?: string | null
           cover_image_url?: string | null
           description?: string | null
           duration_minutes?: number | null
+          end_date?: Json | null
           english_title?: string | null
           episodes?: number | null
+          external_links?: Json | null
+          favourites?: number | null
           format?: string | null
           genres?: string[]
+          hashtag?: string | null
           id?: string
+          mean_score?: number | null
           metadata_updated_at?: string
           native_title?: string | null
           popularity?: number | null
+          rankings?: Json | null
           romaji_title?: string
           season?: string | null
           season_year?: number | null
+          site_url?: string | null
           source?: string | null
+          start_date?: Json | null
           status?: string | null
+          studios?: Json | null
+          tags?: Json | null
+          trailer?: Json | null
+          trending?: number | null
         }
         Relationships: []
       }
