@@ -106,3 +106,8 @@ export const getLatestAnime = cache(async (): Promise<DiscoverAnimeItem[]> => {
 export const getPopularAnime = cache(async (): Promise<DiscoverAnimeItem[]> => {
   return fetchDiscover(["POPULARITY_DESC"]);
 });
+
+/** Currently trending on AniList. */
+export const getTrendingAnime = cache(async (): Promise<DiscoverAnimeItem[]> => {
+  return fetchDiscover(["TRENDING_DESC"]);
+});
