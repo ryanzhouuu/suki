@@ -22,8 +22,21 @@ function media(id: number, romaji: string): AniListMediaDetail {
     status: "FINISHED",
     genres: [],
     averageScore: null,
+    meanScore: null,
     popularity: null,
+    trending: null,
+    favourites: null,
     source: null,
+    countryOfOrigin: null,
+    hashtag: null,
+    siteUrl: null,
+    startDate: null,
+    endDate: null,
+    trailer: null,
+    studios: null,
+    tags: null,
+    rankings: null,
+    externalLinks: null,
   };
 }
 
