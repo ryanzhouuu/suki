@@ -47,6 +47,51 @@ export type AniListMediaRelations = {
   edges: AniListRelationEdge[] | null;
 } | null;
 
+export type AniListFuzzyDate = {
+  year: number | null;
+  month: number | null;
+  day: number | null;
+} | null;
+
+export type AniListTrailer = {
+  id: string | null;
+  site: string | null;
+  thumbnail: string | null;
+} | null;
+
+export type AniListStudioEdge = {
+  isMain: boolean;
+  node: { name: string; siteUrl: string | null } | null;
+};
+
+export type AniListStudios = {
+  edges: AniListStudioEdge[] | null;
+} | null;
+
+export type AniListTag = {
+  name: string;
+  rank: number | null;
+  category: string | null;
+  isGeneralSpoiler: boolean;
+  isMediaSpoiler: boolean;
+  isAdult: boolean;
+};
+
+export type AniListRanking = {
+  rank: number;
+  type: string;
+  allTime: boolean;
+  context: string;
+};
+
+export type AniListExternalLink = {
+  site: string;
+  url: string | null;
+  type: string | null;
+  language: string | null;
+  isDisabled: boolean;
+};
+
 export type AniListMediaDetail = AniListMediaSummary & {
   description: string | null;
   bannerImage: string | null;
@@ -54,8 +99,21 @@ export type AniListMediaDetail = AniListMediaSummary & {
   season: string | null;
   genres: string[];
   averageScore: number | null;
+  meanScore: number | null;
   popularity: number | null;
+  trending: number | null;
+  favourites: number | null;
   source: string | null;
+  countryOfOrigin: string | null;
+  hashtag: string | null;
+  siteUrl: string | null;
+  startDate: AniListFuzzyDate;
+  endDate: AniListFuzzyDate;
+  trailer: AniListTrailer;
+  studios: AniListStudios;
+  tags: AniListTag[] | null;
+  rankings: AniListRanking[] | null;
+  externalLinks: AniListExternalLink[] | null;
   relations?: AniListMediaRelations;
 };
 

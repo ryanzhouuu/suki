@@ -91,8 +91,59 @@ export const ANIME_DETAIL_QUERY = `
       status
       genres
       averageScore
+      meanScore
       popularity
+      trending
+      favourites
       source
+      countryOfOrigin
+      hashtag
+      siteUrl
+      startDate {
+        year
+        month
+        day
+      }
+      endDate {
+        year
+        month
+        day
+      }
+      trailer {
+        id
+        site
+        thumbnail
+      }
+      studios {
+        edges {
+          isMain
+          node {
+            name
+            siteUrl
+          }
+        }
+      }
+      tags {
+        name
+        rank
+        category
+        isGeneralSpoiler
+        isMediaSpoiler
+        isAdult
+      }
+      rankings {
+        rank
+        type
+        allTime
+        context
+      }
+      externalLinks {
+        site
+        url
+        type
+        language
+        isDisabled
+      }
       relations {
         edges {
           relationType
