@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 
 import { DiscoverRow } from "@/components/home/discover-row";
 import { LandingHero } from "@/components/home/landing-hero";
-import { getLatestAnime, getPopularAnime } from "@/lib/anilist/discover";
+import { getLatestAnime, getPopularAnime, getTrendingAnime } from "@/lib/anilist/discover";
 import { getAuthUser } from "@/lib/auth/session";
 import { getRandomBackground } from "@/lib/home/background";
 import { APP_NAME } from "@/lib/constants";
@@ -31,19 +31,25 @@ const FEATURES = [
 // ——— Streaming section ———
 
 async function LandingDiscoverSection() {
-  const [latest, popular] = await Promise.all([
+  const [trending, latest, popular] = await Promise.all([
+    getTrendingAnime().catch(() => []),
     getLatestAnime().catch(() => []),
     getPopularAnime().catch(() => []),
   ]);
   return (
     <>
-      {latest.length > 0 ? (
+      {trending.length > 0 ? (
         <div className="animate-rise [animation-delay:240ms]">
+          <DiscoverRow eyebrow="Browse" title="Trending now" items={trending} />
+        </div>
+      ) : null}
+      {latest.length > 0 ? (
+        <div className="animate-rise [animation-delay:300ms]">
           <DiscoverRow eyebrow="Browse" title="Latest anime" items={latest} />
         </div>
       ) : null}
       {popular.length > 0 ? (
-        <div className="animate-rise [animation-delay:300ms]">
+        <div className="animate-rise [animation-delay:360ms]">
           <DiscoverRow eyebrow="Browse" title="Popular now" items={popular} />
         </div>
       ) : null}
@@ -54,7 +60,7 @@ async function LandingDiscoverSection() {
 function LandingDiscoverSkeleton() {
   return (
     <div className="space-y-10">
-      {[0, 1].map((i) => (
+      {[0, 1, 2].map((i) => (
         <div key={i}>
           <div className="mb-4">
             <div className="h-3 w-14 animate-pulse rounded bg-surface-2" />
