@@ -132,6 +132,19 @@ export const anime = pgTable("anime", {
   metadataUpdatedAt: timestamp("metadata_updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
+  startDate: jsonb("start_date"),
+  endDate: jsonb("end_date"),
+  meanScore: integer("mean_score"),
+  trending: integer("trending"),
+  favourites: integer("favourites"),
+  countryOfOrigin: text("country_of_origin"),
+  hashtag: text("hashtag"),
+  siteUrl: text("site_url"),
+  trailer: jsonb("trailer"),
+  studios: jsonb("studios"),
+  tags: jsonb("tags"),
+  rankings: jsonb("rankings"),
+  externalLinks: jsonb("external_links"),
 });
 
 export const userAnimeEntries = pgTable(
