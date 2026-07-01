@@ -21,7 +21,7 @@
     "backfill:popular": "npx tsx src/scripts/backfill-popular-catalog.ts",
     "test": "node scripts/run-tests.mjs",
     "test:coverage": "c8 npm test",
-    "test:coverage:check": "c8 check-coverage --lines 45 --functions 75 --branches 78 --statements 45"
+    "test:coverage:check": "c8 check-coverage --lines 50 --functions 78 --branches 79 --statements 50"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
