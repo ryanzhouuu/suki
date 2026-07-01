@@ -154,14 +154,9 @@ export function LibraryPanel({
             </p>
           </div>
         ) : grouped ? (
-          <ul className="grid grid-cols-1 gap-2.5">
+          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-3">
             {groups.map((group) => (
-              <SeriesGroupCard
-                key={group.key}
-                group={group}
-                editingEntryId={editingEntryId}
-                onEdit={setEditingEntryId}
-              />
+              <SeriesGroupCard key={group.key} group={group} />
             ))}
           </ul>
         ) : (
