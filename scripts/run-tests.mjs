@@ -10,7 +10,7 @@ function collectTestFiles(dir) {
       files.push(...collectTestFiles(path));
       continue;
     }
-    if (entry.endsWith(".test.ts")) files.push(path);
+    if (entry.endsWith(".test.ts") || entry.endsWith(".test.tsx")) files.push(path);
   }
   return files;
 }
@@ -24,7 +24,7 @@ if (testFiles.length === 0) {
 
 const result = spawnSync(
   "npx",
-  ["tsx", "--test", ...testFiles],
+  ["tsx", "--import", "./tests/setup/dom.mjs", "--test", ...testFiles],
   { stdio: "inherit", shell: true },
 );
 
