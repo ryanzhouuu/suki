@@ -21,7 +21,7 @@
     "backfill:popular": "npx tsx src/scripts/backfill-popular-catalog.ts",
     "test": "node scripts/run-tests.mjs",
     "test:coverage": "c8 npm test",
-    "test:coverage:check": "c8 check-coverage --lines 32 --functions 70 --branches 75 --statements 32"
+    "test:coverage:check": "c8 check-coverage --lines 45 --functions 75 --branches 78 --statements 45"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
@@ -36,7 +36,10 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@happy-dom/global-registrator": "^20.10.6",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
