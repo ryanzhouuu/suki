@@ -24,7 +24,14 @@ if (testFiles.length === 0) {
 
 const result = spawnSync(
   "npx",
-  ["tsx", "--import", "./tests/setup/dom.mjs", "--test", ...testFiles],
+  [
+    "tsx",
+    "--experimental-test-module-mocks",
+    "--import",
+    "./tests/setup/dom.mjs",
+    "--test",
+    ...testFiles,
+  ],
   { stdio: "inherit", shell: true },
 );
 
