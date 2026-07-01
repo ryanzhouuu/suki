@@ -9,6 +9,11 @@ import { requireProfile } from "@/lib/auth/session";
 import { env } from "@/lib/env";
 import { RANKING_ALGORITHM_VERSION } from "@/lib/constants";
 import { getPreparingImportJob } from "@/lib/imports/gating";
+import { groupLibraryEntries } from "@/lib/library/group";
+import {
+  getSeriesRefsByAnimeIds,
+  getUserLibraryEntries,
+} from "@/lib/library/queries";
 import { getNextComparisonPair } from "@/lib/ranking/prompt";
 import { getGenresBySeriesIds } from "@/lib/series/genres";
 import { getCompletedSeriesForUser } from "@/lib/series/queries";
@@ -40,7 +45,7 @@ export default async function RankingPage({ searchParams }: RankingPageProps) {
 
   const completedSeries = await getCompletedSeriesForUser(user.id);
 
-  const [pair, rankingsResult] = await Promise.all([
+  const [pair, rankingsResult, libraryEntries] = await Promise.all([
     getNextComparisonPair(user.id),
     supabase
       .from("derived_series_rankings")
@@ -48,6 +53,7 @@ export default async function RankingPage({ searchParams }: RankingPageProps) {
       .eq("user_id", user.id)
       .eq("algorithm_version", RANKING_ALGORITHM_VERSION)
       .order("rank", { ascending: true }),
+    getUserLibraryEntries(user.id),
   ]);
 
   const rankings = rankingsResult.data ?? [];
@@ -62,6 +68,13 @@ export default async function RankingPage({ searchParams }: RankingPageProps) {
   ];
   const genresMap = await getGenresBySeriesIds(seriesIds);
   const genresBySeriesId = Object.fromEntries(genresMap);
+  const librarySeriesMap = await getSeriesRefsByAnimeIds(
+    libraryEntries.map((entry) => entry.anime.id),
+  );
+  const libraryGroupsBySeriesId = Object.fromEntries(
+    groupLibraryEntries(libraryEntries, librarySeriesMap)
+      .flatMap((group) => (group.series ? [[group.series.id, group]] : [])),
+  );
 
   return (
     <WidePageFrame className="space-y-10">
@@ -99,6 +112,7 @@ export default async function RankingPage({ searchParams }: RankingPageProps) {
           initialPair={pair}
           rankings={rankings}
           genresBySeriesId={genresBySeriesId}
+          libraryGroupsBySeriesId={libraryGroupsBySeriesId}
           completedSeriesCount={completedSeriesCount}
           initialView={initialView}
         />

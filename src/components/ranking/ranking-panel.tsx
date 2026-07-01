@@ -15,6 +15,7 @@ import { FilterMatchCount } from "@/components/filters/filter-match-count";
 import { GenreFilter } from "@/components/filters/genre-filter";
 import { CONFIDENCE_LABELS } from "@/lib/constants";
 import { filterRankingsByGenre, useGenreFilters } from "@/lib/filters";
+import type { LibraryGroup } from "@/lib/library/group";
 import type { SeriesComparisonPair } from "@/lib/ranking/prompt";
 import type { Tables } from "@/types/database";
 
@@ -26,6 +27,7 @@ type RankingPanelProps = {
   initialPair: SeriesComparisonPair | null;
   rankings: RankedSeriesRow[];
   genresBySeriesId: Record<string, string[]>;
+  libraryGroupsBySeriesId: Record<string, LibraryGroup>;
   completedSeriesCount: number;
   initialView: RankingView;
 };
@@ -34,6 +36,7 @@ export function RankingPanel({
   initialPair,
   rankings,
   genresBySeriesId,
+  libraryGroupsBySeriesId,
   completedSeriesCount,
   initialView,
 }: RankingPanelProps) {
@@ -181,6 +184,7 @@ export function RankingPanel({
         <RankedList
           rankings={filteredRankings}
           genresBySeriesId={genresBySeriesId}
+          libraryGroupsBySeriesId={libraryGroupsBySeriesId}
           editable
         />
       )}

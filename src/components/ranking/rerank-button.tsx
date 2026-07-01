@@ -43,7 +43,7 @@ export function RerankButton({ seriesId, title }: RerankButtonProps) {
         size="sm"
         onClick={rerank}
         disabled={pending}
-        className="opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
+        className="min-h-8 px-2.5 text-xs opacity-100 transition-opacity sm:opacity-0 sm:focus-visible:opacity-100 sm:group-hover:opacity-100"
       >
         {pending ? "Re-ranking…" : "Re-rank"}
       </Button>
