@@ -10,8 +10,8 @@
   "reporter": ["text-summary", "text", "html", "lcov"],
   "report-dir": "coverage",
   "skip-full": false,
-  "lines": 45,
-  "functions": 75,
-  "branches": 78,
-  "statements": 45
+  "lines": 50,
+  "functions": 78,
+  "branches": 79,
+  "statements": 50
 }
