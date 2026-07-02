@@ -1,12 +1,23 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { before, describe, it, mock } from "node:test";
 
-import {
-  computeRankingHash,
-  isCardPublic,
-  mapShareCard,
-  type ShareRankingRow,
-} from "@/lib/profiles/share-card";
+import type { ShareRankingRow } from "@/lib/profiles/share-card";
+
+// `@/lib/profiles/share-card` imports `createAdminClient` from
+// `@/lib/supabase/admin`, which is guarded by `import "server-only"` and
+// throws outside a react-server module context. Stub the marker package
+// before dynamically importing the module under test.
+mock.module("server-only", { namedExports: {} });
+
+let computeRankingHash: typeof import("@/lib/profiles/share-card").computeRankingHash;
+let isCardPublic: typeof import("@/lib/profiles/share-card").isCardPublic;
+let mapShareCard: typeof import("@/lib/profiles/share-card").mapShareCard;
+
+before(async () => {
+  ({ computeRankingHash, isCardPublic, mapShareCard } = await import(
+    "@/lib/profiles/share-card"
+  ));
+});
 
 const baseRankings: ShareRankingRow[] = [
   {

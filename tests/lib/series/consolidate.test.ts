@@ -1,7 +1,17 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { before, describe, it, mock } from "node:test";
 
-import { remapComparisonRow } from "@/lib/series/consolidate";
+// `@/lib/series/consolidate` imports `createAdminClient` from
+// `@/lib/supabase/admin`, which is guarded by `import "server-only"` and
+// throws outside a react-server module context. Stub the marker package
+// before dynamically importing the module under test.
+mock.module("server-only", { namedExports: {} });
+
+let remapComparisonRow: typeof import("@/lib/series/consolidate").remapComparisonRow;
+
+before(async () => {
+  ({ remapComparisonRow } = await import("@/lib/series/consolidate"));
+});
 
 describe("remapComparisonRow", () => {
   const base = {

@@ -1,11 +1,24 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { before, describe, it, mock } from "node:test";
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-
-import { SeriesGroupCard } from "@/components/library/series-group-card";
 import type { LibraryGroup } from "@/lib/library/group";
 import type { LibraryEntry } from "@/lib/library/queries";
+
+// SeriesGroupCard renders SeriesGroupDetailsDialog, which imports the
+// `updateAnimeEntry` Server Action, which transitively imports
+// `@/lib/supabase/admin` — guarded by `import "server-only"`, which throws
+// outside a react-server module context. Stub the marker package before
+// dynamically importing the component under test.
+mock.module("server-only", { namedExports: {} });
+
+let SeriesGroupCard: typeof import("@/components/library/series-group-card").SeriesGroupCard;
+
+before(async () => {
+  ({ SeriesGroupCard } = await import(
+    "@/components/library/series-group-card"
+  ));
+});
 
 function makeEntry(overrides: Partial<LibraryEntry> = {}): LibraryEntry {
   const id = (overrides.id as string) ?? "entry-1";

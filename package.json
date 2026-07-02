@@ -11,14 +11,14 @@
     "db:generate": "drizzle-kit generate",
     "db:studio": "drizzle-kit studio",
     "types:supabase": "echo 'Regenerate with Supabase MCP generate_typescript_types or: supabase gen types typescript'",
-    "backfill:series": "npx tsx src/scripts/backfill-series.ts",
-    "backfill:bt-rankings": "npx tsx src/scripts/backfill-bt-rankings.ts",
-    "reresolve:titles": "npx tsx src/scripts/reresolve-series-titles.ts",
-    "regroup:franchises": "npx tsx src/scripts/regroup-franchises.ts",
-    "dedupe:series": "npx tsx src/scripts/dedupe-series.ts",
-    "backfill:embeddings": "npx tsx src/scripts/backfill-anime-embeddings.ts",
-    "seed:catalog": "npx tsx src/scripts/seed-recommendation-catalog.ts",
-    "backfill:popular": "npx tsx src/scripts/backfill-popular-catalog.ts",
+    "backfill:series": "npx tsx --conditions=react-server src/scripts/backfill-series.ts",
+    "backfill:bt-rankings": "npx tsx --conditions=react-server src/scripts/backfill-bt-rankings.ts",
+    "reresolve:titles": "npx tsx --conditions=react-server src/scripts/reresolve-series-titles.ts",
+    "regroup:franchises": "npx tsx --conditions=react-server src/scripts/regroup-franchises.ts",
+    "dedupe:series": "npx tsx --conditions=react-server src/scripts/dedupe-series.ts",
+    "backfill:embeddings": "npx tsx --conditions=react-server src/scripts/backfill-anime-embeddings.ts",
+    "seed:catalog": "npx tsx --conditions=react-server src/scripts/seed-recommendation-catalog.ts",
+    "backfill:popular": "npx tsx --conditions=react-server src/scripts/backfill-popular-catalog.ts",
     "test": "node scripts/run-tests.mjs",
     "test:coverage": "c8 npm test",
     "test:coverage:check": "c8 check-coverage --lines 50 --functions 78 --branches 79 --statements 50"
@@ -33,7 +33,8 @@
     "openai": "^6.39.1",
     "postgres": "^3.4.9",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@happy-dom/global-registrator": "^20.10.6",

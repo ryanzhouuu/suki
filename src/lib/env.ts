@@ -1,3 +1,8 @@
+import "server-only";
+
+import { getSupabasePublishableKey } from "@/lib/supabase/env-keys";
+import { getSupabaseSecretKey } from "@/lib/supabase/secret-key";
+
 function required(name: string): string {
   const value = process.env[name];
   if (!value) {
@@ -5,11 +10,6 @@ function required(name: string): string {
   }
   return value;
 }
-
-import {
-  getSupabasePublishableKey,
-  getSupabaseSecretKey,
-} from "@/lib/supabase/env-keys";
 
 export const env = {
   supabaseUrl: () => required("NEXT_PUBLIC_SUPABASE_URL"),

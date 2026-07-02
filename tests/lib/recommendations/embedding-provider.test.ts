@@ -1,10 +1,20 @@
 import assert from "node:assert/strict";
-import { afterEach, describe, it } from "node:test";
+import { afterEach, before, describe, it, mock } from "node:test";
 
-import {
-  formatEmbeddingError,
-  isEmbeddingConfigured,
-} from "@/lib/recommendations/embedding-provider";
+// `@/lib/recommendations/embedding-provider` imports `env` from
+// `@/lib/env`, which is guarded by `import "server-only"` and throws
+// outside a react-server module context. Stub the marker package before
+// dynamically importing the module under test.
+mock.module("server-only", { namedExports: {} });
+
+let formatEmbeddingError: typeof import("@/lib/recommendations/embedding-provider").formatEmbeddingError;
+let isEmbeddingConfigured: typeof import("@/lib/recommendations/embedding-provider").isEmbeddingConfigured;
+
+before(async () => {
+  ({ formatEmbeddingError, isEmbeddingConfigured } = await import(
+    "@/lib/recommendations/embedding-provider"
+  ));
+});
 
 const envSnapshot = { ...process.env };
 
