@@ -11,14 +11,14 @@ const SEARCH_RESPONSE_CACHE_CONTROL = "public, s-maxage=60, stale-while-revalida
 const SEARCH_RATE_LIMIT_ERROR = "Too many search requests. Please wait and try again.";
 
 function clientIpFromRequest(request: Request): string {
+  const realIp = request.headers.get("x-real-ip")?.trim();
+  if (realIp) return realIp;
+
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) {
     const firstIp = forwarded.split(",")[0]?.trim();
     if (firstIp) return firstIp;
   }
-
-  const realIp = request.headers.get("x-real-ip")?.trim();
-  if (realIp) return realIp;
 
   return "unknown";
 }
