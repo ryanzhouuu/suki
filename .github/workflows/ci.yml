@@ -61,3 +61,15 @@ jobs:
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_placeholder
           SUPABASE_SECRET_KEY: sb_secret_placeholder
           NEXT_PUBLIC_SITE_URL: http://localhost:3000
+
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: npm
+      - run: npm ci
+      # Gated at high, not moderate: the known moderate Next/PostCSS advisory (GHSA-qx2v-qp2m-jg93) has no patched stable Next release yet (npm audit fix --force would downgrade to Next 9 — never run it), so this blocks new high/critical advisories while that one is tracked separately.
+      - run: npm audit --omit=dev --audit-level=high
