@@ -14,6 +14,15 @@ function request(url: string, ip = "127.0.0.1"): Request {
   });
 }
 
+function requestWithRealIp(url: string, realIp: string, spoofedIp: string): Request {
+  return new Request(url, {
+    headers: {
+      "x-real-ip": realIp,
+      "x-forwarded-for": spoofedIp,
+    },
+  });
+}
+
 function media(id: number, title: string): AniListMediaSummary {
   return {
     id,
@@ -87,5 +96,37 @@ describe("handleSearchRequest", () => {
 
     assert.equal(lastStatus, 429);
     assert.ok(Number(retryAfter) > 0);
+  });
+
+  it("prefers x-real-ip over x-forwarded-for for rate limiting", async () => {
+    resetSearchCacheForTests();
+    resetSearchRateLimitForTests();
+
+    const search = async () => [] as AniListMediaSummary[];
+    const realIp = "10.0.0.1";
+    const spoofedIp = "10.0.0.2";
+
+    // Send 31 requests from realIp with a spoofed x-forwarded-for
+    for (let i = 0; i < 31; i += 1) {
+      await handleSearchRequest(
+        requestWithRealIp("http://localhost:3000/api/search?q=test", realIp, spoofedIp),
+        { search, nowMs: () => 60_000 },
+      );
+    }
+
+    // The 31st request should have been rate limited
+    const rateLimited = await handleSearchRequest(
+      requestWithRealIp("http://localhost:3000/api/search?q=test", realIp, spoofedIp),
+      { search, nowMs: () => 60_000 },
+    );
+    assert.equal(rateLimited.status, 429);
+
+    // Now send a request from the spoofed IP (as x-real-ip) with the original real IP as x-forwarded-for
+    // This should succeed because it's from a different real IP, proving rate limiting uses x-real-ip
+    const shouldSucceed = await handleSearchRequest(
+      requestWithRealIp("http://localhost:3000/api/search?q=test", spoofedIp, realIp),
+      { search, nowMs: () => 60_000 },
+    );
+    assert.equal(shouldSucceed.status, 200);
   });
 });
