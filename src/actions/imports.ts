@@ -23,6 +23,7 @@ import type {
   StagedRowCorrection,
 } from "@/lib/imports/types";
 import { createClient } from "@/lib/supabase/server";
+import { checkImportStartThrottle } from "@/lib/throttle/import-start";
 import type { TablesInsert } from "@/types/database";
 
 export type StartImportState = {
@@ -75,6 +76,13 @@ export async function startImport(
   if (active) {
     return {
       error: "You already have an import in progress. Finish or cancel it first.",
+    };
+  }
+
+  const throttle = await checkImportStartThrottle(supabase, user.id);
+  if (!throttle.allowed) {
+    return {
+      error: `Please wait ${throttle.retryAfterSeconds} seconds before starting another import.`,
     };
   }
 
