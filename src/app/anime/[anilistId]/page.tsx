@@ -16,6 +16,7 @@ import {
   getYoutubeTrailer,
   type FuzzyDate,
 } from "@/lib/anime/detail-helpers";
+import { sanitizeExternalUrl } from "@/lib/security/url";
 import { listAcceptedFriends } from "@/lib/friends/queries";
 import { getUserEntryForAnime } from "@/lib/library/queries";
 
@@ -68,6 +69,7 @@ export default async function AnimeDetailPage({ params }: AnimeDetailPageProps) 
   const links = getEnabledLinks(anime.external_links);
   const topRankings = getTopRankings(anime.rankings);
   const trailer = getYoutubeTrailer(anime.trailer);
+  const siteUrl = sanitizeExternalUrl(anime.site_url);
 
   const streamingLinks = links.filter((l) => l.type === "STREAMING");
   const infoLinks = links.filter((l) => l.type !== "STREAMING");
@@ -296,15 +298,15 @@ export default async function AnimeDetailPage({ params }: AnimeDetailPageProps) 
             ) : null}
 
             {/* Links */}
-            {(anime.site_url || infoLinks.length > 0 || streamingLinks.length > 0) ? (
+            {(siteUrl || infoLinks.length > 0 || streamingLinks.length > 0) ? (
               <div>
                 <p className="eyebrow mb-3">Links</p>
                 <div className="space-y-3">
-                  {(anime.site_url || infoLinks.length > 0) ? (
+                  {(siteUrl || infoLinks.length > 0) ? (
                     <div className="flex flex-wrap gap-2">
-                      {anime.site_url ? (
+                      {siteUrl ? (
                         <a
-                          href={anime.site_url}
+                          href={siteUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="rounded-full border border-line-strong px-3 py-1 text-xs font-medium text-muted transition-colors hover:border-accent hover:text-accent"

@@ -83,6 +83,20 @@ describe("getSortedStudios", () => {
     assert.equal(result[0].node?.name, "Main");
   });
 
+  it("sanitizes malicious studio siteUrls", () => {
+    const studios = {
+      edges: [
+        { isMain: true, node: { name: "Legit", siteUrl: "https://example.com" } },
+        { isMain: false, node: { name: "Malicious", siteUrl: "javascript:alert(1)" } },
+      ],
+    };
+    const result = getSortedStudios(studios);
+    assert.equal(result[0].node?.name, "Legit");
+    assert.equal(result[0].node?.siteUrl, "https://example.com/");
+    assert.equal(result[1].node?.name, "Malicious");
+    assert.equal(result[1].node?.siteUrl, null);
+  });
+
   it("returns empty array for null input", () => {
     assert.deepEqual(getSortedStudios(null), []);
   });
@@ -104,6 +118,16 @@ describe("getEnabledLinks", () => {
       { site: "NoUrl", url: null, type: "INFO", language: null, isDisabled: false },
     ];
     assert.deepEqual(getEnabledLinks(links), []);
+  });
+
+  it("filters out javascript: URLs from malicious metadata", () => {
+    const links = [
+      { site: "Legit", url: "https://example.com", type: "INFO", language: null, isDisabled: false },
+      { site: "Malicious", url: "javascript:alert(1)", type: "INFO", language: null, isDisabled: false },
+    ];
+    const result = getEnabledLinks(links);
+    assert.equal(result.length, 1);
+    assert.equal(result[0].site, "Legit");
   });
 
   it("returns empty array for null input", () => {

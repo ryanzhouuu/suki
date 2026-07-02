@@ -1,4 +1,5 @@
 import type { Json } from "@/types/database";
+import { sanitizeExternalUrl } from "@/lib/security/url";
 
 export type FuzzyDate = { year: number | null; month: number | null; day: number | null };
 export type StudioEdge = { isMain: boolean; node: { name: string; siteUrl: string | null } | null };
@@ -32,13 +33,17 @@ export function getFilteredTags(raw: Json | null, limit = 8): AnimeTag[] {
 export function getSortedStudios(raw: Json | null): StudioEdge[] {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return [];
   const studios = raw as { edges: StudioEdge[] | null };
-  const edges = studios.edges ?? [];
+  const edges = (studios.edges ?? []).map((e) =>
+    e.node ? { ...e, node: { ...e.node, siteUrl: sanitizeExternalUrl(e.node.siteUrl) } } : e,
+  );
   return [...edges].sort((a, b) => (b.isMain ? 1 : 0) - (a.isMain ? 1 : 0));
 }
 
 export function getEnabledLinks(raw: Json | null): ExternalLink[] {
   if (!raw || !Array.isArray(raw)) return [];
-  return (raw as ExternalLink[]).filter((l) => !l.isDisabled && l.url);
+  return (raw as ExternalLink[])
+    .map((l) => ({ ...l, url: sanitizeExternalUrl(l.url) }))
+    .filter((l) => !l.isDisabled && l.url);
 }
 
 export function getTopRankings(raw: Json | null): AnimeRanking[] {
