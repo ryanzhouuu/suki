@@ -1,5 +1,15 @@
 import type { NextConfig } from "next";
 
+import { buildSecurityHeaders } from "./src/lib/security/headers";
+
+const supabaseHostname = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").hostname;
+  } catch {
+    return "*.supabase.co";
+  }
+})();
+
 const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
@@ -15,6 +25,17 @@ const nextConfig: NextConfig = {
       // Supabase Storage public URLs (avatars/banners): <project-ref>.supabase.co
       { protocol: "https", hostname: "*.supabase.co" },
     ],
+  },
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: buildSecurityHeaders({
+          isDev: process.env.NODE_ENV === "development",
+          supabaseHostname,
+        }),
+      },
+    ];
   },
 };
 
