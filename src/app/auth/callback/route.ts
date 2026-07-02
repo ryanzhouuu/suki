@@ -4,12 +4,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getSupabasePublishableKey } from "@/lib/supabase/env-keys";
 import type { Database } from "@/types/database";
 
-function loginRedirect(origin: string, error: string, description?: string | null) {
-  const params = new URLSearchParams({ error });
-  if (description) {
-    params.set("error_description", description);
-  }
-  return NextResponse.redirect(`${origin}/auth/login?${params.toString()}`);
+function loginRedirect(origin: string, error: string) {
+  return NextResponse.redirect(`${origin}/auth/login?${new URLSearchParams({ error })}`);
 }
 
 function redirectWithCookies(
@@ -33,9 +29,11 @@ export async function GET(request: NextRequest) {
   if (oauthError) {
     const description = oauthErrorDescription?.toLowerCase() ?? "";
     if (description.includes("invalid_client")) {
-      return loginRedirect(origin, "google_secret", oauthErrorDescription);
+      console.error("[auth callback]", "google_secret", oauthErrorDescription);
+      return loginRedirect(origin, "google_secret");
     }
-    return loginRedirect(origin, "auth", oauthErrorDescription);
+    console.error("[auth callback]", "auth", oauthErrorDescription);
+    return loginRedirect(origin, "auth");
   }
 
   if (code) {
@@ -83,9 +81,11 @@ export async function GET(request: NextRequest) {
 
     const description = error?.message.toLowerCase() ?? "";
     if (description.includes("code verifier")) {
-      return loginRedirect(origin, "pkce", error?.message);
+      console.error("[auth callback]", "pkce", error?.message);
+      return loginRedirect(origin, "pkce");
     }
-    return loginRedirect(origin, "auth", error?.message);
+    console.error("[auth callback]", "auth", error?.message);
+    return loginRedirect(origin, "auth");
   }
 
   return loginRedirect(origin, "auth");
