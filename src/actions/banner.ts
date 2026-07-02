@@ -6,6 +6,7 @@ import { requireAuthUser } from "@/lib/auth/session";
 import { BANNER_BUCKET } from "@/lib/banners/constants";
 import { bannerObjectPath, validateBannerFile } from "@/lib/banners/validate";
 import { createClient } from "@/lib/supabase/server";
+import { sniffImageMime } from "@/lib/uploads/sniff";
 
 import type { ProfileActionState } from "./profile";
 
@@ -54,15 +55,21 @@ export async function uploadBanner(
     return { error: "Use a JPEG, PNG, or WebP image." };
   }
 
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const sniffed = sniffImageMime(bytes);
+  if (sniffed !== file.type) {
+    return { error: "That file doesn't look like a valid image." };
+  }
+
   const supabase = await createClient();
 
   await deleteStoredBanners(user.id);
 
   const { error: uploadError } = await supabase.storage
     .from(BANNER_BUCKET)
-    .upload(objectPath, file, {
+    .upload(objectPath, bytes, {
       upsert: true,
-      contentType: file.type,
+      contentType: sniffed,
     });
 
   if (uploadError) {

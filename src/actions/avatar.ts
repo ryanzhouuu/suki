@@ -6,6 +6,7 @@ import { requireAuthUser } from "@/lib/auth/session";
 import { AVATAR_BUCKET } from "@/lib/avatars/constants";
 import { avatarObjectPath, validateAvatarFile } from "@/lib/avatars/validate";
 import { createClient } from "@/lib/supabase/server";
+import { sniffImageMime } from "@/lib/uploads/sniff";
 
 import type { ProfileActionState } from "./profile";
 
@@ -54,15 +55,21 @@ export async function uploadAvatar(
     return { error: "Use a JPEG, PNG, WebP, or GIF image." };
   }
 
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const sniffed = sniffImageMime(bytes);
+  if (sniffed !== file.type) {
+    return { error: "That file doesn't look like a valid image." };
+  }
+
   const supabase = await createClient();
 
   await deleteStoredAvatars(user.id);
 
   const { error: uploadError } = await supabase.storage
     .from(AVATAR_BUCKET)
-    .upload(objectPath, file, {
+    .upload(objectPath, bytes, {
       upsert: true,
-      contentType: file.type,
+      contentType: sniffed,
     });
 
   if (uploadError) {
