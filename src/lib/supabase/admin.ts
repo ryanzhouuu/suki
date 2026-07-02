@@ -1,8 +1,10 @@
+import "server-only";
+
 import { createClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/types/database";
 
-import { getSupabaseSecretKey } from "./env-keys";
+import { getSupabaseSecretKey } from "./secret-key";
 
 /**
  * Secret-key client for server-only operations (e.g. series mappings, derived_series_rankings).

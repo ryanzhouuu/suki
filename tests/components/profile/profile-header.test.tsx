@@ -9,6 +9,11 @@ import { installRouterMock } from "../../helpers/mock-router";
 
 installRouterMock();
 
+// ProfileHeader imports `env` from `@/lib/env`, which is guarded by
+// `import "server-only"` and throws outside a react-server module context.
+// Stub the marker package before dynamically importing the component below.
+mock.module("server-only", { namedExports: {} });
+
 mock.module("@/actions/profile", {
   namedExports: { updateProfile: async () => ({}) },
 });

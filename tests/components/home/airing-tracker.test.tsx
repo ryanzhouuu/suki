@@ -12,6 +12,13 @@ import { installRouterMock } from "../../helpers/mock-router";
 
 installRouterMock();
 
+// AiringRowItem imports the `updateAnimeEntry` Server Action, which
+// transitively imports `@/lib/supabase/admin` — guarded by
+// `import "server-only"`, which throws outside a react-server module
+// context. Stub the marker package before dynamically importing the
+// component under test below.
+mock.module("server-only", { namedExports: {} });
+
 let airingRows: AiringRow[] | Error = [];
 
 mock.module("@/lib/anime/airing-fetch", {
