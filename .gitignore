@@ -66,3 +66,6 @@ CLAUDE.md
 
 # superpowers planning artifacts (specs/plans kept locally, not tracked)
 docs/superpowers/
+
+# git worktrees used for isolated feature work
+.worktrees/
