@@ -20,6 +20,7 @@ import {
   getUserRecommendations,
 } from "@/lib/recommendations/queries";
 import { parseRecommendationRequestPrefs } from "@/lib/recommendations/request-prefs";
+import { checkRecommendationRefreshThrottle } from "@/lib/throttle/recommendation-refresh";
 
 export type RecommendationsActionState = {
   error?: string;
@@ -36,6 +37,13 @@ export async function refreshRecommendations(
     return {
       error:
         "Recommendations are not configured. Add OPENAI_API_KEY to the server environment.",
+    };
+  }
+
+  const throttle = await checkRecommendationRefreshThrottle(user.id, "personal");
+  if (!throttle.allowed) {
+    return {
+      error: `Please wait ${throttle.retryAfterSeconds} seconds before refreshing again.`,
     };
   }
 
@@ -134,6 +142,13 @@ export async function refreshCollaborativeRecommendations(
     assertAcceptedFriends(friendship, user.id, friendUserId);
   } catch {
     return { error: "You must be friends to generate collaborative picks." };
+  }
+
+  const throttle = await checkRecommendationRefreshThrottle(user.id, "collaborative");
+  if (!throttle.allowed) {
+    return {
+      error: `Please wait ${throttle.retryAfterSeconds} seconds before refreshing again.`,
+    };
   }
 
   const parsed = parseRecommendationRequestPrefs(formData);
