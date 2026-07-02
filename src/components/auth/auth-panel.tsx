@@ -13,7 +13,6 @@ type AuthMode = "signin" | "signup";
 type AuthPanelProps = {
   initialMode: AuthMode;
   error?: string;
-  errorDescription?: string;
 };
 
 const MODE_COPY: Record<
@@ -32,11 +31,7 @@ const MODE_COPY: Record<
   },
 };
 
-export function AuthPanel({
-  initialMode,
-  error,
-  errorDescription,
-}: AuthPanelProps) {
+export function AuthPanel({ initialMode, error }: AuthPanelProps) {
   const router = useRouter();
   const [mode, setMode] = useState<AuthMode>(initialMode);
   const copy = MODE_COPY[mode];
@@ -73,7 +68,7 @@ export function AuthPanel({
 
       <div className="mt-7 space-y-4">
         <OAuthButtons />
-        <AuthErrorBanner code={error} description={errorDescription} />
+        <AuthErrorBanner code={error} />
         {mode === "signin" ? (
           <AuthForm key="signin" action={signIn} submitLabel="Sign in" />
         ) : (

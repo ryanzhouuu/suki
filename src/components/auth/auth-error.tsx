@@ -9,27 +9,19 @@ const AUTH_ERRORS: Record<string, string> = {
 
 type AuthErrorBannerProps = {
   code?: string;
-  description?: string;
 };
 
-export function AuthErrorBanner({ code, description }: AuthErrorBannerProps) {
+export function AuthErrorBanner({ code }: AuthErrorBannerProps) {
   if (!code) return null;
 
   const message = AUTH_ERRORS[code] ?? AUTH_ERRORS.auth;
 
   return (
-    <div className="space-y-2">
-      <p
-        className="rounded-xl border border-line bg-accent-soft px-3 py-2 text-sm text-danger"
-        role="alert"
-      >
-        {message}
-      </p>
-      {description && code === "auth" ? (
-        <p className="rounded-xl border border-line bg-surface-2 px-3 py-2 text-xs text-muted">
-          {description}
-        </p>
-      ) : null}
-    </div>
+    <p
+      className="rounded-xl border border-line bg-accent-soft px-3 py-2 text-sm text-danger"
+      role="alert"
+    >
+      {message}
+    </p>
   );
 }

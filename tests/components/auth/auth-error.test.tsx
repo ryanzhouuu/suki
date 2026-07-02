@@ -25,15 +25,15 @@ describe("AuthErrorBanner", () => {
     cleanup();
   });
 
-  it("shows the description only alongside the 'auth' code", () => {
-    render(<AuthErrorBanner code="auth" description="Extra context" />);
-    screen.getByText("Extra context");
+  it("shows the mapped message for the oauth code", () => {
+    render(<AuthErrorBanner code="oauth" />);
+    screen.getByText("Could not start Google sign in. Please try again.");
     cleanup();
   });
 
-  it("hides the description for non-'auth' codes", () => {
-    render(<AuthErrorBanner code="oauth" description="Extra context" />);
-    assert.equal(screen.queryByText("Extra context"), null);
+  it("shows the mapped message for the google_secret code", () => {
+    render(<AuthErrorBanner code="google_secret" />);
+    screen.getByText(/Google sign in failed because the client secret/);
     cleanup();
   });
 });

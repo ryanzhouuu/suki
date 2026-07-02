@@ -6,7 +6,7 @@ import { APP_NAME } from "@/lib/constants";
 import { getAuthUser, getCurrentProfile } from "@/lib/auth/session";
 
 type LoginPageProps = {
-  searchParams: Promise<{ error?: string; error_description?: string; mode?: string }>;
+  searchParams: Promise<{ error?: string; mode?: string }>;
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
@@ -16,7 +16,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     redirect(profile ? "/home" : "/onboarding");
   }
 
-  const { error, error_description: errorDescription, mode } = await searchParams;
+  const { error, mode } = await searchParams;
   const initialMode = mode === "signup" ? "signup" : "signin";
 
   return (
@@ -30,11 +30,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             {APP_NAME}
           </span>
         </Link>
-        <AuthPanel
-          initialMode={initialMode}
-          error={error}
-          errorDescription={errorDescription}
-        />
+        <AuthPanel initialMode={initialMode} error={error} />
       </div>
     </div>
   );
