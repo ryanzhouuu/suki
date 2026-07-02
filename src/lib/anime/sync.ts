@@ -4,14 +4,19 @@ import { ANIME_DETAIL_QUERY } from "@/lib/anilist/queries";
 import type { AniListMediaResult } from "@/lib/anilist/types";
 import { syncAnimeEmbedding } from "@/lib/recommendations/sync-anime-embedding";
 import { ensureAnimeSeriesMapping } from "@/lib/series/resolver";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Tables } from "@/types/database";
 
-/** Sync requires an authenticated session (RLS on anime upsert). */
+/**
+ * Writes to the shared `anime` catalog go through the service-role admin client:
+ * authenticated users can no longer write `anime` directly (RLS), so a user
+ * can't corrupt the global catalog by calling PostgREST with the publishable key.
+ * Server-only — never import from a client component.
+ */
 export async function syncAnimeFromAnilist(
   anilistId: number,
 ): Promise<Tables<"anime">> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data: existing } = await supabase
     .from("anime")
