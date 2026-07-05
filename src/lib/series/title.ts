@@ -95,6 +95,8 @@ function franchiseMatchKeys(title: string): string[] {
 export type FranchiseMember = {
   english: string | null;
   romaji: string | null;
+  /** AniList premiere year, used to prefer the franchise originator on ties. */
+  seasonYear?: number | null;
 };
 
 type ResolvedMember = {
@@ -102,6 +104,7 @@ type ResolvedMember = {
   romaji: string | null;
   display: string;
   key: string;
+  seasonYear: number | null;
 };
 
 /**
@@ -160,6 +163,7 @@ export function pickConsolidatedFranchiseRootFromMembers(
       romaji,
       display,
       key: normalizeFranchiseKey(romaji ?? english ?? ""),
+      seasonYear: m.seasonYear ?? null,
     });
   }
 
@@ -179,16 +183,25 @@ export function pickConsolidatedFranchiseRootFromMembers(
     groups.set(e.key, list);
   }
 
-  let best: { display: string; count: number } | null = null;
+  // On a frequency tie, prefer the earliest-airing franchise (the originator)
+  // over a later installment; only fall back to the shorter (more general)
+  // label when air years are equal or unknown. Without this, a franchise with
+  // multiple TV series is named after whichever has the shortest title.
+  let best: { display: string; count: number; year: number } | null = null;
   for (const list of groups.values()) {
     const display = pickGroupDisplay(list);
     const count = list.length;
+    const year = Math.min(
+      ...list.map((e) => e.seasonYear ?? Number.POSITIVE_INFINITY),
+    );
     if (
       !best ||
       count > best.count ||
-      (count === best.count && display.length < best.display.length)
+      (count === best.count &&
+        (year < best.year ||
+          (year === best.year && display.length < best.display.length)))
     ) {
-      best = { display, count };
+      best = { display, count, year };
     }
   }
 
