@@ -138,6 +138,7 @@ export function franchiseRootForCluster(
   const members: FranchiseMember[] = nodes.map((n) => ({
     english: n.title.english,
     romaji: n.title.romaji,
+    seasonYear: n.seasonYear,
   }));
 
   const consolidated = pickConsolidatedFranchiseRootFromMembers(members);

@@ -207,6 +207,27 @@ describe("pickConsolidatedFranchiseRootFromMembers", () => {
       "Black Clover",
     );
   });
+
+  it("names a multi-TV franchise after the earliest installment, not the shortest title", () => {
+    // Seishun Buta Yarou has two TV series with distinct romaji identities, so
+    // frequency ties. The 2025 "Santa Claus" cour has a shorter title than the
+    // 2018 original, so a length-only tie-break mislabels the franchise.
+    assert.equal(
+      pickConsolidatedFranchiseRootFromMembers([
+        {
+          english: "Rascal Does Not Dream of Bunny Girl Senpai",
+          romaji: "Seishun Buta Yarou wa Bunny Girl Senpai no Yume wo Minai",
+          seasonYear: 2018,
+        },
+        {
+          english: "Rascal Does Not Dream of Santa Claus",
+          romaji: "Seishun Buta Yarou wa Santa Claus no Yume wo Minai",
+          seasonYear: 2025,
+        },
+      ]),
+      "Rascal Does Not Dream of Bunny Girl Senpai",
+    );
+  });
 });
 
 describe("slugifySeriesTitle", () => {
