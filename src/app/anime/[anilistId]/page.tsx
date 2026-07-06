@@ -7,6 +7,7 @@ import { BackButton } from "@/components/anime/back-button";
 import { RecommendFromAnimeButton } from "@/components/friend-recommendations/recommend-from-anime-button";
 import { getAuthUser } from "@/lib/auth/session";
 import { getAnimeForDisplay } from "@/lib/anime/get-for-display";
+import { isAnimeNotFoundError } from "@/lib/anime/errors";
 import {
   formatFuzzyDate,
   getEnabledLinks,
@@ -32,19 +33,17 @@ export default async function AnimeDetailPage({ params }: AnimeDetailPageProps) 
     notFound();
   }
 
-  const [animeResult, user] = await Promise.all([
-    getAnimeForDisplay(anilistId).then(
-      (value) => ({ ok: true as const, anime: value }),
-      () => ({ ok: false as const }),
-    ),
+  const [anime, user] = await Promise.all([
+    getAnimeForDisplay(anilistId).catch((error: unknown) => {
+      // A genuine "no such media" is a real 404; every other failure
+      // (429/5xx/network/DB) propagates to error.tsx as a retryable error.
+      if (isAnimeNotFoundError(error)) {
+        notFound();
+      }
+      throw error;
+    }),
     getAuthUser(),
   ]);
-
-  if (!animeResult.ok) {
-    notFound();
-  }
-
-  const anime = animeResult.anime;
   const [entry, friends] =
     user && anime.id
       ? await Promise.all([
