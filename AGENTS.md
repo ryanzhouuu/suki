@@ -31,7 +31,7 @@ Run `npm run lint`, `npm run typecheck`, and `npm test`. The `/check` skill runs
 
 ## Environment
 
-Required (see `.env.example`): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `DATABASE_URL`, `OPENAI_API_KEY`, `NEXT_PUBLIC_SITE_URL`. Optional: `SERIES_ADMIN_EMAILS` (comma-separated, grants `/admin/series` access).
+Required (see `.env.example`): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `DATABASE_URL`, `OPENAI_API_KEY`, `NEXT_PUBLIC_SITE_URL`. Optional: `SERIES_ADMIN_EMAILS` (comma-separated, grants `/admin/series` access); `ANILIST_TOKEN` (server-only AniList OAuth token — raises the authenticated rate-limit ceiling; unset behaves as today, since public metadata needs no auth. Read only via `src/lib/anilist/token.ts`, never a bare `process.env` read).
 
 ## Development Guidelines
 
