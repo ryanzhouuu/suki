@@ -1,3 +1,4 @@
+import { cachedAnilistFetch } from "@/lib/anilist/cache";
 import { anilistQuery } from "@/lib/anilist/client";
 import { ANIME_RELATIONS_QUERY } from "@/lib/anilist/queries";
 import type {
@@ -11,6 +12,25 @@ import {
   SERIES_GRAPH_MAX_DEPTH,
   SERIES_GRAPH_MAX_NODES,
 } from "./constants";
+
+/** Relations rarely change, so cache them for a day. */
+const RELATIONS_CACHE_TTL_SECONDS = 24 * 60 * 60;
+
+/**
+ * Cross-request-cached relations fetch for one AniList id. Caps the
+ * up-to-64-calls-per-anime franchise crawl: overlapping crawls and re-syncs
+ * reuse cached relation nodes instead of re-hitting AniList.
+ */
+const fetchRelations = cachedAnilistFetch(
+  ["anilist-relations"],
+  (id: number): Promise<AniListRelationsResult> =>
+    anilistQuery<AniListRelationsResult>(
+      ANIME_RELATIONS_QUERY,
+      { id },
+      { cache: "no-store" },
+    ),
+  { revalidate: RELATIONS_CACHE_TTL_SECONDS, tags: ["anilist-relations"] },
+);
 
 export type FranchiseMediaNode = {
   anilistId: number;
@@ -99,9 +119,7 @@ export async function fetchFranchiseCluster(
     if (!current || visited.has(current.id)) continue;
     if (current.depth > SERIES_GRAPH_MAX_DEPTH) continue;
 
-    const result = await anilistQuery<AniListRelationsResult>(ANIME_RELATIONS_QUERY, {
-      id: current.id,
-    });
+    const result = await fetchRelations(current.id);
 
     const media = result.Media;
     if (!media) continue;
