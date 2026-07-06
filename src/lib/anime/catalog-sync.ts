@@ -1,7 +1,5 @@
-import { anilistQuery } from "@/lib/anilist/client";
+import { fetchAnimeDetail, fetchAnimeDetailUncached } from "@/lib/anilist/detail";
 import { mapAniListMediaToAnimeRow } from "@/lib/anilist/map";
-import { ANIME_DETAIL_QUERY } from "@/lib/anilist/queries";
-import type { AniListMediaResult } from "@/lib/anilist/types";
 import { isEmbeddingConfigured } from "@/lib/recommendations/embedding-provider";
 import { syncAnimeEmbedding } from "@/lib/recommendations/sync-anime-embedding";
 import { ensureAnimeSeriesMapping } from "@/lib/series/resolver";
@@ -44,9 +42,11 @@ export async function syncAnimeCatalogFromAnilist(
     }
   }
 
-  const result = await anilistQuery<AniListMediaResult>(ANIME_DETAIL_QUERY, {
-    id: anilistId,
-  });
+  // Bypass the shared Data Cache when forcing a refresh; otherwise the cache
+  // would defeat forceRefresh by serving a stale entry.
+  const result = options?.forceRefresh
+    ? await fetchAnimeDetailUncached(anilistId)
+    : await fetchAnimeDetail(anilistId);
 
   if (!result.Media) {
     throw new Error(`Anime ${anilistId} not found on AniList`);
