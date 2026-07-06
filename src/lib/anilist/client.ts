@@ -1,7 +1,25 @@
+import { TokenBucket } from "@/lib/anilist/rate-limiter";
+import { getAnilistToken } from "@/lib/anilist/token";
+
 const ANILIST_GRAPHQL_URL = "https://graphql.anilist.co";
 
 /** Unauthenticated AniList limit is ~30 requests/minute. */
 const RATE_LIMIT_MAX_RETRIES = 6;
+
+/**
+ * Client-side pacing: stay well under AniList's 90 req/min ceiling (often
+ * degraded lower). A burst up to the capacity proceeds immediately; beyond that,
+ * requests are paced. This tames self-inflicted bursts (imports, the
+ * up-to-64-call franchise traversal) before they hit the server-side limit.
+ */
+const REQUESTS_PER_MINUTE = 60;
+const BURST_CAPACITY = 20;
+const limiter = new TokenBucket(BURST_CAPACITY, REQUESTS_PER_MINUTE / 60_000);
+
+// Coalesce identical in-flight queries into one request: N concurrent views of
+// the same new anime issue a single fetch. Complements the cross-request Data
+// Cache, which does not dedupe concurrent misses.
+const inflightRequests = new Map<string, Promise<unknown>>();
 
 type GraphQLResponse<T> = {
   data?: T;
@@ -37,24 +55,27 @@ function retryDelayMs(response: Response, attempt: number): number {
   return Math.min(60_000, 2000 * 2 ** attempt);
 }
 
-export async function anilistQuery<T>(
+async function executeQuery<T>(
   query: string,
   variables?: Record<string, unknown>,
   options?: { cache?: RequestCache; revalidate?: number },
 ): Promise<T> {
-  const cacheKey = queryCache
-    ? `${query}::${JSON.stringify(variables ?? {})}`
-    : null;
-  if (cacheKey && queryCache!.has(cacheKey)) {
-    return queryCache!.get(cacheKey) as T;
-  }
+  const token = getAnilistToken();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (token) headers.Authorization = `Bearer ${token}`;
 
   let lastError: Error | undefined;
 
   for (let attempt = 0; attempt < RATE_LIMIT_MAX_RETRIES; attempt++) {
+    // Pace outbound requests. reserve() never blocks; it returns the wait.
+    const waitMs = limiter.reserve();
+    if (waitMs > 0) await sleep(waitMs);
+
     const response = await fetch(ANILIST_GRAPHQL_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ query, variables }),
       cache: options?.cache ?? "default",
       next:
@@ -99,9 +120,33 @@ export async function anilistQuery<T>(
       throw new Error("AniList returned no data");
     }
 
-    if (cacheKey) queryCache!.set(cacheKey, json.data);
     return json.data;
   }
 
   throw lastError ?? new Error("AniList request failed");
+}
+
+export async function anilistQuery<T>(
+  query: string,
+  variables?: Record<string, unknown>,
+  options?: { cache?: RequestCache; revalidate?: number },
+): Promise<T> {
+  const key = `${query}::${JSON.stringify(variables ?? {})}`;
+
+  if (queryCache?.has(key)) {
+    return queryCache.get(key) as T;
+  }
+
+  const existing = inflightRequests.get(key);
+  if (existing) return existing as Promise<T>;
+
+  const promise = executeQuery<T>(query, variables, options)
+    .then((data) => {
+      if (queryCache) queryCache.set(key, data);
+      return data;
+    })
+    .finally(() => inflightRequests.delete(key));
+
+  inflightRequests.set(key, promise);
+  return promise as Promise<T>;
 }

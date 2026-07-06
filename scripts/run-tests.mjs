@@ -28,6 +28,8 @@ const result = spawnSync(
     "tsx",
     "--experimental-test-module-mocks",
     "--import",
+    "./tests/setup/server-only-stub.mjs",
+    "--import",
     "./tests/setup/dom.mjs",
     "--test",
     ...testFiles,
