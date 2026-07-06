@@ -1,11 +1,10 @@
-import { anilistQuery } from "@/lib/anilist/client";
+import { fetchAnimeDetail } from "@/lib/anilist/detail";
 import { mapAniListMediaToAnimeRow } from "@/lib/anilist/map";
-import { ANIME_DETAIL_QUERY } from "@/lib/anilist/queries";
-import type { AniListMediaResult } from "@/lib/anilist/types";
 import { getAuthUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/types/database";
 
+import { AnimeNotFoundError } from "./errors";
 import { syncAnimeFromAnilist } from "./sync";
 
 export async function getAnimeForDisplay(
@@ -25,12 +24,10 @@ export async function getAnimeForDisplay(
     return syncAnimeFromAnilist(anilistId);
   }
 
-  const result = await anilistQuery<AniListMediaResult>(ANIME_DETAIL_QUERY, {
-    id: anilistId,
-  });
+  const result = await fetchAnimeDetail(anilistId);
 
   if (!result.Media) {
-    throw new Error("Anime not found");
+    throw new AnimeNotFoundError(anilistId);
   }
 
   const row = mapAniListMediaToAnimeRow(result.Media);

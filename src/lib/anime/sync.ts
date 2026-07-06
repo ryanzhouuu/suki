@@ -1,11 +1,11 @@
-import { anilistQuery } from "@/lib/anilist/client";
+import { fetchAnimeDetail } from "@/lib/anilist/detail";
 import { mapAniListMediaToAnimeRow } from "@/lib/anilist/map";
-import { ANIME_DETAIL_QUERY } from "@/lib/anilist/queries";
-import type { AniListMediaResult } from "@/lib/anilist/types";
 import { syncAnimeEmbedding } from "@/lib/recommendations/sync-anime-embedding";
 import { ensureAnimeSeriesMapping } from "@/lib/series/resolver";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Tables } from "@/types/database";
+
+import { AnimeNotFoundError } from "./errors";
 
 /**
  * Writes to the shared `anime` catalog go through the service-role admin client:
@@ -34,12 +34,10 @@ export async function syncAnimeFromAnilist(
     }
   }
 
-  const result = await anilistQuery<AniListMediaResult>(ANIME_DETAIL_QUERY, {
-    id: anilistId,
-  });
+  const result = await fetchAnimeDetail(anilistId);
 
   if (!result.Media) {
-    throw new Error("Anime not found on AniList");
+    throw new AnimeNotFoundError(anilistId);
   }
 
   const row = mapAniListMediaToAnimeRow(result.Media);
