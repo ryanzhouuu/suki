@@ -90,7 +90,9 @@ async function main() {
 
     try {
       const current = await currentSeries(admin, a.id);
-      const cluster = await fetchFranchiseCluster(a.anilist_id);
+      const cluster = await fetchFranchiseCluster(a.anilist_id, {
+        cache: false,
+      });
       if (cluster.length <= 1) continue; // standalone — nothing to join
 
       const root = franchiseRootForCluster(cluster, title);
@@ -109,7 +111,7 @@ async function main() {
         continue;
       }
 
-      const resolved = await ensureAnimeSeriesMapping(a);
+      const resolved = await ensureAnimeSeriesMapping(a, { cache: false });
       if (current && current.id !== resolved.series.id) {
         await consolidateSeriesReferences(current.id, resolved.series.id);
         await deleteOrphanSeries(admin, current.id);

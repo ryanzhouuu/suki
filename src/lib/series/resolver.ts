@@ -144,6 +144,7 @@ async function resolveByTargetAnilistPrimary(
   targetAnilistPrimaryId: number,
   fallbackTitle: string,
   fallbackCoverUrl: string | null,
+  options?: { cache?: boolean },
 ): Promise<Tables<"series">> {
   const admin = createAdminClient();
   const { data } = await admin
@@ -154,7 +155,9 @@ async function resolveByTargetAnilistPrimary(
 
   if (data) return data;
 
-  const cluster = await fetchFranchiseCluster(targetAnilistPrimaryId);
+  const cluster = await fetchFranchiseCluster(targetAnilistPrimaryId, {
+    cache: options?.cache,
+  });
   if (cluster.length === 0) {
     return resolveSingleton(targetAnilistPrimaryId, fallbackTitle, fallbackCoverUrl);
   }
@@ -170,6 +173,7 @@ export async function resolveSeriesForAnilistId(
   options?: {
     fallbackTitle?: string;
     fallbackCoverUrl?: string | null;
+    cache?: boolean;
   },
 ): Promise<Tables<"series">> {
   const title = options?.fallbackTitle ?? `Anime ${anilistId}`;
@@ -193,12 +197,15 @@ export async function resolveSeriesForAnilistId(
         override.target_anilist_primary_id,
         title,
         cover,
+        { cache: options?.cache },
       );
     }
   }
 
   try {
-    const cluster = await fetchFranchiseCluster(anilistId);
+    const cluster = await fetchFranchiseCluster(anilistId, {
+      cache: options?.cache,
+    });
     if (cluster.length === 0) {
       return resolveSingleton(anilistId, title, cover);
     }
@@ -211,7 +218,7 @@ export async function resolveSeriesForAnilistId(
 
 export async function ensureAnimeSeriesMapping(
   anime: Tables<"anime">,
-  options?: { lightweight?: boolean },
+  options?: { lightweight?: boolean; cache?: boolean },
 ): Promise<ResolvedSeries> {
   const admin = createAdminClient();
   const title =
@@ -227,6 +234,7 @@ export async function ensureAnimeSeriesMapping(
     : await resolveSeriesForAnilistId(anime.anilist_id, {
         fallbackTitle: title,
         fallbackCoverUrl: anime.cover_image_url,
+        cache: options?.cache,
       });
 
   let source: TablesInsert<"anime_series_map">["source"] = options?.lightweight

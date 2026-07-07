@@ -16,6 +16,14 @@ import {
 /** Relations rarely change, so cache them for a day. */
 const RELATIONS_CACHE_TTL_SECONDS = 24 * 60 * 60;
 
+function fetchRelationsUncached(id: number): Promise<AniListRelationsResult> {
+  return anilistQuery<AniListRelationsResult>(
+    ANIME_RELATIONS_QUERY,
+    { id },
+    { cache: "no-store" },
+  );
+}
+
 /**
  * Cross-request-cached relations fetch for one AniList id. Caps the
  * up-to-64-calls-per-anime franchise crawl: overlapping crawls and re-syncs
@@ -23,12 +31,7 @@ const RELATIONS_CACHE_TTL_SECONDS = 24 * 60 * 60;
  */
 const fetchRelations = cachedAnilistFetch(
   ["anilist-relations"],
-  (id: number): Promise<AniListRelationsResult> =>
-    anilistQuery<AniListRelationsResult>(
-      ANIME_RELATIONS_QUERY,
-      { id },
-      { cache: "no-store" },
-    ),
+  fetchRelationsUncached,
   { revalidate: RELATIONS_CACHE_TTL_SECONDS, tags: ["anilist-relations"] },
 );
 
@@ -105,9 +108,12 @@ function relatedNodes(
 
 export async function fetchFranchiseCluster(
   rootAnilistId: number,
+  options?: { cache?: boolean },
 ): Promise<FranchiseMediaNode[]> {
   const visited = new Map<number, FranchiseMediaNode>();
   const queue: { id: number; depth: number }[] = [{ id: rootAnilistId, depth: 0 }];
+  const loadRelations =
+    options?.cache === false ? fetchRelationsUncached : fetchRelations;
 
   // Tokens of the originating media. Every traversed neighbor must share one, so
   // a crossover/festival edge into another franchise can't drag it in even if a
@@ -119,7 +125,7 @@ export async function fetchFranchiseCluster(
     if (!current || visited.has(current.id)) continue;
     if (current.depth > SERIES_GRAPH_MAX_DEPTH) continue;
 
-    const result = await fetchRelations(current.id);
+    const result = await loadRelations(current.id);
 
     const media = result.Media;
     if (!media) continue;
