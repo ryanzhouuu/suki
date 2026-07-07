@@ -98,7 +98,7 @@ async function main() {
     }${args.all ? " (all cached rows)" : " with missing rich metadata"}.`,
   );
   console.log(
-    `Mode: force AniList refresh, lightweight series mapping, no embeddings, ${args.delayMs}ms between titles.`,
+    `Mode: force AniList refresh, full series mapping, no embeddings, ${args.delayMs}ms between titles.`,
   );
 
   if (args.dryRun) {
@@ -115,7 +115,6 @@ async function main() {
     try {
       await syncAnimeCatalogFromAnilist(anime.anilist_id, {
         forceRefresh: true,
-        lightweightSeriesMapping: true,
         skipEmbedding: true,
       });
       refreshed += 1;
