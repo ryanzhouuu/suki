@@ -2,6 +2,7 @@ import { anilistQuery } from "@/lib/anilist/client";
 import { cachedAnilistFetch } from "@/lib/anilist/cache";
 import { ANIME_DETAIL_QUERY } from "@/lib/anilist/queries";
 import type { AniListMediaResult } from "@/lib/anilist/types";
+import { AnimeNotFoundError } from "@/lib/anime/errors";
 
 /**
  * Uncached detail fetch. The cache layer (`cachedAnilistFetch`) owns caching, so
@@ -18,6 +19,18 @@ export function fetchAnimeDetailUncached(
   );
 }
 
+async function fetchCacheableAnimeDetail(
+  anilistId: number,
+): Promise<AniListMediaResult> {
+  const result = await fetchAnimeDetailUncached(anilistId);
+
+  if (!result.Media) {
+    throw new AnimeNotFoundError(anilistId);
+  }
+
+  return result;
+}
+
 /**
  * Shared, cross-request-cached detail fetch for a single AniList id.
  *
@@ -28,6 +41,6 @@ export function fetchAnimeDetailUncached(
  */
 export const fetchAnimeDetail = cachedAnilistFetch(
   ["anilist-detail"],
-  fetchAnimeDetailUncached,
+  fetchCacheableAnimeDetail,
   { tags: ["anilist-detail"] },
 );
