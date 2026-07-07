@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // c8 coverage output (npm run test:coverage) — not source.
     "coverage/**",
+    // Local git worktrees may contain their own generated Next output.
+    ".worktrees/**",
   ]),
 ]);
 
