@@ -13,6 +13,7 @@ import {
   validateLibraryEntryPatch,
   type LibraryEntryPatchInput,
 } from "@/lib/library/validate";
+import { applyLibraryStateTransitions } from "@/lib/library/transitions";
 import { recomputeUserRanking } from "@/lib/ranking/recompute-series";
 import { ensureAnimeSeriesMapping } from "@/lib/series/resolver";
 import { createClient } from "@/lib/supabase/server";
@@ -118,6 +119,10 @@ export async function addAnimeEntry(
       status === "completed" ? new Date().toISOString().slice(0, 10) : null;
     const startedAt =
       status === "watching" ? new Date().toISOString().slice(0, 10) : null;
+    const completedProgress =
+      status === "completed" && anime.episodes != null && anime.episodes > 0
+        ? anime.episodes
+        : undefined;
 
     if (existing) {
       const { error } = await supabase
@@ -126,6 +131,9 @@ export async function addAnimeEntry(
           status,
           completed_at: completedAt,
           started_at: startedAt ?? undefined,
+          ...(completedProgress !== undefined
+            ? { progress_episodes: completedProgress }
+            : {}),
         })
         .eq("id", existing.id);
 
@@ -157,6 +165,9 @@ export async function addAnimeEntry(
       status,
       completed_at: completedAt,
       started_at: startedAt,
+      ...(completedProgress !== undefined
+        ? { progress_episodes: completedProgress }
+        : {}),
     });
 
     if (error) return { error: error.message };
@@ -216,6 +227,13 @@ export async function updateAnimeEntry(
       error: e instanceof Error ? e.message : "Invalid library update.",
     };
   }
+
+  validated = applyLibraryStateTransitions({
+    existingStatus: existing.status as AnimeEntryStatus,
+    existingProgressEpisodes: existing.progress_episodes,
+    patch: validated,
+    totalEpisodes: maxEpisodes,
+  });
 
   const effectiveStatus = validated.status ?? existing.status;
   if (effectiveStatus !== "plan_to_watch" && validated.priority !== undefined) {
