@@ -23,6 +23,7 @@ export type ProfileTasteSummary = {
 
 export type ProfileWatchStyle = {
   topFormats: { format: string; count: number }[];
+  totalEpisodesWatched: number;
   shortSeriesShare: number | null;
   genreCompletionRates: { genre: string; rate: number; started: number }[];
 };
@@ -120,6 +121,12 @@ function shortSeriesShare(entries: LibraryEntry[]): number | null {
   return Math.round((shortCount / withEpisodeCount.length) * 100);
 }
 
+function totalEpisodesWatched(entries: LibraryEntry[]): number {
+  return entries
+    .filter((entry) => entry.status !== "plan_to_watch")
+    .reduce((sum, entry) => sum + Math.max(0, entry.progress_episodes), 0);
+}
+
 function genreCompletionRates(
   entries: LibraryEntry[],
   topGenres: string[],
@@ -184,6 +191,7 @@ export function computeProfileStats(
   };
   const watchStyle: ProfileWatchStyle = {
     topFormats: formatCounts(entries),
+    totalEpisodesWatched: totalEpisodesWatched(entries),
     shortSeriesShare: shortSeriesShare(completedEntries),
     genreCompletionRates: genreCompletionRates(entries, topGenres.slice(0, 4)),
   };
