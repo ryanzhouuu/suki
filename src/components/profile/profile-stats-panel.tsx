@@ -82,6 +82,7 @@ export function ProfileStatsPanel({
 
   const hasWatchStyle =
     watchStyle.topFormats.length > 0 ||
+    watchStyle.totalEpisodesWatched > 0 ||
     watchStyle.shortSeriesShare !== null ||
     watchStyle.genreCompletionRates.some((g) => g.started > 0);
 
@@ -108,6 +109,11 @@ export function ProfileStatsPanel({
     headlineMetrics.push({ value: library.total, label: "Tracked" });
   if (library.completed > 0)
     headlineMetrics.push({ value: library.completed, label: "Completed" });
+  if (watchStyle.totalEpisodesWatched > 0)
+    headlineMetrics.push({
+      value: watchStyle.totalEpisodesWatched.toLocaleString(),
+      label: "Episodes",
+    });
   if (ranking.totalRanked > 0)
     headlineMetrics.push({ value: ranking.totalRanked, label: "Ranked" });
   if (taste.averagePersonalScore !== null)

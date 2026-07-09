@@ -33,6 +33,7 @@ const emptyRanking: ProfileRankingStats = {
 
 const emptyWatchStyle: ProfileWatchStyle = {
   topFormats: [],
+  totalEpisodesWatched: 0,
   shortSeriesShare: null,
   genreCompletionRates: [],
 };
@@ -51,13 +52,13 @@ describe("ProfileStatsPanel", () => {
     cleanup();
   });
 
-  it("shows headline metrics for tracked, completed, ranked, and avg score", () => {
+  it("shows headline metrics for tracked, completed, episodes, ranked, and avg score", () => {
     render(
       <ProfileStatsPanel
         library={{ ...emptyLibrary, total: 20, completed: 12, watching: 8 }}
         taste={{ ...emptyTaste, averagePersonalScore: 8.5 }}
         ranking={{ ...emptyRanking, totalRanked: 6 }}
-        watchStyle={emptyWatchStyle}
+        watchStyle={{ ...emptyWatchStyle, totalEpisodesWatched: 248 }}
       />,
     );
     screen.getByText("20");
@@ -65,6 +66,8 @@ describe("ProfileStatsPanel", () => {
     // "12"/"Completed" also appear in the status-breakdown card below.
     assert.equal(screen.getAllByText("12").length, 2);
     assert.equal(screen.getAllByText("Completed").length, 2);
+    screen.getByText("248");
+    screen.getByText("Episodes");
     screen.getByText("6");
     screen.getByText("Ranked");
     screen.getByText("8.5");
@@ -128,6 +131,7 @@ describe("ProfileStatsPanel", () => {
         ranking={emptyRanking}
         watchStyle={{
           topFormats: [{ format: "TV", count: 10 }],
+          totalEpisodesWatched: 248,
           shortSeriesShare: 25,
           genreCompletionRates: [{ genre: "Action", rate: 80, started: 5 }],
         }}
