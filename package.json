@@ -12,6 +12,7 @@
     "db:studio": "drizzle-kit studio",
     "types:supabase": "echo 'Regenerate with Supabase MCP generate_typescript_types or: supabase gen types typescript'",
     "backfill:series": "npx tsx --conditions=react-server src/scripts/backfill-series.ts",
+    "backfill:completed-progress": "npx tsx --conditions=react-server src/scripts/backfill-completed-progress.ts",
     "backfill:bt-rankings": "npx tsx --conditions=react-server src/scripts/backfill-bt-rankings.ts",
     "backfill:rich-metadata": "npx tsx --conditions=react-server src/scripts/backfill-rich-metadata.ts",
     "reresolve:titles": "npx tsx --conditions=react-server src/scripts/reresolve-series-titles.ts",
