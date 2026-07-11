@@ -160,6 +160,7 @@ export async function processImportChunk(
   const progress = await processChunk(jobId);
 
   revalidatePath("/library");
+  revalidatePath("/setup/library");
   if (progress?.status === "done") revalidatePath("/ranking");
   return progress;
 }

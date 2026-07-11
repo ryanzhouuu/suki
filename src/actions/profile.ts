@@ -57,8 +57,8 @@ export async function completeProfile(
   }
 
   revalidatePath("/home");
-  // Land new users on Import to kill the empty-library cold start; they can skip.
-  redirect("/import");
+  revalidatePath("/setup/library");
+  redirect("/setup/library");
 }
 
 export async function updateProfile(

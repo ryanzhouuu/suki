@@ -30,6 +30,7 @@ function revalidateLibraryPaths(options?: {
   includeRanking?: boolean;
 }) {
   revalidatePath("/library");
+  revalidatePath("/setup/library");
   if (options?.anilistId) {
     revalidatePath(`/anime/${options.anilistId}`);
   }
