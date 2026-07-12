@@ -32,7 +32,7 @@ export const getUserLibraryEntries = cache(async function (
   const { data, error } = await query;
 
   if (error) {
-    throw new Error(error.message);
+    throw error;
   }
 
   return (data ?? []) as LibraryEntry[];

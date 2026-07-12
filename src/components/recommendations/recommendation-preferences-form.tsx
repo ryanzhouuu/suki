@@ -187,9 +187,14 @@ export function RecommendationPreferencesForm({
             {pending ? "Finding picks…" : "Get recommendations"}
           </Button>
           {state.error ? (
-            <p className="text-sm text-red-600" role="alert">
-              {state.error}
-            </p>
+            <div className="text-sm text-red-600" role="alert">
+              <p>{state.error}</p>
+              {state.referenceId ? (
+                <p className="mt-1 font-mono text-xs text-faint">
+                  Reference: {state.referenceId}
+                </p>
+              ) : null}
+            </div>
           ) : null}
           {state.message ? (
             <p className="text-sm text-muted">{state.message}</p>

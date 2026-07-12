@@ -20,11 +20,14 @@ import {
   getUserRecommendations,
 } from "@/lib/recommendations/queries";
 import { parseRecommendationRequestPrefs } from "@/lib/recommendations/request-prefs";
+import { runResilientOperation } from "@/lib/resilience/operation";
 import { checkRecommendationRefreshThrottle } from "@/lib/throttle/recommendation-refresh";
 
 export type RecommendationsActionState = {
   error?: string;
   message?: string;
+  referenceId?: string;
+  retryable?: boolean;
 };
 
 export async function refreshRecommendations(
@@ -34,9 +37,24 @@ export async function refreshRecommendations(
   const user = await requireAuthUser();
 
   if (!isEmbeddingConfigured()) {
+    const result = await runResilientOperation(
+      {
+        route: "/recommendations",
+        operation: "generate_recommendations",
+        dependency: "openai",
+        userId: user.id,
+      },
+      () => {
+        throw new Error("OPENAI_API_KEY is not set.");
+      },
+    );
+    if (result.status === "loaded") {
+      throw new Error("Expected configuration failure.");
+    }
     return {
-      error:
-        "Recommendations are not configured. Add OPENAI_API_KEY to the server environment.",
+      error: result.failure.safeMessage,
+      referenceId: result.failure.correlationId.slice(0, 8),
+      retryable: result.failure.retryable,
     };
   }
 
@@ -52,22 +70,33 @@ export async function refreshRecommendations(
     return { error: parsed.error };
   }
 
-  try {
-    await generateRecommendations(user.id, {
-      force: true,
-      prefs: parsed.prefs,
-    });
-    await logUserEvent(user.id, USER_EVENT_TYPES.recommendationRefreshed, {
-      metadata: { requestPrefs: parsed.prefs },
-    });
-    revalidatePath("/recommendations");
-    revalidatePath("/home");
-    return { message: "Recommendations updated." };
-  } catch (e) {
+  const generation = await runResilientOperation(
+    {
+      route: "/recommendations",
+      operation: "generate_recommendations",
+      dependency: "openai",
+      userId: user.id,
+    },
+    () =>
+      generateRecommendations(user.id, {
+        force: true,
+        prefs: parsed.prefs,
+      }),
+  );
+  if (generation.status === "unavailable") {
     return {
-      error: e instanceof Error ? e.message : "Failed to refresh recommendations.",
+      error: generation.failure.safeMessage,
+      referenceId: generation.failure.correlationId.slice(0, 8),
+      retryable: generation.failure.retryable,
     };
   }
+
+  await logUserEvent(user.id, USER_EVENT_TYPES.recommendationRefreshed, {
+    metadata: { requestPrefs: parsed.prefs },
+  });
+  revalidatePath("/recommendations");
+  revalidatePath("/home");
+  return { message: "Recommendations updated." };
 }
 
 export async function logRecommendationViewed(animeId?: string) {
@@ -119,8 +148,7 @@ export async function refreshCollaborativeRecommendations(
 
   if (!isEmbeddingConfigured()) {
     return {
-      error:
-        "Recommendations are not configured. Add OPENAI_API_KEY to the server environment.",
+      error: "Recommendations are not available right now. Please try again later.",
     };
   }
 

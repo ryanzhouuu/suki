@@ -93,10 +93,11 @@ describe("RecommendationPreferencesForm", () => {
   });
 
   it("shows the error returned by the action", async () => {
-    refreshResult = { error: "Could not refresh" };
+    refreshResult = { error: "Could not refresh", referenceId: "abc12345" };
     render(<RecommendationPreferencesForm />);
     fireEvent.click(screen.getByRole("button", { name: "Get recommendations" }));
     await screen.findByRole("alert");
     screen.getByText("Could not refresh");
+    screen.getByText("Reference: abc12345");
   });
 });

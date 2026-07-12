@@ -5,26 +5,37 @@ import { loadRecommendationsForUser, logRecommendationViewed } from "@/actions/r
 import { ControlRail, WidePageFrame } from "@/components/layout/page-frame";
 import { FocusedRecommendations } from "@/components/recommendations/focused-recommendations";
 import { RecommendationPreferencesForm } from "@/components/recommendations/recommendation-preferences-form";
+import { AsyncSectionUnavailable } from "@/components/ui/async-section";
 import { requireProfile } from "@/lib/auth/session";
 import { isEmbeddingConfigured } from "@/lib/recommendations/embedding-provider";
 import {
   FOCUSED_RECOMMENDATION_LIMIT,
   STORED_RECOMMENDATION_LIMIT,
 } from "@/lib/recommendations/constants";
-import { getRecommendationPoolStats } from "@/lib/recommendations/pool-stats";
+
+import {
+  loadRecommendationPoolStats,
+  reportRecommendationConfiguration,
+} from "./recommendations-data";
 
 export default async function RecommendationsPage() {
   const { user } = await requireProfile();
 
   if (!isEmbeddingConfigured()) {
+    const configuration = await reportRecommendationConfiguration(user.id);
+    if (configuration.status === "loaded") {
+      throw new Error(
+        "Recommendation configuration check unexpectedly succeeded.",
+      );
+    }
     return (
       <div className="mx-auto max-w-lg space-y-4">
         <h1 className="text-4xl font-semibold">Recommendations</h1>
-        <p className="rounded-card border border-dashed border-line-strong p-6 text-sm text-muted">
-          Recommendations need <code className="text-ink">OPENAI_API_KEY</code>{" "}
-          in your server environment. Add it to <code>.env.local</code> and
-          restart the dev server.
-        </p>
+        <AsyncSectionUnavailable
+          title="Recommendations unavailable"
+          description="Recommendations are not available right now. Please check back later."
+          referenceId={configuration.failure.correlationId.slice(0, 8)}
+        />
       </div>
     );
   }
@@ -35,10 +46,11 @@ export default async function RecommendationsPage() {
     void logRecommendationViewed();
   });
 
-  const pool =
+  const poolResult =
     items.length < Math.min(8, STORED_RECOMMENDATION_LIMIT)
-      ? await getRecommendationPoolStats(user.id)
+      ? await loadRecommendationPoolStats(user.id)
       : null;
+  const pool = poolResult?.status === "loaded" ? poolResult.data : null;
   const showPoolHint =
     pool !== null &&
     pool.eligibleCount <= items.length + 2;
@@ -74,6 +86,15 @@ export default async function RecommendationsPage() {
                   above.
                 </p>
               </div>
+            ) : null}
+            {poolResult?.status === "unavailable" ? (
+              <AsyncSectionUnavailable
+                className="p-4"
+                title="Pool details unavailable"
+                description="Your saved recommendations are still available, but catalog details could not be loaded."
+                referenceId={poolResult.failure.correlationId.slice(0, 8)}
+                retryable={poolResult.failure.retryable}
+              />
             ) : null}
           </div>
         }
