@@ -10,6 +10,8 @@ import type { ImportJobProgress, StagedRow } from "@/lib/imports/types";
 import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/types/database";
 
+import { importFailureMessage } from "./import-error-copy";
+
 function toProgress(job: Tables<"anime_import_jobs">): ImportJobProgress {
   return {
     id: job.id,
@@ -35,13 +37,15 @@ export default async function ImportPage({
   const supabase = await createClient();
   const { restart } = await searchParams;
 
-  const { data: latest } = await supabase
+  const { data: latest, error: latestError } = await supabase
     .from("anime_import_jobs")
     .select("*")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
+
+  if (latestError) throw latestError;
 
   // "Import another list" passes ?restart=1 to bypass a finished job's summary.
   const job = restart && latest?.status === "done" ? null : latest;
@@ -92,12 +96,12 @@ export default async function ImportPage({
       {!job || stage === "canceled" || stage === "failed" || stage === "done" ? (
         stage !== "done" ? (
           <div className="space-y-4">
-            {stage === "failed" && job?.error ? (
+            {stage === "failed" ? (
               <p
                 className="rounded-xl border border-line bg-accent-soft px-3 py-2 text-sm text-danger"
                 role="alert"
               >
-                {job.error}
+                {importFailureMessage(job?.error ?? null)}
               </p>
             ) : null}
             <ImportStart />

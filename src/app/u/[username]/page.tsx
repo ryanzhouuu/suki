@@ -14,12 +14,18 @@ import { RankedList } from "@/components/ranking/ranked-list";
 import { getAuthUser } from "@/lib/auth/session";
 import { STATUS_LABELS, type AnimeEntryStatus } from "@/lib/constants";
 import { env } from "@/lib/env";
-import { getFriendshipBetween } from "@/lib/friends/queries";
 import { friendshipStatusForViewer } from "@/lib/friends/relationship";
 import { getTasteSimilarity } from "@/lib/friends/taste-similarity";
-import { getProfileByUsername, getPublicProfileData } from "@/lib/profiles/queries";
 import { getShareCardData } from "@/lib/profiles/share-card";
-import { getGenresBySeriesIds } from "@/lib/series/genres";
+import { runResilientOperation } from "@/lib/resilience";
+
+import {
+  loadBaseProfile,
+  loadFriendship,
+  loadGenresBySeriesIds,
+  loadProfileMetadataVisibility,
+  loadPublicProfileData,
+} from "./data";
 
 type PublicProfilePageProps = {
   params: Promise<{ username: string }>;
@@ -32,8 +38,28 @@ export async function generateMetadata({
   params: Promise<{ username: string }>;
 }): Promise<Metadata> {
   const { username } = await params;
-  const card = await getShareCardData(username);
-  if (!card) return {};
+  const generic: Metadata = {
+    metadataBase: new URL(env.siteUrl()),
+    title: "Suki",
+    description: "Track anime, build your watchlist, and rank your favorites on Suki.",
+  };
+  let card;
+  try {
+    const visibilityResult = await runResilientOperation(
+      { route: "/u/[username]", operation: "load_profile_metadata", dependency: "supabase" },
+      () => loadProfileMetadataVisibility(username),
+    );
+    if (visibilityResult.status === "unavailable") return generic;
+    const visibility = visibilityResult.data;
+    if (visibility === null) return generic;
+    if (visibility !== "public") {
+      return { ...generic, title: "Private profile" };
+    }
+    card = await getShareCardData(username);
+  } catch {
+    return generic;
+  }
+  if (!card) return generic;
 
   const base: Metadata = { metadataBase: new URL(env.siteUrl()) };
 
@@ -78,7 +104,7 @@ export default async function PublicProfilePage({
   // Independent reads — run together rather than chaining auth → profile.
   const [viewer, baseProfile] = await Promise.all([
     getAuthUser(),
-    getProfileByUsername(username),
+    loadBaseProfile(username),
   ]);
   if (!baseProfile) {
     notFound();
@@ -90,7 +116,7 @@ export default async function PublicProfilePage({
   let friendshipStatus = friendshipStatusForViewer(null, viewer?.id ?? "");
 
   if (viewer && viewer.id !== baseProfile.user_id) {
-    const friendship = await getFriendshipBetween(viewer.id, baseProfile.user_id);
+    const friendship = await loadFriendship(viewer.id, baseProfile.user_id);
     friendshipId = friendship?.id ?? null;
     friendshipStatus = friendshipStatusForViewer(friendship, viewer.id);
   }
@@ -120,23 +146,26 @@ export default async function PublicProfilePage({
 
   // Taste similarity (embeddings + both libraries) is independent of the
   // profile data read — fetch them concurrently.
-  const [data, tasteSimilarity] = await Promise.all([
-    getPublicProfileData(username, { viewerId: viewer?.id ?? null }),
+  const [data, tasteResult] = await Promise.all([
+    loadPublicProfileData(baseProfile, viewer?.id ?? null),
     isFriend && viewer
-      ? getTasteSimilarity(viewer.id, baseProfile.user_id)
-      : Promise.resolve(null),
+      ? runResilientOperation(
+          { route: "/u/[username]", operation: "load_taste_similarity", dependency: "supabase" },
+          () => getTasteSimilarity(viewer.id, baseProfile.user_id),
+        )
+      : Promise.resolve({ status: "loaded" as const, data: null }),
   ]);
-
-  if (!data) {
-    notFound();
-  }
+  const tasteSimilarity = tasteResult.status === "loaded" ? tasteResult.data : null;
 
   const { profile, entries, allRankings, stats } = data;
   const isEditing = isOwnProfile && edit === "1";
 
   const seriesIds = allRankings.map((r) => r.series_id);
-  const genresMap =
-    seriesIds.length > 0 ? await getGenresBySeriesIds(seriesIds) : new Map();
+  const genresResult = await runResilientOperation(
+    { route: "/u/[username]", operation: "load_ranking_genres", dependency: "supabase" },
+    () => loadGenresBySeriesIds(seriesIds),
+  );
+  const genresMap = genresResult.status === "loaded" ? genresResult.data : new Map();
   const genresBySeriesId = Object.fromEntries(genresMap);
 
   const completedSorted = entries
@@ -220,6 +249,11 @@ export default async function PublicProfilePage({
         editable={isOwnProfile}
         collapsible
       />
+      {genresResult.status === "unavailable" ? (
+        <p className="mt-4 text-sm text-muted" role="status">
+          Ranking genres are temporarily unavailable.
+        </p>
+      ) : null}
     </section>
   );
 
@@ -241,6 +275,11 @@ export default async function PublicProfilePage({
           ranked: stats.ranking.totalRanked,
         }}
       />
+      {tasteResult.status === "unavailable" ? (
+        <p className="text-sm text-muted" role="status">
+          Taste similarity is temporarily unavailable.
+        </p>
+      ) : null}
 
       {isEditing ? (
         <ProfileEditSection profile={profile} editing />

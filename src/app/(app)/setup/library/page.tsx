@@ -14,6 +14,8 @@ import { getCompletedSeriesForUser } from "@/lib/series/queries";
 import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/types/database";
 
+import { importFailureMessage } from "../../import/import-error-copy";
+
 function toProgress(job: Tables<"anime_import_jobs">): ImportJobProgress {
   return {
     id: job.id,
@@ -34,7 +36,7 @@ export default async function LibrarySetupPage() {
   const { user } = await requireProfile();
   const supabase = await createClient();
 
-  const [{ count: libraryCount }, { data: latestJob }, completedSeries] =
+  const [libraryResult, jobResult, completedSeries] =
     await Promise.all([
       supabase
         .from("user_anime_entries")
@@ -50,8 +52,11 @@ export default async function LibrarySetupPage() {
       getCompletedSeriesForUser(user.id),
     ]);
 
-  const entries = libraryCount ?? 0;
-  const job = latestJob ?? null;
+  if (libraryResult.error) throw libraryResult.error;
+  if (jobResult.error) throw jobResult.error;
+
+  const entries = libraryResult.count ?? 0;
+  const job = jobResult.data ?? null;
   const view = resolveLibrarySetupView(entries, job?.status ?? null);
   const rankingReady =
     completedSeries.length >= LIBRARY_SETUP_RANKING_SERIES_THRESHOLD;
@@ -80,12 +85,12 @@ export default async function LibrarySetupPage() {
 
       {view === "failed_import" ? (
         <div className="space-y-5">
-          {job?.error ? (
+          {job ? (
             <p
               className="rounded-xl border border-line bg-accent-soft px-3 py-2 text-sm text-danger"
               role="alert"
             >
-              {job.error}
+              {importFailureMessage(job.error)}
             </p>
           ) : null}
           <LibrarySetupChooser showRecoveryHint />
