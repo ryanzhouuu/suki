@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 
 import { AnimePoster } from "@/components/anime/anime-poster";
+import { AsyncSectionUnavailable } from "@/components/ui/async-section";
 import {
   AiringTracker,
   AiringTrackerSkeleton,
@@ -18,63 +19,90 @@ import { requireProfile } from "@/lib/auth/session";
 import { getRandomBackground } from "@/lib/home/background";
 import { pickHeroHeadline } from "@/lib/home/hero-copy";
 import { getUserLibraryEntries } from "@/lib/library/queries";
+import { runResilientOperation } from "@/lib/resilience";
 import { getNextComparisonPair } from "@/lib/ranking/prompt";
 import { getCompletedSeriesForUser } from "@/lib/series/queries";
 
 // ——— Streaming sections (render concurrently with the page shell) ———
 
-async function DiscoverSection() {
-  const [trending, latest, popular] = await Promise.all([
-    getTrendingAnime().catch(() => []),
-    getLatestAnime().catch(() => []),
-    getPopularAnime().catch(() => []),
-  ]);
+type DiscoverRowSectionProps = {
+  delay: string;
+  operation: string;
+  title: string;
+  load: typeof getTrendingAnime;
+};
+
+async function DiscoverRowSection({
+  delay,
+  operation,
+  title,
+  load,
+}: DiscoverRowSectionProps) {
+  const result = await runResilientOperation(
+    { route: "/home", operation, dependency: "anilist" },
+    load,
+  );
+
+  if (result.status === "unavailable") {
+    return (
+      <AsyncSectionUnavailable
+        title={`${title} is temporarily unavailable`}
+        description={result.failure.safeMessage}
+        referenceId={result.failure.correlationId.slice(0, 8)}
+        retryable={result.failure.retryable}
+      />
+    );
+  }
+
+  if (result.data.length === 0) return null;
+
   return (
-    <>
-      {trending.length > 0 ? (
-        <div className="animate-rise [animation-delay:60ms]">
-          <DiscoverRow eyebrow="Discover" title="Trending" items={trending} />
-        </div>
-      ) : null}
-      {latest.length > 0 ? (
-        <div className="animate-rise [animation-delay:120ms]">
-          <DiscoverRow eyebrow="Discover" title="Latest" items={latest} />
-        </div>
-      ) : null}
-      {popular.length > 0 ? (
-        <div className="animate-rise [animation-delay:180ms]">
-          <DiscoverRow eyebrow="Discover" title="Popular" items={popular} />
-        </div>
-      ) : null}
-    </>
+    <div className="animate-rise" style={{ animationDelay: delay }}>
+      <DiscoverRow eyebrow="Discover" title={title} items={result.data} />
+    </div>
   );
 }
 
-function DiscoverSectionSkeleton() {
+function DiscoverRowSkeleton() {
   return (
-    <div className="space-y-10">
-      {[0, 1, 2].map((i) => (
-        <div key={i}>
-          <div className="mb-4">
-            <div className="h-3 w-14 animate-pulse rounded bg-surface-2" />
-            <div className="mt-1 h-7 w-24 animate-pulse rounded bg-surface-2" />
+    <div aria-hidden="true">
+      <div className="mb-4">
+        <div className="h-3 w-14 animate-pulse rounded bg-surface-2" />
+        <div className="mt-1 h-7 w-24 animate-pulse rounded bg-surface-2" />
+      </div>
+      <div className="-mx-4 flex gap-3 overflow-hidden px-4">
+        {Array.from({ length: 8 }).map((_, index) => (
+          <div key={index} className="w-29 shrink-0 sm:w-32">
+            <div className="aspect-2/3 w-full animate-pulse rounded-lg bg-surface-2" />
+            <div className="mt-2 h-3 w-3/4 animate-pulse rounded bg-surface-2" />
           </div>
-          <div className="-mx-4 flex gap-3 overflow-hidden px-4">
-            {Array.from({ length: 8 }).map((_, j) => (
-              <div key={j} className="w-29 shrink-0 sm:w-32">
-                <div className="aspect-2/3 w-full animate-pulse rounded-lg bg-surface-2" />
-                <div className="mt-2 h-3 w-3/4 animate-pulse rounded bg-surface-2" />
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
 
 async function WatchlistSection({ userId }: { userId: string }) {
-  const planToWatch = await getUserLibraryEntries(userId, "plan_to_watch");
+  const result = await runResilientOperation(
+    {
+      route: "/home",
+      operation: "load_plan_to_watch_shuffle",
+      dependency: "supabase",
+      userId,
+    },
+    () => getUserLibraryEntries(userId, "plan_to_watch"),
+  );
+  if (result.status === "unavailable") {
+    return (
+      <AsyncSectionUnavailable
+        title="Your watchlist is temporarily unavailable"
+        description={result.failure.safeMessage}
+        referenceId={result.failure.correlationId.slice(0, 8)}
+        retryable={result.failure.retryable}
+      />
+    );
+  }
+  const planToWatch = result.data;
   if (planToWatch.length === 0) return null;
   return (
     <div className="animate-rise [animation-delay:160ms]">
@@ -84,10 +112,30 @@ async function WatchlistSection({ userId }: { userId: string }) {
 }
 
 async function RankingSection({ userId }: { userId: string }) {
-  const [completedSeries, pair] = await Promise.all([
-    getCompletedSeriesForUser(userId),
-    getNextComparisonPair(userId),
-  ]);
+  const result = await runResilientOperation(
+    {
+      route: "/home",
+      operation: "load_ranking_prompt",
+      dependency: "supabase",
+      userId,
+    },
+    () =>
+      Promise.all([
+        getCompletedSeriesForUser(userId),
+        getNextComparisonPair(userId),
+      ]),
+  );
+  if (result.status === "unavailable") {
+    return (
+      <AsyncSectionUnavailable
+        title="Your ranking prompt is temporarily unavailable"
+        description={result.failure.safeMessage}
+        referenceId={result.failure.correlationId.slice(0, 8)}
+        retryable={result.failure.retryable}
+      />
+    );
+  }
+  const [completedSeries, pair] = result.data;
 
   if (pair && completedSeries.length >= 2) {
     return (
@@ -146,9 +194,32 @@ export default async function HomePage() {
         bgSrc={bg}
       />
 
-      <Suspense fallback={<DiscoverSectionSkeleton />}>
-        <DiscoverSection />
-      </Suspense>
+      <div className="space-y-10">
+        <Suspense fallback={<DiscoverRowSkeleton />}>
+          <DiscoverRowSection
+            delay="60ms"
+            operation="load_discover_trending"
+            title="Trending"
+            load={getTrendingAnime}
+          />
+        </Suspense>
+        <Suspense fallback={<DiscoverRowSkeleton />}>
+          <DiscoverRowSection
+            delay="120ms"
+            operation="load_discover_latest"
+            title="Latest"
+            load={getLatestAnime}
+          />
+        </Suspense>
+        <Suspense fallback={<DiscoverRowSkeleton />}>
+          <DiscoverRowSection
+            delay="180ms"
+            operation="load_discover_popular"
+            title="Popular"
+            load={getPopularAnime}
+          />
+        </Suspense>
+      </div>
 
       <Suspense fallback={null}>
         <WatchlistSection userId={user.id} />

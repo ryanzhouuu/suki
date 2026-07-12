@@ -99,10 +99,11 @@ async function profilesByUserIds(
   if (userIds.length === 0) return new Map();
 
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("profiles")
     .select("user_id, username, display_name, avatar_url, bio")
     .in("user_id", userIds);
+  if (error) throw error;
 
   return new Map((data ?? []).map((p) => [p.user_id, p]));
 }
@@ -121,12 +122,13 @@ export async function listAcceptedFriends(
 ): Promise<FriendWithProfile[]> {
   const supabase = await createClient();
 
-  const { data: rows } = await supabase
+  const { data: rows, error } = await supabase
     .from("friendships")
     .select("*")
     .eq("status", "accepted")
     .or(`requester_id.eq.${userId},recipient_id.eq.${userId}`)
     .order("responded_at", { ascending: false, nullsFirst: false });
+  if (error) throw error;
 
   const friendships = rows ?? [];
   const otherIds = friendships.map((f) => otherUserId(f, userId));
@@ -161,6 +163,8 @@ export async function listFriendRequests(userId: string): Promise<{
       .eq("status", "pending")
       .order("created_at", { ascending: false }),
   ]);
+  if (incomingResult.error) throw incomingResult.error;
+  if (outgoingResult.error) throw outgoingResult.error;
 
   const incomingRows = incomingResult.data ?? [];
   const outgoingRows = outgoingResult.data ?? [];

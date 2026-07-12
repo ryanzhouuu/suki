@@ -20,12 +20,13 @@ export async function getReceivedRecommendations(
 ): Promise<ReceivedRecommendation[]> {
   const supabase = await createClient();
 
-  const { data: rows } = await supabase
+  const { data: rows, error } = await supabase
     .from("anime_recommendations")
     .select(`id, note, created_at, sender_id, anime:anime_id(${ANIME_SELECT})`)
     .eq("recipient_id", userId)
     .eq("status", "pending")
     .order("created_at", { ascending: false });
+  if (error) throw error;
 
   const recRows = (rows ?? []) as ReceivedRecommendationRow[];
   if (recRows.length === 0) return [];
@@ -44,8 +45,13 @@ export async function getReceivedRecommendations(
           .select("anime_id")
           .eq("user_id", userId)
           .in("anime_id", animeIds as string[])
-      : Promise.resolve({ data: [] as { anime_id: string }[] }),
+      : Promise.resolve({
+          data: [] as { anime_id: string }[],
+          error: null,
+        }),
   ]);
+  if (sendersResult.error) throw sendersResult.error;
+  if (ownedResult.error) throw ownedResult.error;
 
   const senders = new Map<string, SenderRef>(
     (sendersResult.data ?? []).map((p) => [p.user_id, p]),

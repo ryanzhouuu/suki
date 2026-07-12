@@ -53,12 +53,13 @@ export async function getFriendActivityFeed(
   const admin = createAdminClient();
 
   // Only friends whose profile is visible and who haven't opted out.
-  const { data: profileRows } = await admin
+  const { data: profileRows, error: profilesError } = await admin
     .from("profiles")
     .select(
       "user_id, username, display_name, avatar_url, profile_visibility, show_activity_to_friends",
     )
     .in("user_id", friendIds);
+  if (profilesError) throw profilesError;
 
   const actors = new Map<string, FeedActor>();
   for (const p of profileRows ?? []) {
@@ -88,7 +89,8 @@ export async function getFriendActivityFeed(
     .limit(limit);
   if (cursor) query = query.lt("created_at", cursor);
 
-  const { data: eventRows } = await query;
+  const { data: eventRows, error: eventsError } = await query;
+  if (eventsError) throw eventsError;
   const rows: FeedEventRow[] = (eventRows ?? []).map((e) => ({
     id: e.id,
     userId: e.user_id,
@@ -113,10 +115,11 @@ export async function getFriendActivityFeed(
 
   const animeMap = new Map<string, AnimeRef>();
   if (animeIds.length > 0) {
-    const { data: animeRows } = await admin
+    const { data: animeRows, error: animeError } = await admin
       .from("anime")
       .select("id, anilist_id, english_title, romaji_title, cover_image_url")
       .in("id", animeIds);
+    if (animeError) throw animeError;
     for (const a of animeRows ?? []) {
       animeMap.set(a.id, {
         animeId: a.id,
@@ -130,7 +133,7 @@ export async function getFriendActivityFeed(
   const seriesMap = new Map<string, SeriesRef>();
   const rankByActorSeries = new Map<string, number>();
   if (winnerSeriesIds.length > 0) {
-    const [{ data: seriesRows }, { data: rankRows }] = await Promise.all([
+    const [seriesResult, rankingsResult] = await Promise.all([
       admin
         .from("series")
         .select("id, anilist_primary_id, canonical_title, cover_image_url")
@@ -143,6 +146,10 @@ export async function getFriendActivityFeed(
         .eq("algorithm_version", RANKING_ALGORITHM_VERSION)
         .lte("rank", FEED_RANKING_TOP_N),
     ]);
+    if (seriesResult.error) throw seriesResult.error;
+    if (rankingsResult.error) throw rankingsResult.error;
+    const seriesRows = seriesResult.data;
+    const rankRows = rankingsResult.data;
     for (const s of seriesRows ?? []) {
       seriesMap.set(s.id, {
         seriesId: s.id,
