@@ -20,16 +20,20 @@ export async function getRecommendationPoolStats(
   ]);
   const libraryCount = libraryEntries.length;
 
-  const { count: embeddedCount } = await admin
+  const { count: embeddedCount, error: countError } = await admin
     .from("anime_embeddings")
     .select("*", { count: "exact", head: true });
+
+  if (countError) throw countError;
 
   const excludedAnime = new Set(exclusions.excludedAnimeIds);
   const excludedSeries = new Set(exclusions.excludedSeriesIds);
 
-  const { data: embeddedRows } = await admin
+  const { data: embeddedRows, error: embeddedRowsError } = await admin
     .from("anime_embeddings")
     .select("anime_id");
+
+  if (embeddedRowsError) throw embeddedRowsError;
 
   const animeIds = (embeddedRows ?? []).map((r) => r.anime_id);
   if (animeIds.length === 0) {
@@ -40,10 +44,12 @@ export async function getRecommendationPoolStats(
     };
   }
 
-  const { data: maps } = await admin
+  const { data: maps, error: mapsError } = await admin
     .from("anime_series_map")
     .select("anime_id, series_id")
     .in("anime_id", animeIds);
+
+  if (mapsError) throw mapsError;
 
   const seriesByAnime = new Map(
     (maps ?? []).map((m) => [m.anime_id, m.series_id]),

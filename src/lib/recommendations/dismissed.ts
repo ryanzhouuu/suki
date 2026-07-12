@@ -14,7 +14,7 @@ export const getDismissedAnimeIds = cache(async (userId: string): Promise<string
     .not("anime_id", "is", null);
 
   if (error) {
-    throw new Error(error.message);
+    throw error;
   }
 
   return [...new Set((data ?? []).map((row) => row.anime_id as string))];

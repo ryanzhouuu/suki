@@ -27,10 +27,12 @@ export async function getRecommendationExclusions(
   }
 
   const supabase = await createClient();
-  const { data: maps } = await supabase
+  const { data: maps, error } = await supabase
     .from("anime_series_map")
     .select("series_id")
     .in("anime_id", excludedAnimeIds);
+
+  if (error) throw error;
 
   const excludedSeriesIds = [
     ...new Set((maps ?? []).map((m) => m.series_id)),

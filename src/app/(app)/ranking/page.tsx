@@ -5,6 +5,7 @@ import { RankingPanel } from "@/components/ranking/ranking-panel";
 import { ImportPreparingPanel } from "@/components/imports/import-preparing-panel";
 import { WidePageFrame } from "@/components/layout/page-frame";
 import { ShareButton } from "@/components/share/share-button";
+import { AsyncSectionUnavailable } from "@/components/ui/async-section";
 import { requireProfile } from "@/lib/auth/session";
 import { env } from "@/lib/env";
 import { RANKING_ALGORITHM_VERSION } from "@/lib/constants";
@@ -15,9 +16,10 @@ import {
   getUserLibraryEntries,
 } from "@/lib/library/queries";
 import { getNextComparisonPair } from "@/lib/ranking/prompt";
-import { getGenresBySeriesIds } from "@/lib/series/genres";
 import { getCompletedSeriesForUser } from "@/lib/series/queries";
 import { createClient } from "@/lib/supabase/server";
+
+import { loadRankingGenres } from "./ranking-genres";
 
 type RankingPageProps = {
   searchParams: Promise<{ view?: string }>;
@@ -56,9 +58,10 @@ export default async function RankingPage({ searchParams }: RankingPageProps) {
     getUserLibraryEntries(user.id),
   ]);
 
+  if (rankingsResult.error) throw rankingsResult.error;
+
   const rankings = rankingsResult.data ?? [];
   const completedSeriesCount = completedSeries.length;
-  const rankingsError = rankingsResult.error?.message;
 
   const seriesIds = [
     ...new Set([
@@ -66,8 +69,10 @@ export default async function RankingPage({ searchParams }: RankingPageProps) {
       ...completedSeries.map((s) => s.id),
     ]),
   ];
-  const genresMap = await getGenresBySeriesIds(seriesIds);
-  const genresBySeriesId = Object.fromEntries(genresMap);
+  const genresResult = await loadRankingGenres(user.id, seriesIds);
+  const genresBySeriesId = Object.fromEntries(
+    genresResult.status === "loaded" ? genresResult.data : new Map(),
+  );
   const librarySeriesMap = await getSeriesRefsByAnimeIds(
     libraryEntries.map((entry) => entry.anime.id),
   );
@@ -86,10 +91,14 @@ export default async function RankingPage({ searchParams }: RankingPageProps) {
         <ShareButton url={shareUrl} title="My anime rankings on Suki" />
       </div>
 
-      {rankingsError ? (
-        <p className="rounded-card border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          Could not load rankings: {rankingsError}
-        </p>
+      {genresResult.status === "unavailable" ? (
+        <AsyncSectionUnavailable
+          className="py-4"
+          title="Genre labels unavailable"
+          description="Your rankings are still available, but genre labels could not be loaded."
+          referenceId={genresResult.failure.correlationId.slice(0, 8)}
+          retryable={genresResult.failure.retryable}
+        />
       ) : null}
 
       {completedSeriesCount < 2 ? (

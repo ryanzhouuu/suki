@@ -20,7 +20,7 @@ export async function getUserRecommendations(
 ): Promise<RecommendationRow[]> {
   const supabase = await createClient();
 
-  const { data: latestRun } = await supabase
+  const { data: latestRun, error: latestRunError } = await supabase
     .from("recommendation_runs")
     .select("id")
     .eq("user_id", userId)
@@ -29,6 +29,8 @@ export async function getUserRecommendations(
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
+
+  if (latestRunError) throw latestRunError;
 
   if (!latestRun) return [];
 
@@ -39,7 +41,7 @@ export async function getUserRecommendations(
     .order("position", { ascending: true });
 
   if (error) {
-    throw new Error(error.message);
+    throw error;
   }
 
   const dismissed = new Set(await getDismissedAnimeIds(userId));
@@ -55,11 +57,13 @@ export async function getUserRecommendations(
 
   if (options?.includeLibraryStatus && limited.length > 0) {
     const animeIds = limited.map((row) => row.anime_id);
-    const { data: libraryRows } = await supabase
+    const { data: libraryRows, error: libraryError } = await supabase
       .from("user_anime_entries")
       .select("id, anime_id, status, progress_episodes")
       .eq("user_id", userId)
       .in("anime_id", animeIds);
+
+    if (libraryError) throw libraryError;
 
     libraryByAnimeId = new Map(
       (libraryRows ?? []).map((entry) => [
