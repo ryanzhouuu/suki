@@ -2,6 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  globalSetup: "./tests/e2e/setup/global-setup.ts",
   fullyParallel: false,
   workers: 1,
   timeout: 30_000,
@@ -20,6 +21,20 @@ export default defineConfig({
     headless: true,
   },
   outputDir: "test-results",
+  webServer: [
+    {
+      command: "npm run e2e:stub",
+      url: "http://127.0.0.1:4100/health",
+      reuseExistingServer: !process.env.CI,
+      timeout: 30_000,
+    },
+    {
+      command: "next start -H 127.0.0.1 -p 3100",
+      url: "http://127.0.0.1:3100/auth/login",
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+    },
+  ],
   projects: [
     {
       name: "setup",

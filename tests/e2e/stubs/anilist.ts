@@ -126,6 +126,24 @@ export const STUB_MEDIA: StubMedia[] = [
     description: "An apprentice tends the last orchard in a floating city.",
     relationIds: [],
   },
+  {
+    id: 1007,
+    idMal: 9007,
+    english: "Lanterns in Orbit",
+    romaji: "Kido no Tourou",
+    native: "軌道の灯籠",
+    format: "TV",
+    episodes: 13,
+    duration: 24,
+    season: "SUMMER",
+    seasonYear: 2020,
+    status: "FINISHED",
+    genres: ["Sci-Fi", "Drama"],
+    averageScore: 82,
+    popularity: 30_007,
+    description: "A maintenance crew keeps a ring of orbital lanterns alive.",
+    relationIds: [],
+  },
 ];
 
 type GraphqlRequest = {
