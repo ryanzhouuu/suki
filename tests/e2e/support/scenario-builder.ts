@@ -94,12 +94,16 @@ async function clearScenarioRows(admin: AdminClient, userId: string): Promise<vo
   }
 }
 
-async function insertLibraryProfile(admin: AdminClient, userId: string): Promise<void> {
+async function insertFixtureProfile(
+  admin: AdminClient,
+  userId: string,
+  name: "library" | "signout",
+): Promise<void> {
   const result = await admin.from("profiles").insert({
     user_id: userId,
-    username: FIXTURE_USERS.library.username,
-    display_name: FIXTURE_USERS.library.displayName,
-    bio: "A deterministic library fixture.",
+    username: FIXTURE_USERS[name].username,
+    display_name: FIXTURE_USERS[name].displayName,
+    bio: `A deterministic ${name} fixture.`,
     profile_visibility: "public",
     show_activity_to_friends: true,
   });
@@ -137,7 +141,7 @@ async function insertLibraryEntries(admin: AdminClient, userId: string): Promise
 }
 
 export async function resetScenario(
-  name: "onboarding" | "library",
+  name: "onboarding" | "library" | "signout",
 ): Promise<FixtureUserIds> {
   const admin = createLocalAdminClient();
   await upsertFixtureCatalog(admin);
@@ -145,8 +149,11 @@ export async function resetScenario(
   const userId = users[name];
   await clearScenarioRows(admin, userId);
 
+  if (name === "library" || name === "signout") {
+    await insertFixtureProfile(admin, userId, name);
+  }
+
   if (name === "library") {
-    await insertLibraryProfile(admin, userId);
     await insertLibraryEntries(admin, userId);
   }
 
@@ -159,4 +166,5 @@ export async function prepareFixtures(): Promise<void> {
   await ensureFixtureUsers(admin);
   await resetScenario("onboarding");
   await resetScenario("library");
+  await resetScenario("signout");
 }
