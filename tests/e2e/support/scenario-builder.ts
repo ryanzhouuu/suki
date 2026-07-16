@@ -24,6 +24,7 @@ type AdminClient = SupabaseClient<Database>;
 async function ensureFixtureUser(
   admin: AdminClient,
   name: FixtureUserName,
+  resetPassword: boolean,
 ): Promise<string> {
   const fixture = FIXTURE_USERS[name];
   const { data: list, error: listError } = await admin.auth.admin.listUsers({
@@ -34,11 +35,13 @@ async function ensureFixtureUser(
 
   const existing = list.users.find((user) => user.email === fixture.email);
   if (existing) {
-    const { error } = await admin.auth.admin.updateUserById(existing.id, {
-      password: FIXTURE_PASSWORD,
-      email_confirm: true,
-    });
-    if (error) throw new Error(`E2E fixture user update failed: ${error.message}`);
+    if (resetPassword || !existing.email_confirmed_at) {
+      const { error } = await admin.auth.admin.updateUserById(existing.id, {
+        ...(resetPassword ? { password: FIXTURE_PASSWORD } : {}),
+        email_confirm: true,
+      });
+      if (error) throw new Error(`E2E fixture user update failed: ${error.message}`);
+    }
     return existing.id;
   }
 
@@ -55,10 +58,12 @@ async function ensureFixtureUser(
 
 export async function ensureFixtureUsers(
   admin = createLocalAdminClient(),
+  options: { resetPasswords?: boolean } = {},
 ): Promise<FixtureUserIds> {
+  const resetPassword = options.resetPasswords ?? true;
   return {
-    onboarding: await ensureFixtureUser(admin, "onboarding"),
-    library: await ensureFixtureUser(admin, "library"),
+    onboarding: await ensureFixtureUser(admin, "onboarding", resetPassword),
+    library: await ensureFixtureUser(admin, "library", resetPassword),
   };
 }
 
@@ -135,7 +140,7 @@ export async function resetScenario(
 ): Promise<FixtureUserIds> {
   const admin = createLocalAdminClient();
   await upsertFixtureCatalog(admin);
-  const users = await ensureFixtureUsers(admin);
+  const users = await ensureFixtureUsers(admin, { resetPasswords: false });
   const userId = users[name];
   await clearScenarioRows(admin, userId);
 
