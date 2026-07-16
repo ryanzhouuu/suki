@@ -1,12 +1,16 @@
 import type { NextConfig } from "next";
 
 import { buildSecurityHeaders } from "./src/lib/security/headers";
+import {
+  parseSupabaseOrigin,
+  type SupabaseOrigin,
+} from "./src/lib/security/supabase-origin";
 
-const supabaseHostname = (() => {
+const supabaseOrigin: SupabaseOrigin = (() => {
   try {
-    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").hostname;
+    return parseSupabaseOrigin(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "");
   } catch {
-    return "*.supabase.co";
+    return { protocol: "https", hostname: "*.supabase.co", port: "" };
   }
 })();
 
@@ -23,7 +27,12 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "s4.anilist.co" },
       { protocol: "https", hostname: "img1.ak.crunchyroll.com" },
       // Supabase Storage public URLs (restricted to this project's storage)
-      { protocol: "https", hostname: supabaseHostname, pathname: "/storage/v1/object/public/**" },
+      {
+        protocol: supabaseOrigin.protocol,
+        hostname: supabaseOrigin.hostname,
+        port: supabaseOrigin.port,
+        pathname: "/storage/v1/object/public/**",
+      },
     ],
   },
   async headers() {
@@ -32,7 +41,7 @@ const nextConfig: NextConfig = {
         source: "/(.*)",
         headers: buildSecurityHeaders({
           isDev: process.env.NODE_ENV === "development",
-          supabaseHostname,
+          supabaseOrigin,
         }),
       },
     ];

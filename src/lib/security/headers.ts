@@ -1,16 +1,19 @@
+import { formatSupabaseOrigin, type SupabaseOrigin } from "./supabase-origin";
+
 export function buildSecurityHeaders(options: {
   isDev: boolean;
-  supabaseHostname: string;
+  supabaseOrigin: SupabaseOrigin;
 }): Array<{ key: string; value: string }> {
-  const { isDev, supabaseHostname } = options;
+  const { isDev, supabaseOrigin } = options;
+  const supabaseSource = formatSupabaseOrigin(supabaseOrigin);
   const csp = [
     "default-src 'self'",
     // Next.js App Router requires inline scripts without a nonce setup; dev needs eval.
     `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://va.vercel-scripts.com`,
     "style-src 'self' 'unsafe-inline'",
-    `img-src 'self' data: blob: https://${supabaseHostname} https://s4.anilist.co https://img1.ak.crunchyroll.com https://img.youtube.com https://i.ytimg.com`,
+    `img-src 'self' data: blob: ${supabaseSource} https://s4.anilist.co https://img1.ak.crunchyroll.com https://img.youtube.com https://i.ytimg.com`,
     "font-src 'self' data:",
-    `connect-src 'self' https://${supabaseHostname} https://va.vercel-scripts.com https://vitals.vercel-insights.com`,
+    `connect-src 'self' ${supabaseSource} https://va.vercel-scripts.com https://vitals.vercel-insights.com`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

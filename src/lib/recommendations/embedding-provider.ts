@@ -41,7 +41,11 @@ export function createEmbeddingProvider(): EmbeddingProvider {
     );
   }
 
-  const client = new OpenAI({ apiKey });
+  const baseURL = env.openAiBaseUrl();
+  const client = new OpenAI({
+    apiKey,
+    ...(baseURL ? { baseURL } : {}),
+  });
 
   return {
     model: EMBEDDING_MODEL,
