@@ -11,7 +11,7 @@ test("authenticate local fixture users", async ({ page }) => {
     await page.goto("/auth/login");
     await page.getByLabel("Email").fill(fixture.email);
     await page.getByLabel("Password").fill(FIXTURE_PASSWORD);
-    await page.getByRole("button", { name: "Sign in" }).click();
+    await page.locator("form").getByRole("button", { name: "Sign in" }).click();
 
     if (name === "onboarding") {
       await expect(page).toHaveURL(/\/onboarding$/);
