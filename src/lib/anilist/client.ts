@@ -1,7 +1,6 @@
 import { TokenBucket } from "@/lib/anilist/rate-limiter";
+import { env } from "@/lib/env";
 import { getAnilistToken } from "@/lib/anilist/token";
-
-const ANILIST_GRAPHQL_URL = "https://graphql.anilist.co";
 
 /** Unauthenticated AniList limit is ~30 requests/minute. */
 const RATE_LIMIT_MAX_RETRIES = 6;
@@ -73,7 +72,7 @@ async function executeQuery<T>(
     const waitMs = limiter.reserve();
     if (waitMs > 0) await sleep(waitMs);
 
-    const response = await fetch(ANILIST_GRAPHQL_URL, {
+    const response = await fetch(env.anilistGraphqlUrl(), {
       method: "POST",
       headers,
       body: JSON.stringify({ query, variables }),
