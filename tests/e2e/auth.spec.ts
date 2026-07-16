@@ -1,5 +1,5 @@
 import { FIXTURE_PASSWORD, FIXTURE_USERS } from "./support/fixture-users";
-import { authStatePath, expect, test } from "./support/test";
+import { expect, test } from "./support/test";
 
 test.describe("authentication", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
@@ -31,9 +31,15 @@ test.describe("authentication", () => {
 });
 
 test.describe("sign out", () => {
-  test.use({ storageState: authStatePath("library") });
+  test.use({ storageState: { cookies: [], origins: [] } });
 
   test("clears access to authenticated routes", async ({ page }) => {
+    await page.goto("/auth/login");
+    await page.getByLabel("Email").fill(FIXTURE_USERS.library.email);
+    await page.getByLabel("Password").fill(FIXTURE_PASSWORD);
+    await page.locator("form").getByRole("button", { name: "Sign in" }).click();
+    await expect(page).toHaveURL(/\/home$/);
+
     await page.goto("/home");
     await page.getByRole("button", { name: "Sign out" }).click();
     await expect(page).toHaveURL(/\/auth\/login$/);
