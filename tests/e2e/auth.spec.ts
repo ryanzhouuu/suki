@@ -22,7 +22,7 @@ test.describe("authentication", () => {
 
   test("logs a valid fixture user in through the visible form", async ({ page }) => {
     await page.goto("/auth/login");
-    await page.getByLabel("Email").fill(FIXTURE_USERS.library.email);
+    await page.getByLabel("Email").fill(FIXTURE_USERS.signout.email);
     await page.getByLabel("Password").fill(FIXTURE_PASSWORD);
     await page.locator("form").getByRole("button", { name: "Sign in" }).click();
 
@@ -35,7 +35,7 @@ test.describe("sign out", () => {
 
   test("clears access to authenticated routes", async ({ page }) => {
     await page.goto("/auth/login");
-    await page.getByLabel("Email").fill(FIXTURE_USERS.library.email);
+    await page.getByLabel("Email").fill(FIXTURE_USERS.signout.email);
     await page.getByLabel("Password").fill(FIXTURE_PASSWORD);
     await page.locator("form").getByRole("button", { name: "Sign in" }).click();
     await expect(page).toHaveURL(/\/home$/);

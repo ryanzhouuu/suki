@@ -11,6 +11,11 @@ export const FIXTURE_USERS = {
     username: "library_user",
     displayName: "Library Fixture",
   },
+  signout: {
+    email: "e2e-signout@example.test",
+    username: "signout_user",
+    displayName: "Sign Out Fixture",
+  },
 } as const;
 
 export type FixtureUserName = keyof typeof FIXTURE_USERS;
