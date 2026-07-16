@@ -64,6 +64,7 @@ export async function ensureFixtureUsers(
   return {
     onboarding: await ensureFixtureUser(admin, "onboarding", resetPassword),
     library: await ensureFixtureUser(admin, "library", resetPassword),
+    signout: await ensureFixtureUser(admin, "signout", resetPassword),
   };
 }
 
