@@ -117,8 +117,27 @@ try {
 }
 
 console.log("E2E: resetting the local database and replaying migrations…");
-const reset = runSupabase(["db", "reset", "--yes"]);
-if (reset.status !== 0) fail("Local Supabase database reset failed.", reset);
+function resetLocalDatabase() {
+  const reset = runSupabase(["db", "reset", "--yes"]);
+  if (reset.status === 0) return;
+
+  console.log("E2E: recreating the local Supabase stack after reset failure…");
+  const stop = runSupabase(["stop", "--no-backup"]);
+  if (stop.status !== 0) fail("Local Supabase stack could not be stopped for reset recovery.", stop);
+
+  startSupabase();
+  const retryEnvironment = normalizeStatus(readSupabaseStatus());
+  try {
+    assertLocalE2eEnvironment({ ...process.env, ...retryEnvironment, E2E_TEST_MODE: "1" });
+  } catch (error) {
+    fail(error instanceof Error ? error.message : "Local safety validation failed.");
+  }
+
+  const retry = runSupabase(["db", "reset", "--yes"]);
+  if (retry.status !== 0) fail("Local Supabase database reset failed after recovery.", retry);
+}
+
+resetLocalDatabase();
 
 const applicationEnvironment = {
   ...process.env,
