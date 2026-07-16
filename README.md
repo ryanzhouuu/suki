@@ -59,3 +59,13 @@ Imported scores are informational; Suki re-ranks everything through its own comp
 - **AniList GraphQL API** for anime metadata
 
 Privacy by design: profiles and lists are public by default, but account data stays private and Row Level Security is enforced at the database. Rankings are computed server-side with a key that never reaches the browser.
+
+## Local browser tests
+
+The end-to-end suite runs against a local Supabase stack and deterministic AniList/OpenAI stubs. Start Docker Desktop, install Chromium once with `npx playwright install chromium`, then run:
+
+```bash
+npm run test:e2e
+```
+
+Use `npm run test:e2e:headed` to watch the browser or `npm run test:e2e:ui` for Playwright UI mode. The runner refuses to reset anything unless the Supabase API and database both resolve to the local loopback ports.
