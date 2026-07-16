@@ -69,3 +69,8 @@ docs/superpowers/
 
 # git worktrees used for isolated feature work
 .worktrees/
+
+# Playwright output and local authentication state
+playwright/.auth/
+playwright-report/
+test-results/
