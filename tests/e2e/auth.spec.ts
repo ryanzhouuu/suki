@@ -14,7 +14,7 @@ test.describe("authentication", () => {
     await page.goto("/auth/login");
     await page.getByLabel("Email").fill("missing@example.test");
     await page.getByLabel("Password").fill("wrong-password");
-    await page.getByRole("button", { name: "Sign in" }).click();
+    await page.locator("form").getByRole("button", { name: "Sign in" }).click();
 
     await expect(page.getByRole("alert")).toBeVisible();
     await expect(page).toHaveURL(/\/auth\/login$/);
@@ -24,7 +24,7 @@ test.describe("authentication", () => {
     await page.goto("/auth/login");
     await page.getByLabel("Email").fill(FIXTURE_USERS.library.email);
     await page.getByLabel("Password").fill(FIXTURE_PASSWORD);
-    await page.getByRole("button", { name: "Sign in" }).click();
+    await page.locator("form").getByRole("button", { name: "Sign in" }).click();
 
     await expect(page).toHaveURL(/\/home$/);
   });
