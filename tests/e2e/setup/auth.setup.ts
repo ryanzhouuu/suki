@@ -13,10 +13,10 @@ test("authenticate local fixture users", async ({ page }) => {
     await page.getByLabel("Password").fill(FIXTURE_PASSWORD);
     await page.locator("form").getByRole("button", { name: "Sign in" }).click();
 
-    if (name === "library") {
-      await expect(page).toHaveURL(/\/home$/);
-    } else {
+    if (name === "onboarding") {
       await expect(page).toHaveURL(/\/onboarding$/);
+    } else {
+      await expect(page).toHaveURL(/\/home$/);
     }
 
     await page.context().storageState({ path: authStatePath(name) });
