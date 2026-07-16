@@ -57,7 +57,7 @@ export function createProviderStubServer() {
     try {
       if (request.url === "/anilist/graphql") {
         const result = handleAnilistGraphql(body as Parameters<typeof handleAnilistGraphql>[0]);
-        json(response, result.status, result.body);
+        json(response, result.status, result.status === 200 ? { data: result.body } : result.body);
         return;
       }
 
