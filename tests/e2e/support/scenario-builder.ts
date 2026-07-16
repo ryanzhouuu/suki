@@ -35,7 +35,7 @@ async function ensureFixtureUser(
 
   const existing = list.users.find((user) => user.email === fixture.email);
   if (existing) {
-    if (resetPassword || !existing.email_confirmed_at) {
+    if (resetPassword) {
       const { error } = await admin.auth.admin.updateUserById(existing.id, {
         ...(resetPassword ? { password: FIXTURE_PASSWORD } : {}),
         email_confirm: true,
