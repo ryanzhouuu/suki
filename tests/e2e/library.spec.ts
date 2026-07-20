@@ -1,5 +1,5 @@
 import { authStatePath, expect, test } from "./support/test";
-import { resetScenario } from "./support/scenario-builder";
+import { resetScenario } from "../support/local-supabase/scenario-builder";
 
 test.describe("library persistence", () => {
   test.use({ storageState: authStatePath("library") });

@@ -23,8 +23,9 @@ if (testFiles.length === 0) {
 }
 
 const result = spawnSync(
-  "npx",
+  process.execPath,
   [
+    "--import",
     "tsx",
     "--experimental-test-module-mocks",
     "--import",

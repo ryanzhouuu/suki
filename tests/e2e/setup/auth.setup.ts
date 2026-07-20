@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { FIXTURE_PASSWORD, FIXTURE_USERS } from "../support/fixture-users";
+import { FIXTURE_PASSWORD, FIXTURE_USERS } from "../../support/local-supabase/fixture-users";
 import { authStatePath } from "../support/test";
 
 test("authenticate local fixture users", async ({ page }) => {

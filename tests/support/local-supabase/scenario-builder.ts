@@ -13,34 +13,40 @@ import {
   fixtureAnimeId,
 } from "./fixture-catalog";
 import {
+  ACTION_FIXTURE_USERS,
+  E2E_FIXTURE_USERS,
   FIXTURE_PASSWORD,
-  FIXTURE_USERS,
+  type ActionFixtureUserIds,
+  type ActionFixtureUserName,
   type FixtureUserIds,
   type FixtureUserName,
 } from "./fixture-users";
 
 type AdminClient = SupabaseClient<Database>;
+type AnyFixtureUserName = FixtureUserName | ActionFixtureUserName;
 
 async function ensureFixtureUser(
   admin: AdminClient,
-  name: FixtureUserName,
+  name: AnyFixtureUserName,
   resetPassword: boolean,
 ): Promise<string> {
-  const fixture = FIXTURE_USERS[name];
+  const fixture = E2E_FIXTURE_USERS[name as FixtureUserName] ?? ACTION_FIXTURE_USERS[name as ActionFixtureUserName];
+  if (!fixture) throw new Error(`Unknown local fixture user: ${name}`);
+
   const { data: list, error: listError } = await admin.auth.admin.listUsers({
     page: 1,
     perPage: 1_000,
   });
-  if (listError) throw new Error(`E2E fixture user lookup failed: ${listError.message}`);
+  if (listError) throw new Error(`Local fixture user lookup failed: ${listError.message}`);
 
   const existing = list.users.find((user) => user.email === fixture.email);
   if (existing) {
     if (resetPassword) {
       const { error } = await admin.auth.admin.updateUserById(existing.id, {
-        ...(resetPassword ? { password: FIXTURE_PASSWORD } : {}),
+        password: FIXTURE_PASSWORD,
         email_confirm: true,
       });
-      if (error) throw new Error(`E2E fixture user update failed: ${error.message}`);
+      if (error) throw new Error(`Local fixture user update failed: ${error.message}`);
     }
     return existing.id;
   }
@@ -51,7 +57,7 @@ async function ensureFixtureUser(
     email_confirm: true,
   });
   if (error || !data.user) {
-    throw new Error(`E2E fixture user creation failed: ${error?.message ?? "missing user"}`);
+    throw new Error(`Local fixture user creation failed: ${error?.message ?? "missing user"}`);
   }
   return data.user.id;
 }
@@ -65,6 +71,20 @@ export async function ensureFixtureUsers(
     onboarding: await ensureFixtureUser(admin, "onboarding", resetPassword),
     library: await ensureFixtureUser(admin, "library", resetPassword),
     signout: await ensureFixtureUser(admin, "signout", resetPassword),
+  };
+}
+
+export async function ensureActionFixtureUsers(
+  admin = createLocalAdminClient(),
+  options: { resetPasswords?: boolean } = {},
+): Promise<ActionFixtureUserIds> {
+  const resetPassword = options.resetPasswords ?? true;
+  return {
+    actionAlice: await ensureFixtureUser(admin, "actionAlice", resetPassword),
+    actionBob: await ensureFixtureUser(admin, "actionBob", resetPassword),
+    actionCarol: await ensureFixtureUser(admin, "actionCarol", resetPassword),
+    actionAdmin: await ensureFixtureUser(admin, "actionAdmin", resetPassword),
+    actionNonAdmin: await ensureFixtureUser(admin, "actionNonAdmin", resetPassword),
   };
 }
 
@@ -97,17 +117,18 @@ async function clearScenarioRows(admin: AdminClient, userId: string): Promise<vo
 async function insertFixtureProfile(
   admin: AdminClient,
   userId: string,
-  name: "library" | "signout",
+  name: AnyFixtureUserName,
 ): Promise<void> {
+  const fixture = E2E_FIXTURE_USERS[name as FixtureUserName] ?? ACTION_FIXTURE_USERS[name as ActionFixtureUserName];
   const result = await admin.from("profiles").insert({
     user_id: userId,
-    username: FIXTURE_USERS[name].username,
-    display_name: FIXTURE_USERS[name].displayName,
+    username: fixture.username,
+    display_name: fixture.displayName,
     bio: `A deterministic ${name} fixture.`,
     profile_visibility: "public",
     show_activity_to_friends: true,
   });
-  throwOnSupabaseError("library profile insert", result.error);
+  throwOnSupabaseError(`${name} profile insert`, result.error);
 }
 
 async function insertLibraryEntries(admin: AdminClient, userId: string): Promise<void> {
@@ -153,18 +174,49 @@ export async function resetScenario(
     await insertFixtureProfile(admin, userId, name);
   }
 
-  if (name === "library") {
-    await insertLibraryEntries(admin, userId);
+  if (name === "library") await insertLibraryEntries(admin, userId);
+  return users;
+}
+
+export type LibraryActionScenario = {
+  users: ActionFixtureUserIds;
+  aliceAnimeId: string;
+  bobAnimeId: string;
+};
+
+export async function resetLibraryActionScenario(
+  admin = createLocalAdminClient(),
+): Promise<LibraryActionScenario> {
+  await upsertFixtureCatalog(admin);
+  const users = await ensureActionFixtureUsers(admin, { resetPasswords: false });
+
+  for (const name of Object.keys(users) as ActionFixtureUserName[]) {
+    await clearScenarioRows(admin, users[name]);
+    await insertFixtureProfile(admin, users[name], name);
   }
 
-  return users;
+  const entryResult = await admin.from("user_anime_entries").insert({
+    user_id: users.actionBob,
+    anime_id: fixtureAnimeId(1001),
+    status: "watching",
+    progress_episodes: 3,
+  });
+  throwOnSupabaseError("library action Bob entry insert", entryResult.error);
+
+  return {
+    users,
+    aliceAnimeId: fixtureAnimeId(1001),
+    bobAnimeId: fixtureAnimeId(1001),
+  };
 }
 
 export async function prepareFixtures(): Promise<void> {
   const admin = createLocalAdminClient();
   await upsertFixtureCatalog(admin);
   await ensureFixtureUsers(admin);
+  await ensureActionFixtureUsers(admin);
   await resetScenario("onboarding");
   await resetScenario("library");
   await resetScenario("signout");
+  await resetLibraryActionScenario(admin);
 }
