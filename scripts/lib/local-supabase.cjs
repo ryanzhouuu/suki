@@ -165,7 +165,7 @@ function readLocalSupabaseEnvironment() {
 }
 
 function startLocalSupabase() {
-  const result = runSupabase(["start"]);
+  const result = runSupabase(["start", "--exclude", "logflare"]);
   if (result.status === 0) return;
 
   const status = runSupabase(["status"]);
