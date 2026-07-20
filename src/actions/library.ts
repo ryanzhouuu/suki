@@ -289,7 +289,8 @@ export async function updateAnimeEntry(
   const { error } = await supabase
     .from("user_anime_entries")
     .update(updates)
-    .eq("id", entryId);
+    .eq("id", entryId)
+    .eq("user_id", user.id);
 
   if (error) return { error: error.message };
 
@@ -386,13 +387,16 @@ export async function removeAnimeEntry(entryId: string): Promise<LibraryActionSt
   const user = await requireAuthUser();
   const supabase = await createClient();
 
-  const { error } = await supabase
+  const { data: removed, error } = await supabase
     .from("user_anime_entries")
     .delete()
     .eq("id", entryId)
-    .eq("user_id", user.id);
+    .eq("user_id", user.id)
+    .select("id")
+    .maybeSingle();
 
   if (error) return { error: error.message };
+  if (!removed) return { error: "Entry not found." };
 
   scheduleLogEvent(user.id, USER_EVENT_TYPES.libraryEntryRemoved, {
     metadata: { entryId },
