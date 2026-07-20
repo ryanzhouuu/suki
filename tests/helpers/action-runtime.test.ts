@@ -40,6 +40,13 @@ describe("action runtime", () => {
     assert.equal(complete, true);
   });
 
+  it("keeps cache wrappers callable in the test runtime", async () => {
+    const runtime = createActionRuntime();
+    const cached = runtime.unstableCache(async (value: number) => value + 1, ["test"]);
+
+    assert.equal(await cached(41), 42);
+  });
+
   it("uses a sentinel redirect error with a stable destination", () => {
     const runtime = createActionRuntime();
     assert.throws(

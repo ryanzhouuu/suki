@@ -61,7 +61,10 @@ export function installIntegrationActionRuntimeMocks(
   runtime: ReturnType<typeof createIntegrationActionRuntime>,
 ): void {
   mock.module("next/cache", {
-    namedExports: { revalidatePath: runtime.revalidatePath },
+    namedExports: {
+      revalidatePath: runtime.revalidatePath,
+      unstable_cache: runtime.unstableCache,
+    },
   });
   mock.module("next/navigation", {
     namedExports: { redirect: runtime.redirect },
