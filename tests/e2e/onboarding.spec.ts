@@ -1,6 +1,6 @@
-import { FIXTURE_USERS } from "./support/fixture-users";
+import { FIXTURE_USERS } from "../support/local-supabase/fixture-users";
 import { authStatePath, expect, test } from "./support/test";
-import { resetScenario } from "./support/scenario-builder";
+import { resetScenario } from "../support/local-supabase/scenario-builder";
 
 test.describe("onboarding", () => {
   test.use({ storageState: authStatePath("onboarding") });

@@ -1,4 +1,4 @@
-import { FIXTURE_PASSWORD, FIXTURE_USERS } from "./support/fixture-users";
+import { FIXTURE_PASSWORD, FIXTURE_USERS } from "../support/local-supabase/fixture-users";
 import { expect, test } from "./support/test";
 
 test.describe("authentication", () => {

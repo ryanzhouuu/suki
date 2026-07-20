@@ -1,4 +1,4 @@
-import { STUB_MEDIA } from "../stubs/anilist";
+import { STUB_MEDIA } from "../../e2e/stubs/anilist";
 
 const ANIME_IDS: Record<number, string> = {
   1001: "a1001000-0000-4000-8000-000000000001",
@@ -87,6 +87,6 @@ export const FIXTURE_ANIME_SERIES_MAP = STUB_MEDIA.map((media) => ({
 
 export function fixtureAnimeId(anilistId: number): string {
   const id = ANIME_IDS[anilistId];
-  if (!id) throw new Error(`Unknown E2E fixture AniList ID: ${anilistId}`);
+  if (!id) throw new Error(`Unknown local fixture AniList ID: ${anilistId}`);
   return id;
 }

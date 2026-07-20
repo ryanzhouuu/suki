@@ -21,11 +21,7 @@ describe("assertLocalE2eEnvironment", () => {
 
   it("requires explicit E2E mode", () => {
     assert.throws(
-      () =>
-        assertLocalE2eEnvironment({
-          ...safeEnvironment,
-          E2E_TEST_MODE: undefined,
-        }),
+      () => assertLocalE2eEnvironment({ ...safeEnvironment, E2E_TEST_MODE: undefined }),
       /E2E_TEST_MODE must be 1/,
     );
   });
@@ -37,11 +33,7 @@ describe("assertLocalE2eEnvironment", () => {
       "http://staging.example.test:54321",
     ]) {
       assert.throws(
-        () =>
-          assertLocalE2eEnvironment({
-            ...safeEnvironment,
-            NEXT_PUBLIC_SUPABASE_URL: url,
-          }),
+        () => assertLocalE2eEnvironment({ ...safeEnvironment, NEXT_PUBLIC_SUPABASE_URL: url }),
         /NEXT_PUBLIC_SUPABASE_URL must target|NEXT_PUBLIC_SUPABASE_URL must be http/,
       );
     }
@@ -49,29 +41,18 @@ describe("assertLocalE2eEnvironment", () => {
 
   it("rejects non-local API and database ports", () => {
     assert.throws(
-      () =>
-        assertLocalE2eEnvironment({
-          ...safeEnvironment,
-          NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54322",
-        }),
+      () => assertLocalE2eEnvironment({ ...safeEnvironment, NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54322" }),
       /NEXT_PUBLIC_SUPABASE_URL must be http/,
     );
     assert.throws(
-      () =>
-        assertLocalE2eEnvironment({
-          ...safeEnvironment,
-          DATABASE_URL: "postgresql://postgres:postgres@127.0.0.1:54321/postgres",
-        }),
+      () => assertLocalE2eEnvironment({ ...safeEnvironment, DATABASE_URL: "postgresql://postgres:postgres@127.0.0.1:54321/postgres" }),
       /DATABASE_URL must target/,
     );
   });
 
   it("requires both URLs", () => {
     assert.throws(
-      () =>
-        assertLocalE2eEnvironment({
-          E2E_TEST_MODE: "1",
-        }),
+      () => assertLocalE2eEnvironment({ E2E_TEST_MODE: "1" }),
       /Missing NEXT_PUBLIC_SUPABASE_URL/,
     );
   });

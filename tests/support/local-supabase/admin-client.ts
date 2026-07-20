@@ -13,7 +13,7 @@ export function createLocalAdminClient(): SupabaseClient<Database> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const secretKey = process.env.SUPABASE_SECRET_KEY;
   if (!url || !secretKey) {
-    throw new Error("Local E2E environment is missing the Supabase secret key.");
+    throw new Error("Local test environment is missing the Supabase secret key.");
   }
 
   return createClient<Database>(url, secretKey, {
@@ -28,5 +28,5 @@ export function throwOnSupabaseError(
   operation: string,
   error: { message: string } | null,
 ): void {
-  if (error) throw new Error(`E2E fixture ${operation} failed: ${error.message}`);
+  if (error) throw new Error(`Local fixture ${operation} failed: ${error.message}`);
 }
