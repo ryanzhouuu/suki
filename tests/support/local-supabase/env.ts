@@ -2,7 +2,7 @@ import {
   buildLocalApplicationEnvironment as buildEnvironment,
   normalizeSupabaseStatus as normalizeStatus,
   parseSupabaseStatusEnv as parseStatusEnv,
-} from "../../../scripts/lib/local-supabase.mjs";
+} from "../../../scripts/lib/local-supabase.cjs";
 
 import {
   LOCAL_SUPABASE_API_PORT,

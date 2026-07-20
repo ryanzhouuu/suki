@@ -1,11 +1,13 @@
-import { spawnSync } from "node:child_process";
+/* eslint-disable @typescript-eslint/no-require-imports */
+const path = require("node:path");
+const { spawnSync } = require("node:child_process");
 
-export const ROOT = new URL("../..", import.meta.url).pathname;
-export const SUPABASE_COMMAND = process.platform === "win32" ? "npx.cmd" : "npx";
-export const LOCAL_SUPABASE_API_PORT = 54321;
-export const LOCAL_SUPABASE_DB_PORT = 54322;
+const ROOT = path.resolve(__dirname, "../..");
+const SUPABASE_COMMAND = process.platform === "win32" ? "npx.cmd" : "npx";
+const LOCAL_SUPABASE_API_PORT = 54321;
+const LOCAL_SUPABASE_DB_PORT = 54322;
 
-export function run(command, args, options = {}) {
+function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
     cwd: ROOT,
     encoding: "utf8",
@@ -18,7 +20,7 @@ export function run(command, args, options = {}) {
   };
 }
 
-export function sanitizedCommandFailure(output) {
+function sanitizedCommandFailure(output) {
   return String(output ?? "")
     .split(/\r?\n/)
     .filter(
@@ -28,11 +30,11 @@ export function sanitizedCommandFailure(output) {
     .trim();
 }
 
-export function runSupabase(args, options = {}) {
+function runSupabase(args, options = {}) {
   return run(SUPABASE_COMMAND, ["--no-install", "supabase", ...args], options);
 }
 
-export function parseSupabaseStatusEnv(output) {
+function parseSupabaseStatusEnv(output) {
   const values = {};
   for (const line of String(output ?? "").split(/\r?\n/)) {
     const trimmed = line.trim();
@@ -51,7 +53,7 @@ function firstValue(values, names, label) {
   throw new Error(`Supabase status output is missing ${label}.`);
 }
 
-export function normalizeSupabaseStatus(output) {
+function normalizeSupabaseStatus(output) {
   const values = parseSupabaseStatusEnv(output);
   return {
     NEXT_PUBLIC_SUPABASE_URL: firstValue(
@@ -77,7 +79,7 @@ export function normalizeSupabaseStatus(output) {
   };
 }
 
-export function buildLocalApplicationEnvironment(statusOutput, overrides = {}) {
+function buildLocalApplicationEnvironment(statusOutput, overrides = {}) {
   return {
     ...normalizeSupabaseStatus(statusOutput),
     NEXT_PUBLIC_SITE_URL: "http://127.0.0.1:3100",
@@ -106,7 +108,7 @@ function requiredUrl(value, name) {
   }
 }
 
-export function assertSafeLocalEnvironment(environment) {
+function assertSafeLocalEnvironment(environment) {
   if (environment.E2E_TEST_MODE !== "1") {
     throw new Error("E2E_TEST_MODE must be 1 for local E2E mutations.");
   }
@@ -137,14 +139,14 @@ export function assertSafeLocalEnvironment(environment) {
   }
 }
 
-export function checkNodeVersion() {
+function checkNodeVersion() {
   const [major, minor] = process.versions.node.split(".").map(Number);
   if (major < 20 || (major === 20 && minor < 9)) {
     throw new Error(`Node.js 20.9 or newer is required; found ${process.version}.`);
   }
 }
 
-export function checkDocker() {
+function checkDocker() {
   const result = run("docker", ["info"]);
   if (result.status !== 0) {
     const detail = sanitizedCommandFailure(`${result.stdout}\n${result.stderr}`);
@@ -154,7 +156,7 @@ export function checkDocker() {
   }
 }
 
-export function readLocalSupabaseEnvironment() {
+function readLocalSupabaseEnvironment() {
   const result = runSupabase(["status", "-o", "env"]);
   if (result.status !== 0) {
     throw new Error("Unable to read local Supabase status.");
@@ -162,7 +164,7 @@ export function readLocalSupabaseEnvironment() {
   return normalizeSupabaseStatus(result.stdout);
 }
 
-export function startLocalSupabase() {
+function startLocalSupabase() {
   const result = runSupabase(["start"]);
   if (result.status === 0) return;
 
@@ -173,7 +175,7 @@ export function startLocalSupabase() {
   }
 }
 
-export function resetLocalSupabase() {
+function resetLocalSupabase() {
   const reset = runSupabase(["db", "reset", "--yes"]);
   if (reset.status === 0) return;
 
@@ -189,3 +191,22 @@ export function resetLocalSupabase() {
     throw new Error(`Local Supabase database reset failed after recovery.${detail ? `\n${detail}` : ""}`);
   }
 }
+
+module.exports = {
+  ROOT,
+  SUPABASE_COMMAND,
+  LOCAL_SUPABASE_API_PORT,
+  LOCAL_SUPABASE_DB_PORT,
+  run,
+  sanitizedCommandFailure,
+  runSupabase,
+  parseSupabaseStatusEnv,
+  normalizeSupabaseStatus,
+  buildLocalApplicationEnvironment,
+  assertSafeLocalEnvironment,
+  checkNodeVersion,
+  checkDocker,
+  readLocalSupabaseEnvironment,
+  startLocalSupabase,
+  resetLocalSupabase,
+};

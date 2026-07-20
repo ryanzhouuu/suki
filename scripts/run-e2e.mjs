@@ -8,7 +8,7 @@ import {
   run,
   sanitizedCommandFailure,
   startLocalSupabase,
-} from "./lib/local-supabase.mjs";
+} from "./lib/local-supabase.cjs";
 
 function fail(message) {
   console.error(`E2E: ${message}`);
