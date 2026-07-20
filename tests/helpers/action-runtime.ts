@@ -51,6 +51,11 @@ export type ActionRuntime = {
     eventType: string,
     options?: { animeId?: string; metadata?: Json },
   ) => Promise<void>;
+  unstableCache: <A extends unknown[], T>(
+    fn: (...args: A) => Promise<T>,
+    keyParts?: string[],
+    options?: { revalidate?: number | false; tags?: string[] },
+  ) => (...args: A) => Promise<T>;
   revalidatePath: (path: string) => void;
   after: (callback: () => unknown) => void;
   redirect: (destination: string) => never;
@@ -121,6 +126,8 @@ export function createActionRuntime(): ActionRuntime {
     runtime.eventCalls.push({ userId, eventType, ...options });
   };
 
+  runtime.unstableCache = (fn) => fn;
+
   runtime.revalidatePath = (path) => {
     runtime.revalidatedPaths.push(path);
   };
@@ -139,7 +146,10 @@ export function createActionRuntime(): ActionRuntime {
 
 export function installActionRuntimeMocks(runtime: ActionRuntime): void {
   mock.module("next/cache", {
-    namedExports: { revalidatePath: runtime.revalidatePath },
+    namedExports: {
+      revalidatePath: runtime.revalidatePath,
+      unstable_cache: runtime.unstableCache,
+    },
   });
   mock.module("next/navigation", {
     namedExports: { redirect: runtime.redirect },
