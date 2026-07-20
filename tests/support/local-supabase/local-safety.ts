@@ -1,4 +1,4 @@
-import { assertSafeLocalEnvironment } from "../../../scripts/lib/local-supabase.mjs";
+import { assertSafeLocalEnvironment } from "../../../scripts/lib/local-supabase.cjs";
 
 export const LOCAL_SUPABASE_API_PORT = 54321;
 export const LOCAL_SUPABASE_DB_PORT = 54322;

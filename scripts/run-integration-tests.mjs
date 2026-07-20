@@ -12,7 +12,7 @@ import {
   run,
   sanitizedCommandFailure,
   startLocalSupabase,
-} from "./lib/local-supabase.mjs";
+} from "./lib/local-supabase.cjs";
 
 function collectIntegrationFiles(dir) {
   const files = [];
