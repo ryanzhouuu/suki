@@ -93,6 +93,22 @@ jobs:
         if: always()
         run: npx --no-install supabase stop --no-backup
 
+  integration:
+    needs: [lint, test, typecheck]
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: npm
+      - run: npm ci
+      - run: CI=1 npm run test:integration
+      - name: Stop local Supabase
+        if: always()
+        run: npx --no-install supabase stop --no-backup
+
   audit:
     runs-on: ubuntu-latest
     steps:
