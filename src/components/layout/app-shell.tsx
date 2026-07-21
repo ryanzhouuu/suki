@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { signOut } from "@/actions/auth";
+import { AccountMenu } from "@/components/layout/account-menu";
 import { DesktopNav, MobileNav } from "@/components/layout/main-nav";
 import { APP_NAME } from "@/lib/constants";
 import { getUnreadRecommendationCount } from "@/lib/friend-recommendations/queries";
@@ -40,75 +40,18 @@ export async function AppShell({ children, profile, isSeriesAdmin }: AppShellPro
 
           <DesktopNav badges={navBadges} />
 
-          <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
-            {isSeriesAdmin ? (
-              <Link
-                href="/admin/series"
-                className="hidden rounded-full px-3 py-2 text-sm font-medium text-muted transition-colors hover:text-ink sm:inline-block"
-              >
-                Series admin
-              </Link>
-            ) : null}
-            <form action={signOut} className="hidden sm:block">
-              <button
-                type="submit"
-                className="rounded-full px-3 py-2 text-sm font-medium text-muted transition-colors hover:text-ink"
-              >
-                Sign out
-              </button>
-            </form>
-            <Link
-              href={`/u/${profile.username}`}
-              aria-label="Your profile"
-              className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-line-strong bg-surface-2 text-sm font-semibold text-ink transition-colors hover:border-accent sm:h-9 sm:w-9"
-            >
-              {profile.avatar_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={profile.avatar_url}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                initial
-              )}
-            </Link>
-          </div>
+          <AccountMenu
+            username={profile.username}
+            avatarUrl={profile.avatar_url}
+            initial={initial}
+            isSeriesAdmin={isSeriesAdmin}
+          />
         </div>
       </header>
 
       <main className="app-main mx-auto w-full max-w-5xl min-w-0 flex-1 px-4 py-6 sm:py-10">
         {children}
       </main>
-
-      <div className="fixed inset-x-0 bottom-[calc(3.25rem+env(safe-area-inset-bottom,0))] z-20 border-t border-line bg-surface/95 px-3 py-2 backdrop-blur-md sm:hidden">
-        <div className="mx-auto flex w-full max-w-md items-center justify-between gap-2">
-          <Link
-            href="/home"
-            className="inline-flex min-h-10 items-center justify-center rounded-full border border-line-strong px-4 text-sm font-medium text-ink transition-colors hover:border-accent hover:text-accent"
-          >
-            Home
-          </Link>
-          <div className="flex items-center gap-2">
-            {isSeriesAdmin ? (
-              <Link
-                href="/admin/series"
-                className="inline-flex min-h-10 items-center justify-center rounded-full border border-line-strong px-3 text-xs font-medium text-muted transition-colors hover:text-ink"
-              >
-                Admin
-              </Link>
-            ) : null}
-            <form action={signOut}>
-              <button
-                type="submit"
-                className="inline-flex min-h-10 items-center justify-center rounded-full border border-line-strong px-4 text-sm font-medium text-muted transition-colors hover:text-ink"
-              >
-                Sign out
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
 
       <MobileNav badges={navBadges} />
     </div>

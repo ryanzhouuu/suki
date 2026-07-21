@@ -41,6 +41,7 @@ test.describe("sign out", () => {
     await expect(page).toHaveURL(/\/home$/);
 
     await page.goto("/home");
+    await page.getByRole("button", { name: "Open account menu" }).click();
     await page.getByRole("button", { name: "Sign out" }).click();
     await expect(page).toHaveURL(/\/auth\/login$/);
 

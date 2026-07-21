@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { afterEach, before, describe, it, mock } from "node:test";
 
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { AppShell as AppShellType } from "@/components/layout/app-shell";
 import type { Tables } from "@/types/database";
 
@@ -44,15 +44,19 @@ describe("AppShell", () => {
     unreadCount = 0;
   });
 
-  it("renders the app name, profile link, and a Sign out control", async () => {
+  it("renders account actions in the avatar menu", async () => {
     const element = await AppShell({
       children: <p>Page content</p>,
       profile: makeProfile(),
     });
     render(element);
     screen.getByText("Page content");
-    screen.getByRole("link", { name: "Your profile" });
-    assert.ok(screen.getAllByRole("button", { name: "Sign out" }).length > 0);
+    assert.equal(screen.queryByRole("link", { name: "Profile" }), null);
+
+    fireEvent.click(screen.getByRole("button", { name: "Open account menu" }));
+
+    assert.equal(screen.getByRole("link", { name: "Profile" }).getAttribute("href"), "/u/alexj");
+    screen.getByRole("button", { name: "Sign out" });
   });
 
   it("shows the display_name (or username) initial as an avatar fallback", async () => {
@@ -64,14 +68,15 @@ describe("AppShell", () => {
     screen.getByText("B");
   });
 
-  it("only shows the Series admin link for series admins", async () => {
+  it("only shows the Admin menu item for series admins", async () => {
     const nonAdmin = await AppShell({
       children: <p>Content</p>,
       profile: makeProfile(),
       isSeriesAdmin: false,
     });
     render(nonAdmin);
-    assert.equal(screen.queryByRole("link", { name: "Series admin" }), null);
+    fireEvent.click(screen.getByRole("button", { name: "Open account menu" }));
+    assert.equal(screen.queryByRole("link", { name: "Admin" }), null);
     cleanup();
 
     const admin = await AppShell({
@@ -80,7 +85,11 @@ describe("AppShell", () => {
       isSeriesAdmin: true,
     });
     render(admin);
-    assert.ok(screen.getAllByRole("link", { name: "Series admin" }).length > 0);
+    fireEvent.click(screen.getByRole("button", { name: "Open account menu" }));
+    assert.equal(
+      screen.getByRole("link", { name: "Admin" }).getAttribute("href"),
+      "/admin/series",
+    );
   });
 
   it("shows a friend-nav badge with the unread recommendation count", async () => {
