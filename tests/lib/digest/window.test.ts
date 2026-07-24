@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   getLatestCompletedWeek,
   isDigestWindowEligible,
+  utcRangeForLocalDates,
 } from "@/lib/digest/window";
 
 test("calculates the previous completed local week", () => {
@@ -15,6 +16,20 @@ test("calculates the previous completed local week", () => {
   assert.equal(chicago.weekEnd, "2026-11-02");
   assert.equal(chicago.startUtc, "2026-10-26T05:00:00.000Z");
   assert.equal(chicago.endUtc, "2026-11-02T06:00:00.000Z");
+});
+
+test("reconstructs exact UTC boundaries for a stored local week", () => {
+  assert.deepEqual(
+    utcRangeForLocalDates(
+      "2026-10-26",
+      "2026-11-02",
+      "America/Chicago",
+    ),
+    {
+      startUtc: "2026-10-26T05:00:00.000Z",
+      endUtc: "2026-11-02T06:00:00.000Z",
+    },
+  );
 });
 
 test("handles year boundaries and falls back to UTC", () => {

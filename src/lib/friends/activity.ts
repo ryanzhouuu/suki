@@ -28,6 +28,8 @@ export type FeedPage = {
 type FeedQueryOptions = {
   cursor?: string | null;
   limit?: number;
+  createdAfter?: string;
+  createdBefore?: string;
 };
 
 function asMetadata(value: unknown): Record<string, unknown> {
@@ -44,7 +46,12 @@ function asMetadata(value: unknown): Record<string, unknown> {
  */
 export async function getFriendActivityFeed(
   viewerId: string,
-  { cursor = null, limit = FEED_PAGE_SIZE }: FeedQueryOptions = {},
+  {
+    cursor = null,
+    limit = FEED_PAGE_SIZE,
+    createdAfter,
+    createdBefore,
+  }: FeedQueryOptions = {},
 ): Promise<FeedPage> {
   const friends = await listAcceptedFriends(viewerId);
   const friendIds = friends.map((f) => f.profile.user_id);
@@ -84,9 +91,10 @@ export async function getFriendActivityFeed(
     .select("id, user_id, event_type, anime_id, metadata, created_at")
     .in("user_id", allowedIds)
     .in("event_type", [...FEED_WORTHY_EVENT_TYPES])
-    .gte("created_at", cutoff)
     .order("created_at", { ascending: false })
     .limit(limit);
+  query = query.gte("created_at", createdAfter ?? cutoff);
+  if (createdBefore) query = query.lt("created_at", createdBefore);
   if (cursor) query = query.lt("created_at", cursor);
 
   const { data: eventRows, error: eventsError } = await query;
