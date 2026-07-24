@@ -193,4 +193,3 @@ export default async function DigestPage() {
     </div>
   );
 }
-

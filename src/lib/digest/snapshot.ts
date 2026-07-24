@@ -104,4 +104,3 @@ export async function resolveDigestHighlights(snapshot: DigestSnapshot) {
     return row ? [{ ...highlight, anime: row }] : [];
   });
 }
-

@@ -52,4 +52,3 @@ export function WeeklyDigestCard({ digest }: { digest: DigestSnapshot }) {
     </aside>
   );
 }
-

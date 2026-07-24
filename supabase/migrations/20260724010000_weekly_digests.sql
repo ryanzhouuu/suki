@@ -46,4 +46,3 @@ CREATE POLICY weekly_digests_update_own ON public.weekly_digests
   WITH CHECK ((SELECT auth.uid()) = user_id);
 
 GRANT SELECT, INSERT, UPDATE ON public.weekly_digests TO authenticated;
-

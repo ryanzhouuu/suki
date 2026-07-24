@@ -67,4 +67,3 @@ export async function logDigestAction(
     metadata: { digestId, section, actionKind },
   }).catch(() => undefined);
 }
-

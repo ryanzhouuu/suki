@@ -73,4 +73,3 @@ test("parses only the current content version", () => {
   assert.deepEqual(parseDigestSummary(summary), summary);
   assert.equal(parseDigestSummary({ ...summary, version: 2 }), null);
 });
-

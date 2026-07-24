@@ -7,4 +7,3 @@ export function isValidTimeZone(value: string): boolean {
     return false;
   }
 }
-
