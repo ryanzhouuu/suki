@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { AccountMenu } from "@/components/layout/account-menu";
 import { DesktopNav, MobileNav } from "@/components/layout/main-nav";
+import { TimezoneSync } from "@/components/layout/timezone-sync";
 import { APP_NAME } from "@/lib/constants";
 import { getUnreadRecommendationCount } from "@/lib/friend-recommendations/queries";
 import type { Tables } from "@/types/database";
@@ -23,6 +24,7 @@ export async function AppShell({ children, profile, isSeriesAdmin }: AppShellPro
 
   return (
     <div className="flex min-h-full flex-col">
+      <TimezoneSync current={profile.timezone} />
       <header className="sticky top-0 z-30 border-b border-line bg-paper/80 pt-[env(safe-area-inset-top)] backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-7xl min-w-0 items-center justify-between gap-2 px-4 sm:h-16 sm:gap-4">
           <Link
