@@ -34,4 +34,3 @@ export function selectNextAction(
     description: "Browse the season and add something that looks good.",
   };
 }
-
