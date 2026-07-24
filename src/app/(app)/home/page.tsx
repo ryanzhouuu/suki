@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 
 import { AnimePoster } from "@/components/anime/anime-poster";
+import { WeeklyDigestCard } from "@/components/digest/weekly-digest-card";
 import { AsyncSectionUnavailable } from "@/components/ui/async-section";
 import {
   AiringTracker,
@@ -22,6 +23,7 @@ import { getUserLibraryEntries } from "@/lib/library/queries";
 import { runResilientOperation } from "@/lib/resilience";
 import { getNextComparisonPair } from "@/lib/ranking/prompt";
 import { getCompletedSeriesForUser } from "@/lib/series/queries";
+import { getOrCreateLatestDigest } from "@/lib/digest/snapshot";
 
 // ——— Streaming sections (render concurrently with the page shell) ———
 
@@ -175,6 +177,27 @@ async function RankingSection({ userId }: { userId: string }) {
   return null;
 }
 
+async function WeeklyDigestSection({
+  userId,
+  timezone,
+}: {
+  userId: string;
+  timezone: string | null;
+}) {
+  const result = await runResilientOperation(
+    {
+      route: "/home",
+      operation: "load_weekly_digest",
+      dependency: "supabase",
+      userId,
+    },
+    () => getOrCreateLatestDigest(userId, timezone),
+  );
+  if (result.status === "unavailable") return null;
+  if (!result.data || result.data.dismissed_at) return null;
+  return <WeeklyDigestCard digest={result.data} />;
+}
+
 // ——— Page ———
 
 export default async function HomePage() {
@@ -193,6 +216,10 @@ export default async function HomePage() {
         headline={headline}
         bgSrc={bg}
       />
+
+      <Suspense fallback={null}>
+        <WeeklyDigestSection userId={user.id} timezone={profile.timezone} />
+      </Suspense>
 
       <div className="space-y-10">
         <Suspense fallback={<DiscoverRowSkeleton />}>
