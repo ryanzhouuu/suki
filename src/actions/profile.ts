@@ -8,6 +8,7 @@ import {
   normalizeUsername,
   validateUsername,
 } from "@/lib/profiles/validate";
+import { isValidTimeZone } from "@/lib/profiles/timezone";
 import { createClient } from "@/lib/supabase/server";
 
 export type ProfileActionState = {
@@ -98,4 +99,16 @@ export async function updateProfile(
   }
 
   return { message: "Profile updated." };
+}
+
+export async function syncProfileTimezone(timezone: string): Promise<void> {
+  if (!isValidTimeZone(timezone)) return;
+
+  const user = await requireAuthUser();
+  const supabase = await createClient();
+  await supabase
+    .from("profiles")
+    .update({ timezone })
+    .eq("user_id", user.id)
+    .neq("timezone", timezone);
 }

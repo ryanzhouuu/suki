@@ -96,6 +96,7 @@ export const profiles = pgTable(
     showActivityToFriends: boolean("show_activity_to_friends")
       .notNull()
       .default(true),
+    timezone: text("timezone"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -289,6 +290,34 @@ export const userEvents = pgTable("user_events", {
     .notNull()
     .defaultNow(),
 });
+
+export const weeklyDigests = pgTable(
+  "weekly_digests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull(),
+    weekStart: date("week_start").notNull(),
+    weekEnd: date("week_end").notNull(),
+    timezone: text("timezone").notNull(),
+    contentVersion: integer("content_version").notNull(),
+    summary: jsonb("summary").notNull(),
+    generatedAt: timestamp("generated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    viewedAt: timestamp("viewed_at", { withTimezone: true }),
+    dismissedAt: timestamp("dismissed_at", { withTimezone: true }),
+  },
+  (table) => [
+    uniqueIndex("weekly_digests_user_week_unique").on(
+      table.userId,
+      table.weekStart,
+    ),
+    index("weekly_digests_user_week_idx").on(
+      table.userId,
+      table.weekStart.desc(),
+    ),
+  ],
+);
 
 export const animeRecommendations = pgTable(
   "anime_recommendations",

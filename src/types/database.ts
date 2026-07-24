@@ -441,6 +441,7 @@ export type Database = {
           display_name: string | null
           profile_visibility: Database["public"]["Enums"]["profile_visibility"]
           show_activity_to_friends: boolean
+          timezone: string | null
           updated_at: string
           user_id: string
           username: string
@@ -453,6 +454,7 @@ export type Database = {
           display_name?: string | null
           profile_visibility?: Database["public"]["Enums"]["profile_visibility"]
           show_activity_to_friends?: boolean
+          timezone?: string | null
           updated_at?: string
           user_id: string
           username: string
@@ -465,6 +467,7 @@ export type Database = {
           display_name?: string | null
           profile_visibility?: Database["public"]["Enums"]["profile_visibility"]
           show_activity_to_friends?: boolean
+          timezone?: string | null
           updated_at?: string
           user_id?: string
           username?: string
@@ -755,6 +758,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      weekly_digests: {
+        Row: {
+          content_version: number
+          dismissed_at: string | null
+          generated_at: string
+          id: string
+          summary: Json
+          timezone: string
+          user_id: string
+          viewed_at: string | null
+          week_end: string
+          week_start: string
+        }
+        Insert: {
+          content_version: number
+          dismissed_at?: string | null
+          generated_at?: string
+          id?: string
+          summary: Json
+          timezone: string
+          user_id: string
+          viewed_at?: string | null
+          week_end: string
+          week_start: string
+        }
+        Update: {
+          content_version?: number
+          dismissed_at?: string | null
+          generated_at?: string
+          id?: string
+          summary?: Json
+          timezone?: string
+          user_id?: string
+          viewed_at?: string | null
+          week_end?: string
+          week_start?: string
+        }
+        Relationships: []
       }
       user_taste_profiles: {
         Row: {
