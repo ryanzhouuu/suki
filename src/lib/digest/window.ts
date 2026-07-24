@@ -66,6 +66,26 @@ function localMidnightUtc(parts: DateParts, timezone: string): Date {
   return new Date(guess);
 }
 
+function parseIsoDate(value: string): DateParts {
+  const [year, month, day] = value.split("-").map(Number);
+  return { year, month, day };
+}
+
+export function utcRangeForLocalDates(
+  weekStart: string,
+  weekEnd: string,
+  timezone: string,
+) {
+  const safeTimezone = isValidTimeZone(timezone) ? timezone : "UTC";
+  return {
+    startUtc: localMidnightUtc(
+      parseIsoDate(weekStart),
+      safeTimezone,
+    ).toISOString(),
+    endUtc: localMidnightUtc(parseIsoDate(weekEnd), safeTimezone).toISOString(),
+  };
+}
+
 export function getLatestCompletedWeek(
   now: Date,
   requestedTimezone: string | null | undefined,
