@@ -111,7 +111,7 @@ export async function addAnimeEntry(
 
     const { data: existing } = await supabase
       .from("user_anime_entries")
-      .select("id, status")
+      .select("id, status, progress_episodes")
       .eq("user_id", user.id)
       .eq("anime_id", anime.id)
       .maybeSingle();
@@ -148,6 +148,15 @@ export async function addAnimeEntry(
       if (status === "completed") {
         scheduleLogEvent(user.id, USER_EVENT_TYPES.animeCompleted, {
           animeId: anime.id,
+          metadata:
+            completedProgress !== undefined
+              ? {
+                  previousProgress: existing.progress_episodes,
+                  progress: completedProgress,
+                  delta: completedProgress - existing.progress_episodes,
+                  mutationSource: "user",
+                }
+              : {},
         });
         scheduleCompletedEntrySideEffects(user.id, anime);
       }
@@ -181,6 +190,15 @@ export async function addAnimeEntry(
     if (status === "completed") {
       scheduleLogEvent(user.id, USER_EVENT_TYPES.animeCompleted, {
         animeId: anime.id,
+        metadata:
+          completedProgress !== undefined
+            ? {
+                previousProgress: 0,
+                progress: completedProgress,
+                delta: completedProgress,
+                mutationSource: "user",
+              }
+            : {},
       });
       scheduleCompletedEntrySideEffects(user.id, anime);
     }
@@ -308,6 +326,16 @@ export async function updateAnimeEntry(
     if (validated.status === "completed") {
       scheduleLogEvent(user.id, USER_EVENT_TYPES.animeCompleted, {
         animeId: existing.anime_id,
+        metadata:
+          validated.progressEpisodes !== undefined
+            ? {
+                previousProgress: existing.progress_episodes,
+                progress: validated.progressEpisodes,
+                delta:
+                  validated.progressEpisodes - existing.progress_episodes,
+                mutationSource: "user",
+              }
+            : {},
       });
       if (animeRow && !Array.isArray(animeRow)) {
         scheduleCompletedEntrySideEffects(user.id, animeRow);
@@ -335,7 +363,12 @@ export async function updateAnimeEntry(
   if (validated.progressEpisodes !== undefined) {
     scheduleLogEvent(user.id, USER_EVENT_TYPES.progressUpdated, {
       animeId: existing.anime_id,
-      metadata: { progress: validated.progressEpisodes },
+      metadata: {
+        previousProgress: existing.progress_episodes,
+        progress: validated.progressEpisodes,
+        delta: validated.progressEpisodes - existing.progress_episodes,
+        mutationSource: "user",
+      },
     });
   }
 
