@@ -75,6 +75,9 @@ export const USER_EVENT_TYPES = {
   watchlistShuffled: "watchlist_shuffled",
   friendRecommendationSent: "friend_recommendation_sent",
   friendRecommendationAdded: "friend_recommendation_added",
+  digestViewed: "digest_viewed",
+  digestDismissed: "digest_dismissed",
+  digestActionClicked: "digest_action_clicked",
 } as const;
 
 /** Raw event types the friend activity feed considers (everything else is noise). */
