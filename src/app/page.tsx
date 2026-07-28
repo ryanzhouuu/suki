@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { BrandLockup } from "@/components/brand/brand-mark";
 import { DiscoverRow } from "@/components/home/discover-row";
 import { LandingHero } from "@/components/home/landing-hero";
 import { getLatestAnime, getPopularAnime, getTrendingAnime } from "@/lib/anilist/discover";
@@ -93,13 +94,16 @@ export default async function PublicLandingPage() {
       {/* Header floats transparently over the full-screen hero photo */}
       <header className="absolute top-0 right-0 left-0 z-30 pt-[env(safe-area-inset-top)]">
         <div className="mx-auto flex h-14 max-w-5xl min-w-0 items-center justify-between gap-2 px-4 sm:h-16 sm:gap-4">
-          <Link href="/" className="group flex min-w-0 items-center gap-2 sm:gap-2.5">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-base font-semibold text-on-accent shadow-sm transition-transform group-hover:-rotate-6">
-              好
-            </span>
-            <span className="truncate font-display text-xl font-semibold tracking-tight text-white sm:text-2xl">
-              {APP_NAME}
-            </span>
+          <Link
+            href="/"
+            aria-label={`${APP_NAME} home`}
+            className="group min-w-0"
+          >
+            <BrandLockup
+              inverted
+              markClassName="h-8 w-8 sm:h-9 sm:w-9"
+              wordmarkClassName="text-xl sm:text-2xl"
+            />
           </Link>
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <Link

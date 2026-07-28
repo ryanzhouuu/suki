@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { BrandMark } from "@/components/brand/brand-mark";
 import { HeroBackground } from "@/components/home/hero-background";
 import { APP_NAME } from "@/lib/constants";
 
@@ -12,9 +13,7 @@ export function LandingHero({ bgSrc }: LandingHeroProps) {
     <section className="home-hero home-hero--splash animate-rise overflow-hidden">
       <HeroBackground src={bgSrc} variant="splash" />
 
-      <span className="home-hero__mark" aria-hidden>
-        好
-      </span>
+      <BrandMark className="home-hero__mark" />
 
       <div className="relative z-10 px-4 pb-12 pt-28 sm:px-10 sm:pb-20 sm:pt-32">
         <p className="eyebrow">Track anime with less friction</p>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { BrandMark } from "@/components/brand/brand-mark";
 import { HeroBackground } from "@/components/home/hero-background";
 import type { HeroHeadline } from "@/lib/home/hero-copy";
 
@@ -20,9 +21,7 @@ export function HomeHero({
     <section className="home-hero animate-rise overflow-hidden rounded-card border border-line/40 shadow-[0_24px_60px_-32px_rgb(var(--shadow-color)/0.55)]" style={{ minHeight: "62vh" }}>
       <HeroBackground src={bgSrc} variant="card" />
 
-      <span className="home-hero__mark" aria-hidden>
-        好
-      </span>
+      <BrandMark className="home-hero__mark" />
 
       <div className="relative z-10 flex h-full flex-col justify-end px-4 pb-8 pt-10 sm:px-10 sm:pb-12 sm:pt-14" style={{ minHeight: "62vh" }}>
         <p className="eyebrow truncate">Welcome back, {greetingName}</p>

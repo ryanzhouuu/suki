@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { completeProfile } from "@/actions/profile";
+import { BrandMark } from "@/components/brand/brand-mark";
 import { APP_NAME } from "@/lib/constants";
 import { getAuthUser, getCurrentProfile } from "@/lib/auth/session";
 
@@ -16,9 +17,7 @@ export default async function OnboardingPage() {
   return (
     <div className="mx-auto flex min-h-full w-full max-w-md flex-col justify-start px-4 pt-[max(1.5rem,env(safe-area-inset-top))] pb-10 sm:justify-center sm:py-16">
       <div className="animate-rise">
-        <span className="mb-6 flex h-11 w-11 items-center justify-center rounded-xl bg-accent text-xl font-semibold text-on-accent shadow-sm">
-          好
-        </span>
+        <BrandMark className="mb-6 h-12 w-12 text-accent" />
         <p className="eyebrow">One last step</p>
         <h1 className="mt-1.5 text-3xl font-semibold">Welcome to {APP_NAME}</h1>
         <p className="mt-2 text-sm text-muted">
