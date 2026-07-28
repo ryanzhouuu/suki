@@ -36,7 +36,7 @@ function digest(quiet: boolean): DigestSnapshot {
 test("renders an active digest with labeled totals and accessible dismissal", () => {
   render(<WeeklyDigestCard digest={digest(false)} />);
   assert.ok(screen.getByText(/8 episodes/));
-  assert.ok(screen.getByRole("link", { name: /see your week/i }));
+  assert.ok(screen.getByRole("link", { name: /read the edition/i }));
   assert.ok(
     screen.getByRole("button", {
       name: /dismiss weekly recap for jul 27–aug 2, 2026/i,

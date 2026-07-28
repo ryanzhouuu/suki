@@ -11,6 +11,12 @@ export type DigestSnapshot = Omit<Tables<"weekly_digests">, "summary"> & {
   summary: NonNullable<ReturnType<typeof parseDigestSummary>>;
 };
 
+const DEVELOPMENT_DIGEST_ID = "00000000-0000-4000-8000-000000000001";
+
+export function isDevelopmentDigestPreview(digest: DigestSnapshot): boolean {
+  return digest.id === DEVELOPMENT_DIGEST_ID;
+}
+
 function eventMetadata(value: Json): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value)
     ? value
@@ -87,6 +93,67 @@ export async function getOrCreateLatestDigest(
     (await loadSnapshot(userId, window.weekStart)) ??
     generateSnapshot(userId, window)
   );
+}
+
+export async function getDevelopmentDigestPreview(
+  userId: string,
+  timezone: string | null,
+  now = new Date(),
+): Promise<DigestSnapshot> {
+  if (process.env.NODE_ENV !== "development") {
+    throw new Error("Digest previews are only available in development");
+  }
+
+  const window = getLatestCompletedWeek(now, timezone);
+  const supabase = await createClient();
+  const { data: entries } = await supabase
+    .from("user_anime_entries")
+    .select("anime_id, status, updated_at")
+    .eq("user_id", userId)
+    .order("updated_at", { ascending: false })
+    .limit(3);
+  const recent = entries ?? [];
+
+  return {
+    id: DEVELOPMENT_DIGEST_ID,
+    user_id: userId,
+    week_start: window.weekStart,
+    week_end: window.weekEnd,
+    timezone: window.timezone,
+    content_version: 1,
+    generated_at: now.toISOString(),
+    viewed_at: null,
+    dismissed_at: null,
+    summary: {
+      version: 1,
+      totals: {
+        episodesWatched: 9,
+        titlesStarted: Math.max(
+          1,
+          recent.filter((entry) => entry.status === "watching").length,
+        ),
+        titlesCompleted: Math.max(
+          1,
+          recent.filter((entry) => entry.status === "completed").length,
+        ),
+        comparisons: 4,
+        recommendationInteractions: 2,
+      },
+      highlights: recent.map((entry, index) => ({
+        animeId: entry.anime_id,
+        kind:
+          entry.status === "completed"
+            ? ("completed" as const)
+            : index === 0
+              ? ("progress" as const)
+              : ("started" as const),
+        progressDelta: entry.status === "completed" ? null : 4 - index,
+        createdAt: entry.updated_at,
+      })),
+      recommendationAnimeIds: [],
+      quiet: false,
+    },
+  };
 }
 
 export async function resolveDigestHighlights(snapshot: DigestSnapshot) {
