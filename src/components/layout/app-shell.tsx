@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { BrandLockup } from "@/components/brand/brand-mark";
 import { AccountMenu } from "@/components/layout/account-menu";
 import { DesktopNav, MobileNav } from "@/components/layout/main-nav";
 import { TimezoneSync } from "@/components/layout/timezone-sync";
@@ -30,14 +31,12 @@ export async function AppShell({ children, profile, isSeriesAdmin }: AppShellPro
           <Link
             href="/home"
             aria-label={`${APP_NAME} home`}
-            className="group flex min-w-0 shrink items-center gap-2 sm:gap-2.5"
+            className="group min-w-0 shrink"
           >
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-base font-semibold text-on-accent shadow-sm transition-transform group-hover:-rotate-6">
-              好
-            </span>
-            <span className="truncate font-display text-xl font-semibold tracking-tight text-ink sm:text-2xl">
-              {APP_NAME}
-            </span>
+            <BrandLockup
+              markClassName="h-8 w-8 sm:h-9 sm:w-9"
+              wordmarkClassName="text-xl sm:text-2xl"
+            />
           </Link>
 
           <DesktopNav badges={navBadges} />
