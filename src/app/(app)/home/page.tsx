@@ -23,7 +23,10 @@ import { getUserLibraryEntries } from "@/lib/library/queries";
 import { runResilientOperation } from "@/lib/resilience";
 import { getNextComparisonPair } from "@/lib/ranking/prompt";
 import { getCompletedSeriesForUser } from "@/lib/series/queries";
-import { getOrCreateLatestDigest } from "@/lib/digest/snapshot";
+import {
+  getDevelopmentDigestPreview,
+  getOrCreateLatestDigest,
+} from "@/lib/digest/snapshot";
 
 // ——— Streaming sections (render concurrently with the page shell) ———
 
@@ -193,9 +196,20 @@ async function WeeklyDigestSection({
     },
     () => getOrCreateLatestDigest(userId, timezone),
   );
-  if (result.status === "unavailable") return null;
-  if (!result.data || result.data.dismissed_at) return null;
-  return <WeeklyDigestCard digest={result.data} />;
+  if (
+    result.status === "unavailable" &&
+    process.env.NODE_ENV !== "development"
+  ) {
+    return null;
+  }
+  const storedDigest = result.status === "loaded" ? result.data : null;
+  const digest =
+    storedDigest ??
+    (process.env.NODE_ENV === "development"
+      ? await getDevelopmentDigestPreview(userId, timezone).catch(() => null)
+      : null);
+  if (!digest || digest.dismissed_at) return null;
+  return <WeeklyDigestCard digest={digest} />;
 }
 
 // ——— Page ———
