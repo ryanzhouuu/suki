@@ -22,6 +22,7 @@
     "seed:catalog": "npx tsx --conditions=react-server src/scripts/seed-recommendation-catalog.ts",
     "backfill:popular": "npx tsx --conditions=react-server src/scripts/backfill-popular-catalog.ts",
     "test": "node scripts/run-tests.mjs",
+    "test:fingerprint": "node scripts/run-tests.mjs tests/lib/fingerprint tests/actions/fingerprint.test.ts tests/components/profile/taste-fingerprint-section.test.tsx tests/components/profile/taste-fingerprint-tracker.test.tsx",
     "test:e2e": "node scripts/run-e2e.mjs",
     "test:integration": "node scripts/run-integration-tests.mjs",
     "test:e2e:ui": "node scripts/run-e2e.mjs --ui",
