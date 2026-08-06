@@ -106,13 +106,14 @@ describe("buildSecurityHeaders", () => {
     assert.match(imgSrc!, /https:\/\/i\.ytimg\.com/);
   });
 
-  it("does not include a frame-src directive", () => {
+  it("allows the privacy-enhanced YouTube embed in frame-src", () => {
     const headers = buildSecurityHeaders({
       isDev: false,
       supabaseOrigin: hostedSupabaseOrigin,
     });
     const csp = getHeader(headers, "Content-Security-Policy")!;
-    assert.doesNotMatch(csp, /frame-src/);
+    const frameSrc = csp.split(";").find((d) => d.trim().startsWith("frame-src"));
+    assert.match(frameSrc!, /https:\/\/www\.youtube-nocookie\.com/);
   });
 
   it("allows Vercel Analytics and Speed Insights origins", () => {
