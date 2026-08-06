@@ -9,11 +9,14 @@ import { ProfileHeader } from "@/components/profile/profile-header";
 import { ProfileRestrictedCard } from "@/components/profile/profile-restricted-card";
 import { ProfileStatsPanel } from "@/components/profile/profile-stats-panel";
 import { ProfileTabs } from "@/components/profile/profile-tabs";
+import { TasteFingerprintSection } from "@/components/profile/taste-fingerprint-section";
+import { TasteFingerprintTracker } from "@/components/profile/taste-fingerprint-tracker";
 import { WidePageFrame } from "@/components/layout/page-frame";
 import { RankedList } from "@/components/ranking/ranked-list";
 import { getAuthUser } from "@/lib/auth/session";
 import { STATUS_LABELS, type AnimeEntryStatus } from "@/lib/constants";
 import { env } from "@/lib/env";
+import { buildTasteFingerprint } from "@/lib/fingerprint";
 import { friendshipStatusForViewer } from "@/lib/friends/relationship";
 import { getTasteSimilarity } from "@/lib/friends/taste-similarity";
 import { getShareCardData } from "@/lib/profiles/share-card";
@@ -21,6 +24,7 @@ import { runResilientOperation } from "@/lib/resilience";
 
 import {
   loadBaseProfile,
+  loadFingerprintSeriesRefs,
   loadFriendship,
   loadGenresBySeriesIds,
   loadProfileMetadataVisibility,
@@ -161,12 +165,29 @@ export default async function PublicProfilePage({
   const isEditing = isOwnProfile && edit === "1";
 
   const seriesIds = allRankings.map((r) => r.series_id);
-  const genresResult = await runResilientOperation(
-    { route: "/u/[username]", operation: "load_ranking_genres", dependency: "supabase" },
-    () => loadGenresBySeriesIds(seriesIds),
-  );
+  const [genresResult, fingerprintResult] = await Promise.all([
+    runResilientOperation(
+      { route: "/u/[username]", operation: "load_ranking_genres", dependency: "supabase" },
+      () => loadGenresBySeriesIds(seriesIds),
+    ),
+    runResilientOperation(
+      { route: "/u/[username]", operation: "load_taste_fingerprint", dependency: "supabase" },
+      async () => {
+        const seriesByAnimeId = await loadFingerprintSeriesRefs(
+          entries.map((entry) => entry.anime_id),
+        );
+        return buildTasteFingerprint({
+          entries,
+          rankings: allRankings,
+          seriesByAnimeId,
+        });
+      },
+    ),
+  ]);
   const genresMap = genresResult.status === "loaded" ? genresResult.data : new Map();
   const genresBySeriesId = Object.fromEntries(genresMap);
+  const fingerprint =
+    fingerprintResult.status === "loaded" ? fingerprintResult.data : null;
 
   const completedSorted = entries
     .filter((e) => e.status === "completed")
@@ -201,19 +222,35 @@ export default async function PublicProfilePage({
   const hasLibrarySections = libraryCount > 0;
 
   const overviewContent = (
-    <ProfileStatsPanel
-      library={stats.library}
-      taste={stats.taste}
-      ranking={stats.ranking}
-      watchStyle={stats.watchStyle}
-      activitySlot={
-        <ProfileActivityPanel
-          activity={stats.activity}
-          isOwnProfile={isOwnProfile}
-          className="xl:col-span-6"
-        />
-      }
-    />
+    <div className="min-w-0 space-y-4">
+      <TasteFingerprintSection
+        fingerprint={fingerprint}
+        isOwnProfile={isOwnProfile}
+        tracker={
+          viewer && fingerprint?.state === "ready" ? (
+            <TasteFingerprintTracker
+              isSignedIn
+              targetProfileUserId={profile.user_id}
+              fingerprintVersion={fingerprint.version}
+              traitIds={fingerprint.traits.map((trait) => trait.id)}
+            />
+          ) : null
+        }
+      />
+      <ProfileStatsPanel
+        library={stats.library}
+        taste={stats.taste}
+        ranking={stats.ranking}
+        watchStyle={stats.watchStyle}
+        activitySlot={
+          <ProfileActivityPanel
+            activity={stats.activity}
+            isOwnProfile={isOwnProfile}
+            className="xl:col-span-6"
+          />
+        }
+      />
+    </div>
   );
 
   const libraryContent = hasLibrarySections ? (
