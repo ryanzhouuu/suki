@@ -6,7 +6,8 @@ export type StudioEdge = { isMain: boolean; node: { name: string; siteUrl: strin
 export type AnimeTag = { name: string; rank: number | null; category: string | null; isGeneralSpoiler: boolean; isMediaSpoiler: boolean; isAdult: boolean };
 export type AnimeRanking = { rank: number; type: string; allTime: boolean; context: string };
 export type ExternalLink = { site: string; url: string | null; type: string | null; language: string | null; isDisabled: boolean };
-export type AnimeTrailer = { id: string | null; site: string | null; thumbnail: string | null };
+export type AnimeTrailer = { id: string; site: "youtube"; thumbnail: string | null };
+type RawAnimeTrailer = { id: string | null; site: string | null; thumbnail: string | null };
 
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -53,7 +54,7 @@ export function getTopRankings(raw: Json | null): AnimeRanking[] {
 
 export function getYoutubeTrailer(raw: Json | null): AnimeTrailer | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
-  const t = raw as AnimeTrailer;
+  const t = raw as RawAnimeTrailer;
   if (t.site !== "youtube" || !t.id) return null;
-  return t;
+  return { id: t.id, site: "youtube", thumbnail: t.thumbnail };
 }

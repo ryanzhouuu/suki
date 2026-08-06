@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { AnimeLibrarySection } from "@/components/anime/anime-library-section";
 import { AnimePoster } from "@/components/anime/anime-poster";
+import { AnimeTrailer } from "@/components/anime/anime-trailer";
 import { BackButton } from "@/components/anime/back-button";
 import { RecommendFromAnimeButton } from "@/components/friend-recommendations/recommend-from-anime-button";
 import { getAuthUser } from "@/lib/auth/session";
@@ -244,34 +245,7 @@ export default async function AnimeDetailPage({ params }: AnimeDetailPageProps) 
             {trailer ? (
               <div>
                 <p className="eyebrow mb-4">Trailer</p>
-                <a
-                  href={`https://www.youtube.com/watch?v=${trailer.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group relative block max-w-[500px] overflow-hidden rounded-card"
-                >
-                  {trailer.thumbnail ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={trailer.thumbnail}
-                      alt="Trailer thumbnail"
-                      className="aspect-video w-full object-cover transition-opacity duration-200 group-hover:opacity-80"
-                    />
-                  ) : (
-                    <div className="aspect-video w-full bg-surface-2" />
-                  )}
-                  <span className="absolute inset-0 flex items-center justify-center">
-                    <span className="flex h-14 w-14 items-center justify-center rounded-full bg-paper/85 shadow-lg backdrop-blur-sm transition-transform duration-200 group-hover:scale-110">
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        className="h-6 w-6 translate-x-0.5 text-ink"
-                      >
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                    </span>
-                  </span>
-                </a>
+                <AnimeTrailer id={trailer.id} thumbnail={trailer.thumbnail} />
               </div>
             ) : null}
 
