@@ -2,7 +2,10 @@ import "server-only";
 
 import { RANKING_ALGORITHM_VERSION } from "@/lib/constants";
 import { escapeIlikePattern } from "@/lib/db/ilike";
-import type { LibraryEntry } from "@/lib/library/queries";
+import {
+  getSeriesRefsByAnimeIds,
+  type LibraryEntry,
+} from "@/lib/library/queries";
 import { computeProfileStats } from "@/lib/profiles/stats";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -116,4 +119,8 @@ export async function loadGenresBySeriesIds(seriesIds: string[]) {
     ]);
   }
   return result;
+}
+
+export async function loadFingerprintSeriesRefs(animeIds: string[]) {
+  return getSeriesRefsByAnimeIds([...new Set(animeIds)].sort());
 }
