@@ -129,11 +129,17 @@ describe("TasteFingerprintSection", () => {
       disclosures[0].querySelector("summary")?.className ?? "",
       /motion-reduce:transition-none/,
     );
+    screen.getByRole("img", { name: "Taste trait strength radar" });
+    const meters = screen.getAllByRole("progressbar");
+    assert.equal(meters.length, 5);
+    assert.equal(meters[0].getAttribute("aria-valuenow"), "94");
+    screen.getByText("Primary trait");
+    screen.getByText("Loadout 02");
     fireEvent.click(disclosures[0].querySelector("summary")!);
     screen.getByText("12 franchises are in your ranking.");
   });
 
-  it("renders one qualifying trait without filling the constellation", () => {
+  it("renders one qualifying trait without filling the loadout", () => {
     const fingerprint = makeFingerprint();
     render(
       <TasteFingerprintSection
@@ -144,6 +150,8 @@ describe("TasteFingerprintSection", () => {
 
     assert.equal(screen.getAllByRole("heading", { level: 3 }).length, 1);
     screen.getByRole("heading", { name: "Battle-Tested Favorites" });
+    screen.getByText("Signal map locked");
+    assert.equal(screen.queryByRole("img", { name: /strength radar/i }), null);
   });
 
   it("offers owners a ranking CTA when the fingerprint is forming from ranking data", () => {
