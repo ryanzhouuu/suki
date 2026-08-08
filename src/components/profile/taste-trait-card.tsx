@@ -1,5 +1,7 @@
 import type { TasteFingerprint } from "@/lib/fingerprint";
 
+import { TasteFamilyIcon } from "@/components/profile/taste-family-icon";
+
 type TasteFingerprintTrait = TasteFingerprint["traits"][number];
 
 type TasteTraitCardProps = {
@@ -14,39 +16,66 @@ export function TasteTraitCard({
   ordinal,
 }: TasteTraitCardProps) {
   const headingId = `taste-trait-${trait.id}`;
+  const strength = Math.round(Math.max(0, Math.min(1, trait.strength)) * 100);
 
   return (
     <article
-      className={`relative flex min-w-0 flex-col overflow-hidden rounded-card border p-4 shadow-[0_16px_28px_-26px_rgb(var(--shadow-color)/0.5)] sm:p-5 ${
+      className={`group/trait relative flex h-full min-w-0 flex-col overflow-hidden rounded-xl border ${
         prominent
-          ? "border-accent/45 bg-accent-soft/45"
-          : "border-line bg-surface"
+          ? "border-accent/55 bg-[linear-gradient(135deg,var(--accent-soft),var(--surface)_66%)] p-5 shadow-[0_22px_42px_-30px_rgb(var(--shadow-color)/0.65)] sm:p-6"
+          : "border-line bg-surface/75 p-4 transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-accent/35 hover:shadow-[0_18px_30px_-26px_rgb(var(--shadow-color)/0.55)] motion-reduce:transition-none"
       }`}
     >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute top-0 right-0 h-20 w-20 translate-x-8 -translate-y-8 rounded-full border border-accent/20"
-      />
+      <div className="relative flex items-start gap-3">
+        <div
+          className={`flex shrink-0 items-center justify-center rounded-lg border border-accent/30 bg-accent-soft text-accent ${prominent ? "h-12 w-12" : "h-10 w-10"}`}
+        >
+          <TasteFamilyIcon
+            family={trait.family}
+            className={prominent ? "h-6 w-6" : "h-5 w-5"}
+          />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-3 font-mono text-[0.62rem] uppercase tracking-[0.18em] text-muted">
+            <span>
+              {prominent
+                ? "Primary trait"
+                : `Loadout ${String(ordinal).padStart(2, "0")}`}
+            </span>
+            <span className="text-accent">{trait.family}</span>
+          </div>
 
-      <div className="relative flex items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-muted">
-        <span className="font-display text-sm text-accent">
-          {String(ordinal).padStart(2, "0")}
-        </span>
-        <span aria-hidden className="h-px w-6 bg-line-strong" />
-        <span>Trait</span>
+          <h3
+            id={headingId}
+            className={`mt-2 font-display font-semibold leading-tight text-ink ${prominent ? "text-2xl sm:text-3xl" : "text-lg"}`}
+          >
+            {trait.label}
+          </h3>
+        </div>
       </div>
-
-      <h3
-        id={headingId}
-        className={`relative mt-3 font-display font-semibold leading-tight text-ink ${
-          prominent ? "text-2xl sm:text-3xl" : "text-xl"
-        }`}
-      >
-        {trait.label}
-      </h3>
       <p className="relative mt-2 max-w-prose text-sm leading-relaxed text-muted">
         {trait.summary}
       </p>
+
+      <div className="relative mt-4">
+        <div className="mb-1.5 flex items-center justify-between font-mono text-[0.62rem] uppercase tracking-[0.16em] text-muted">
+          <span>Signal strength</span>
+          <span className="tabular-nums text-ink">{strength}%</span>
+        </div>
+        <div
+          role="progressbar"
+          aria-label={`${trait.label} strength`}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={strength}
+          className="h-1.5 overflow-hidden rounded-full border border-line-strong bg-surface-2"
+        >
+          <span
+            className="block h-full rounded-full bg-accent"
+            style={{ width: `${strength}%` }}
+          />
+        </div>
+      </div>
 
       <details
         data-fingerprint-trait-id={trait.id}
@@ -59,7 +88,7 @@ export function TasteTraitCard({
           <span>Why this fits</span>
           <span
             aria-hidden
-            className="text-lg leading-none transition-transform group-open:rotate-45 motion-reduce:transition-none"
+            className="font-mono text-base leading-none transition-transform group-open:rotate-45 motion-reduce:transition-none"
           >
             +
           </span>
