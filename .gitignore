@@ -64,8 +64,15 @@ CLAUDE.md
 .agents/
 .codex/
 
-# superpowers planning artifacts (specs/plans kept locally, not tracked)
+# local planning and design artifacts (never tracked)
+docs/plans/
 docs/superpowers/
+docs/*-design.md
+
+# generated operational and review artifacts
+logs/
+*-threat-model.md
+security_best_practices_report.md
 
 # git worktrees used for isolated feature work
 .worktrees/

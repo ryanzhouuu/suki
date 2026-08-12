@@ -30,6 +30,9 @@ It's difficult to rate shows 1-10 consistently and accurately. Suki instead asks
 ### Keep up with what's airing
 A Home tracker for the currently-airing shows you're watching: next-episode countdowns, an "episodes behind" badge, and a one-tap **+1 episode** that auto-completes a show when you finish it.
 
+### Review your week
+A private weekly digest recaps episodes watched, titles started and completed, ranking comparisons, recommendations, and privacy-filtered friend activity. A Home card points to the latest recap, while quiet weeks become a focused next-up suggestion instead of an empty report.
+
 ### Compare taste with friends
 - **Public taste profiles** at `/u/:username` — top-ranked series, stats, and recent activity.
 - **Friends** with requests and search.
