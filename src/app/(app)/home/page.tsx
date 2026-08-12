@@ -12,6 +12,7 @@ import {
 import { DiscoverRow } from "@/components/home/discover-row";
 import { FriendActivityTeaser } from "@/components/home/friend-activity-teaser";
 import { HomeHero } from "@/components/home/home-hero";
+import { InactivityReviewCard } from "@/components/home/inactivity-review-card";
 import { RecommendationsPreview } from "@/components/home/recommendations-preview";
 import { WatchlistShuffle } from "@/components/library/watchlist-shuffle";
 import { WidePageFrame } from "@/components/layout/page-frame";
@@ -19,6 +20,7 @@ import { getLatestAnime, getPopularAnime, getTrendingAnime } from "@/lib/anilist
 import { requireProfile } from "@/lib/auth/session";
 import { getRandomBackground } from "@/lib/home/background";
 import { pickHeroHeadline } from "@/lib/home/hero-copy";
+import { getDueInactivityPrompts } from "@/lib/inactivity/queries";
 import { getUserLibraryEntries } from "@/lib/library/queries";
 import { runResilientOperation } from "@/lib/resilience";
 import { getNextComparisonPair } from "@/lib/ranking/prompt";
@@ -212,6 +214,12 @@ async function WeeklyDigestSection({
   return <WeeklyDigestCard digest={digest} />;
 }
 
+async function InactivityReviewSection({ userId }: { userId: string }) {
+  const prompts = await getDueInactivityPrompts(userId).catch(() => []);
+  if (prompts.length === 0) return null;
+  return <InactivityReviewCard prompts={prompts} />;
+}
+
 // ——— Page ———
 
 export default async function HomePage() {
@@ -233,6 +241,10 @@ export default async function HomePage() {
 
       <Suspense fallback={null}>
         <WeeklyDigestSection userId={user.id} timezone={profile.timezone} />
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <InactivityReviewSection userId={user.id} />
       </Suspense>
 
       <div className="space-y-10">
