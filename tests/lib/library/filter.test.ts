@@ -18,6 +18,11 @@ function entry(genres: string[], title = "Test"): LibraryEntry {
     started_at: null,
     completed_at: null,
     created_at: "",
+    last_progress_at: "",
+    watching_since_at: null,
+    paused_at: null,
+    drop_prompt_snoozed_at: null,
+    drop_prompt_due_at: null,
     updated_at: "",
     anime: {
       id: "a1",
