@@ -434,11 +434,13 @@ export type Database = {
       }
       profiles: {
         Row: {
+          auto_pause_days: number
           avatar_url: string | null
           banner_url: string | null
           bio: string | null
           created_at: string
           display_name: string | null
+          drop_prompt_days: number
           profile_visibility: Database["public"]["Enums"]["profile_visibility"]
           show_activity_to_friends: boolean
           timezone: string | null
@@ -447,11 +449,13 @@ export type Database = {
           username: string
         }
         Insert: {
+          auto_pause_days?: number
           avatar_url?: string | null
           banner_url?: string | null
           bio?: string | null
           created_at?: string
           display_name?: string | null
+          drop_prompt_days?: number
           profile_visibility?: Database["public"]["Enums"]["profile_visibility"]
           show_activity_to_friends?: boolean
           timezone?: string | null
@@ -460,11 +464,13 @@ export type Database = {
           username: string
         }
         Update: {
+          auto_pause_days?: number
           avatar_url?: string | null
           banner_url?: string | null
           bio?: string | null
           created_at?: string
           display_name?: string | null
+          drop_prompt_days?: number
           profile_visibility?: Database["public"]["Enums"]["profile_visibility"]
           show_activity_to_friends?: boolean
           timezone?: string | null
@@ -673,46 +679,61 @@ export type Database = {
           anime_id: string
           completed_at: string | null
           created_at: string
+          drop_prompt_due_at: string | null
+          drop_prompt_snoozed_at: string | null
           id: string
+          last_progress_at: string
           notes: string | null
           personal_score: number | null
           priority: Database["public"]["Enums"]["watchlist_priority"] | null
           progress_episodes: number
+          paused_at: string | null
           rewatch_count: number
           started_at: string | null
           status: Database["public"]["Enums"]["anime_entry_status"]
           updated_at: string
           user_id: string
+          watching_since_at: string | null
         }
         Insert: {
           anime_id: string
           completed_at?: string | null
           created_at?: string
+          drop_prompt_due_at?: string | null
+          drop_prompt_snoozed_at?: string | null
           id?: string
+          last_progress_at?: string
           notes?: string | null
           personal_score?: number | null
           priority?: Database["public"]["Enums"]["watchlist_priority"] | null
           progress_episodes?: number
+          paused_at?: string | null
           rewatch_count?: number
           started_at?: string | null
           status: Database["public"]["Enums"]["anime_entry_status"]
           updated_at?: string
           user_id: string
+          watching_since_at?: string | null
         }
         Update: {
           anime_id?: string
           completed_at?: string | null
           created_at?: string
+          drop_prompt_due_at?: string | null
+          drop_prompt_snoozed_at?: string | null
           id?: string
+          last_progress_at?: string
           notes?: string | null
           personal_score?: number | null
           priority?: Database["public"]["Enums"]["watchlist_priority"] | null
           progress_episodes?: number
+          paused_at?: string | null
           rewatch_count?: number
           started_at?: string | null
           status?: Database["public"]["Enums"]["anime_entry_status"]
           updated_at?: string
           user_id?: string
+          watching_since_at?: string | null
         }
         Relationships: [
           {
@@ -844,6 +865,14 @@ export type Database = {
           anime_id: string
           similarity: number
         }[]
+      }
+      resolve_anime_inactivity_prompt: {
+        Args: { p_entry_id: string; p_should_drop: boolean }
+        Returns: boolean
+      }
+      run_anime_inactivity_automation: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
       replace_user_series_rankings: {
         Args: { p_algorithm_version: string; p_rows: Json; p_user_id: string }

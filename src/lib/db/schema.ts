@@ -97,6 +97,8 @@ export const profiles = pgTable(
       .notNull()
       .default(true),
     timezone: text("timezone"),
+    autoPauseDays: integer("auto_pause_days").notNull().default(30),
+    dropPromptDays: integer("drop_prompt_days").notNull().default(30),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -164,6 +166,15 @@ export const userAnimeEntries = pgTable(
     personalScore: numeric("personal_score", { precision: 4, scale: 2 }),
     startedAt: date("started_at"),
     completedAt: date("completed_at"),
+    lastProgressAt: timestamp("last_progress_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    watchingSinceAt: timestamp("watching_since_at", { withTimezone: true }),
+    pausedAt: timestamp("paused_at", { withTimezone: true }),
+    dropPromptSnoozedAt: timestamp("drop_prompt_snoozed_at", {
+      withTimezone: true,
+    }),
+    dropPromptDueAt: timestamp("drop_prompt_due_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

@@ -32,6 +32,11 @@ function entry(overrides: Partial<LibraryEntry> = {}): LibraryEntry {
     started_at: null,
     completed_at: null,
     created_at: "2024-01-01T00:00:00Z",
+    last_progress_at: "2024-02-01T00:00:00Z",
+    watching_since_at: null,
+    paused_at: null,
+    drop_prompt_snoozed_at: null,
+    drop_prompt_due_at: null,
     updated_at: "2024-02-01T00:00:00Z",
     ...overrides,
     anime: {

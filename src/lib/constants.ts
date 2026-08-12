@@ -80,6 +80,7 @@ export const USER_EVENT_TYPES = {
   digestActionClicked: "digest_action_clicked",
   tasteFingerprintViewed: "taste_fingerprint_viewed",
   tasteFingerprintEvidenceOpened: "taste_fingerprint_evidence_opened",
+  inactivityPromptSnoozed: "inactivity_prompt_snoozed",
 } as const;
 
 /** Raw event types the friend activity feed considers (everything else is noise). */

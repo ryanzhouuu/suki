@@ -10,6 +10,7 @@ import { BannerUpload } from "@/components/profile/banner-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { InactivitySettingsForm } from "@/components/profile/inactivity-settings-form";
 import type { Tables } from "@/types/database";
 
 type ProfileEditFormProps = {
@@ -89,6 +90,10 @@ export function ProfileEditForm({ profile, action }: ProfileEditFormProps) {
           {pending ? "Saving…" : "Save changes"}
         </Button>
       </form>
+      <InactivitySettingsForm
+        autoPauseDays={profile.auto_pause_days ?? 30}
+        dropPromptDays={profile.drop_prompt_days ?? 30}
+      />
       <div className="flex items-center justify-between gap-3 border-t border-line pt-6">
         <div>
           <p className="text-sm font-semibold text-ink">Import a list</p>
