@@ -7,6 +7,7 @@ import { FriendRequestList } from "@/components/friends/friend-request-list";
 import { FriendSearch } from "@/components/friends/friend-search";
 import { ControlRail, WidePageFrame } from "@/components/layout/page-frame";
 import { AsyncSectionUnavailable } from "@/components/ui/async-section";
+import { RouteSkeleton } from "@/components/ui/route-skeleton";
 import { requireProfile } from "@/lib/auth/session";
 import { getReceivedRecommendations } from "@/lib/friend-recommendations/queries";
 import { getFriendActivityFeed } from "@/lib/friends/activity";
@@ -18,14 +19,14 @@ import { runResilientOperation } from "@/lib/resilience";
 
 function SectionSkeleton({ rows = 2 }: { rows?: number }) {
   return (
-    <div className="space-y-3" aria-hidden="true">
+    <RouteSkeleton label="Loading section" className="space-y-3">
       {Array.from({ length: rows }).map((_, index) => (
         <div
           key={index}
-          className="h-20 animate-pulse rounded-card border border-line bg-surface-2"
+          className="skeleton h-20 rounded-card border border-line"
         />
       ))}
-    </div>
+    </RouteSkeleton>
   );
 }
 

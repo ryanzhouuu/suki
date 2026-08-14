@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AnimePoster } from "@/components/anime/anime-poster";
 import { WeeklyDigestCard } from "@/components/digest/weekly-digest-card";
 import { AsyncSectionUnavailable } from "@/components/ui/async-section";
+import { RouteSkeleton } from "@/components/ui/route-skeleton";
 import {
   AiringTracker,
   AiringTrackerSkeleton,
@@ -72,20 +73,20 @@ async function DiscoverRowSection({
 
 function DiscoverRowSkeleton() {
   return (
-    <div aria-hidden="true">
+    <RouteSkeleton label="Loading anime discovery">
       <div className="mb-4">
-        <div className="h-3 w-14 animate-pulse rounded bg-surface-2" />
-        <div className="mt-1 h-7 w-24 animate-pulse rounded bg-surface-2" />
+        <div className="skeleton h-3 w-14 rounded" />
+        <div className="skeleton mt-1 h-7 w-24 rounded" />
       </div>
       <div className="-mx-4 flex gap-3 overflow-hidden px-4">
         {Array.from({ length: 8 }).map((_, index) => (
           <div key={index} className="w-29 shrink-0 sm:w-32">
-            <div className="aspect-2/3 w-full animate-pulse rounded-lg bg-surface-2" />
-            <div className="mt-2 h-3 w-3/4 animate-pulse rounded bg-surface-2" />
+            <div className="skeleton aspect-2/3 w-full rounded-lg" />
+            <div className="skeleton mt-2 h-3 w-3/4 rounded" />
           </div>
         ))}
       </div>
-    </div>
+    </RouteSkeleton>
   );
 }
 

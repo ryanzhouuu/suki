@@ -7,7 +7,7 @@ type SkeletonBlockProps = {
 export function SkeletonBlock({ className = "h-20" }: SkeletonBlockProps) {
   return (
     <div
-      className={`animate-pulse rounded-card bg-surface-2 ${className}`}
+      className={`skeleton rounded-card ${className}`}
       aria-hidden="true"
     />
   );
@@ -25,9 +25,9 @@ export function RouteSkeleton({
   label = "Loading page",
 }: RouteSkeletonProps) {
   return (
-    <div className={className} role="status">
+    <div className="w-full" role="status">
       <span className="sr-only">{label}</span>
-      <div aria-hidden="true">
+      <div className={className} aria-hidden="true">
         {children ?? (
           <div className="space-y-5">
             <SkeletonBlock className="h-8 w-40" />

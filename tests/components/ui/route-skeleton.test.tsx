@@ -19,5 +19,14 @@ describe("RouteSkeleton", () => {
     screen.getByText("Loading library");
     assert.equal(container.querySelector("button, a, input"), null);
     assert.ok(container.querySelector('[aria-hidden="true"]'));
+    assert.ok(container.querySelector(".skeleton"));
+  });
+
+  it("renders a useful default fallback when no layout is provided", () => {
+    const { container } = render(<RouteSkeleton />);
+
+    screen.getByRole("status");
+    screen.getByText("Loading page");
+    assert.equal(container.querySelectorAll(".skeleton").length, 5);
   });
 });

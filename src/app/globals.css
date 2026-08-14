@@ -23,6 +23,8 @@
   --danger: #c0392b;
   --ring: rgba(223, 74, 44, 0.45);
   --shadow-color: 28 22 14;
+  --skeleton: #dcc7b7;
+  --skeleton-highlight: #f4ded1;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -43,6 +45,8 @@
     --danger: #e8705f;
     --ring: rgba(255, 106, 74, 0.5);
     --shadow-color: 0 0 0;
+    --skeleton: #403126;
+    --skeleton-highlight: #5a3d30;
   }
 }
 
@@ -133,6 +137,35 @@ body::before {
 body > * {
   position: relative;
   z-index: 1;
+}
+
+@keyframes skeleton-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* Warm, high-contrast loading placeholders that stay distinct from cards. */
+.skeleton {
+  background-color: var(--skeleton);
+  background-image: linear-gradient(
+    100deg,
+    var(--skeleton) 30%,
+    var(--skeleton-highlight) 50%,
+    var(--skeleton) 70%
+  );
+  background-size: 220% 100%;
+  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    background-image: none;
+    animation: none;
+  }
 }
 
 /* Headings carry the editorial serif voice. */
