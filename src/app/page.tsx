@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { BrandLockup } from "@/components/brand/brand-mark";
 import { DiscoverRow } from "@/components/home/discover-row";
 import { LandingHero } from "@/components/home/landing-hero";
+import { RouteSkeleton } from "@/components/ui/route-skeleton";
 import { getLatestAnime, getPopularAnime, getTrendingAnime } from "@/lib/anilist/discover";
 import { getAuthUser } from "@/lib/auth/session";
 import { getRandomBackground } from "@/lib/home/background";
@@ -60,24 +61,24 @@ async function LandingDiscoverSection() {
 
 function LandingDiscoverSkeleton() {
   return (
-    <div className="space-y-10">
+    <RouteSkeleton label="Loading anime discovery" className="space-y-10">
       {[0, 1, 2].map((i) => (
         <div key={i}>
           <div className="mb-4">
-            <div className="h-3 w-14 animate-pulse rounded bg-surface-2" />
-            <div className="mt-1 h-7 w-32 animate-pulse rounded bg-surface-2" />
+            <div className="skeleton h-3 w-14 rounded" />
+            <div className="skeleton mt-1 h-7 w-32 rounded" />
           </div>
           <div className="-mx-4 flex gap-3 overflow-hidden px-4">
             {Array.from({ length: 8 }).map((_, j) => (
               <div key={j} className="w-29 shrink-0 sm:w-32">
-                <div className="aspect-2/3 w-full animate-pulse rounded-lg bg-surface-2" />
-                <div className="mt-2 h-3 w-3/4 animate-pulse rounded bg-surface-2" />
+                <div className="skeleton aspect-2/3 w-full rounded-lg" />
+                <div className="skeleton mt-2 h-3 w-3/4 rounded" />
               </div>
             ))}
           </div>
         </div>
       ))}
-    </div>
+    </RouteSkeleton>
   );
 }
 
