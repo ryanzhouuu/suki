@@ -92,6 +92,22 @@ describe("LibraryPanel", () => {
     screen.getByText(/Nothing in your library matches “bleach”/);
   });
 
+  it("keeps status filters available when a status has no matches", () => {
+    setSearchParams("status=completed");
+    render(
+      <LibraryPanel
+        entries={[]}
+        status="completed"
+      />,
+    );
+    screen.getByText("No matches");
+    assert.match(
+      document.body.textContent ?? "",
+      /Nothing in your library matches the Completed status\./,
+    );
+    assert.equal(screen.getAllByRole("link", { name: "Watching" }).length, 2);
+  });
+
   it("shows the match count once a search query narrows the results", () => {
     setSearchParams("q=naruto");
     render(

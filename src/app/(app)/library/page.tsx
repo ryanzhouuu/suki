@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import { LibraryPanel } from "@/components/library/library-panel";
-import { LibraryTabs } from "@/components/library/library-tabs";
 import { WatchlistShuffle } from "@/components/library/watchlist-shuffle";
 import { WidePageFrame } from "@/components/layout/page-frame";
 import { Button } from "@/components/ui/button";
@@ -110,13 +109,9 @@ export default async function LibraryPage({ searchParams }: LibraryPageProps) {
         ))}
       </dl>
 
-      <Suspense fallback={null}>
-        <LibraryTabs />
-      </Suspense>
-
       {showShuffle ? <WatchlistShuffle entries={entries} /> : null}
 
-      {entries.length === 0 ? (
+      {countSource.length === 0 ? (
         <div className="rounded-card border border-dashed border-line-strong p-10 text-center">
           <p className="font-display text-xl text-ink">Nothing here yet</p>
           <p className="mt-1 text-sm text-muted">
