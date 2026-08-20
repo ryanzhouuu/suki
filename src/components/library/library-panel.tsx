@@ -7,6 +7,7 @@ import { EntryCard } from "@/components/library/entry-card";
 import { EntryEditPanel } from "@/components/library/entry-edit-panel";
 import { GroupToggle } from "@/components/library/group-toggle";
 import { SeriesGroupCard } from "@/components/library/series-group-card";
+import { LibraryStatusFilters } from "@/components/library/library-status-filters";
 import { FilterMatchCount } from "@/components/filters/filter-match-count";
 import { GenreFilter } from "@/components/filters/genre-filter";
 import { LibrarySortSelect } from "@/components/library/library-sort-select";
@@ -32,7 +33,7 @@ import {
   type LibrarySortKey,
   type SortDirection,
 } from "@/lib/library/sort";
-import type { AnimeEntryStatus } from "@/lib/constants";
+import { STATUS_LABELS, type AnimeEntryStatus } from "@/lib/constants";
 import { useDebouncedUrlParam } from "@/lib/navigation/url-params";
 
 type LibraryPanelProps = {
@@ -94,33 +95,37 @@ export function LibraryPanel({
   const isEmpty = grouped ? groups.length === 0 : sorted.length === 0;
 
   const titleFiltering = qFromUrl.trim().length > 0;
+  const statusFiltering = status !== undefined;
   const filtering = titleFiltering || genreFiltering;
 
   return (
     <ControlRail
       sidebarLabel="Library filters"
       sidebar={
-        <div className="space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-faint">
-            Filter &amp; sort
-          </p>
-          <Input
-            type="search"
-            placeholder="Search your library…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            aria-label="Search your library"
-          />
-          <GenreFilter selected={genres} onChange={setGenres} layout="wrap" />
-          <LibrarySortSelect status={status} />
-          <GroupToggle />
-          {filtering ? (
-            <FilterMatchCount
-              matched={matchCount}
-              total={entries.length}
-              noun={grouped ? "show" : "entry"}
+        <div className="space-y-4">
+          <LibraryStatusFilters />
+          <div className="space-y-3 border-t border-line pt-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-faint">
+              Filter &amp; sort
+            </p>
+            <Input
+              type="search"
+              placeholder="Search your library…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              aria-label="Search your library"
             />
-          ) : null}
+            <GenreFilter selected={genres} onChange={setGenres} layout="wrap" />
+            <LibrarySortSelect status={status} />
+            <GroupToggle />
+            {filtering ? (
+              <FilterMatchCount
+                matched={matchCount}
+                total={entries.length}
+                noun={grouped ? "show" : "entry"}
+              />
+            ) : null}
+          </div>
         </div>
       }
     >
@@ -147,8 +152,12 @@ export function LibraryPanel({
             <p className="mt-1 text-sm text-muted">
               {titleFiltering ? (
                 <>Nothing in your library matches &ldquo;{qFromUrl}&rdquo;.</>
-              ) : (
+              ) : genreFiltering ? (
                 <>Nothing in your library matches the selected genres.</>
+              ) : statusFiltering ? (
+                <>Nothing in your library matches the {STATUS_LABELS[status]} status.</>
+              ) : (
+                <>Nothing in your library matches the selected filters.</>
               )}{" "}
               Try a different filter.
             </p>
