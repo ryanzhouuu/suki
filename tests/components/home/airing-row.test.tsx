@@ -75,30 +75,36 @@ describe("AiringRowItem", () => {
     assert.equal(screen.queryByText(/behind/), null);
   });
 
-  it("bumps progress optimistically and refreshes on success", async () => {
+  it("logs progress optimistically and refreshes on success", async () => {
     let refreshed = false;
     router.refresh = () => {
       refreshed = true;
     };
     render(<AiringRowItem row={makeRow({ progressEpisodes: 3 })} />);
-    fireEvent.click(screen.getByRole("button", { name: "+1 ep" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Naruto: log next episode watched" }),
+    );
     await waitFor(() => assert.equal(refreshed, true));
     assert.deepEqual(updateCalls, [
       { id: "entry-1", patch: { progressEpisodes: 4 } },
     ]);
   });
 
-  it("marks completed when progress reaches totalEpisodes", async () => {
+  it("lets the server auto-complete when progress reaches totalEpisodes", async () => {
     render(<AiringRowItem row={makeRow({ progressEpisodes: 11, totalEpisodes: 12 })} />);
-    fireEvent.click(screen.getByRole("button", { name: "+1 ep" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Naruto: log next episode watched" }),
+    );
     await waitFor(() => assert.equal(updateCalls.length, 1));
-    assert.deepEqual(updateCalls[0].patch, { progressEpisodes: 12, status: "completed" });
+    assert.deepEqual(updateCalls[0].patch, { progressEpisodes: 12 });
   });
 
   it("reverts the optimistic bump when the update fails", async () => {
     updateResult = { error: "failed" };
     render(<AiringRowItem row={makeRow({ nextEpisodeNumber: 6, progressEpisodes: 3 })} />);
-    fireEvent.click(screen.getByRole("button", { name: "+1 ep" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Naruto: log next episode watched" }),
+    );
     await waitFor(() => assert.equal(updateCalls.length, 1));
     await new Promise((resolve) => setTimeout(resolve, 0));
     screen.getByText("2 behind");

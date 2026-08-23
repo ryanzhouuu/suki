@@ -15,6 +15,7 @@ import { FriendActivityTeaser } from "@/components/home/friend-activity-teaser";
 import { HomeHero } from "@/components/home/home-hero";
 import { InactivityReviewCard } from "@/components/home/inactivity-review-card";
 import { RecommendationsPreview } from "@/components/home/recommendations-preview";
+import { EpisodeTicker } from "@/components/library/episode-ticker";
 import { WatchlistShuffle } from "@/components/library/watchlist-shuffle";
 import { WidePageFrame } from "@/components/layout/page-frame";
 import { getLatestAnime, getPopularAnime, getTrendingAnime } from "@/lib/anilist/discover";
@@ -331,33 +332,42 @@ export default async function HomePage() {
                 : 0;
               return (
                 <li key={entry.id} className="min-w-0">
-                  <Link
-                    href={`/anime/${entry.anime.anilist_id}`}
-                    className="group flex w-full min-w-0 items-center gap-3 rounded-card border border-line bg-surface p-3 transition-all hover:border-accent hover:shadow-[0_8px_24px_-16px_rgb(var(--shadow-color)/0.35)]"
-                  >
-                    <AnimePoster
-                      src={entry.anime.cover_image_url}
-                      alt={title}
-                      size="sm"
+                  <div className="group flex w-full min-w-0 items-center gap-3 rounded-card border border-line bg-surface p-3 transition-all hover:border-accent hover:shadow-[0_8px_24px_-16px_rgb(var(--shadow-color)/0.35)]">
+                    <Link
+                      href={`/anime/${entry.anime.anilist_id}`}
+                      className="flex min-w-0 flex-1 items-center gap-3"
+                    >
+                      <AnimePoster
+                        src={entry.anime.cover_image_url}
+                        alt={title}
+                        size="sm"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium text-ink transition-colors group-hover:text-accent">
+                          {title}
+                        </p>
+                        <p className="mt-0.5 text-xs text-muted">
+                          {entry.progress_episodes}
+                          {total ? ` / ${total} eps` : " eps"}
+                        </p>
+                        {total ? (
+                          <div className="mt-2 h-1 overflow-hidden rounded-full bg-surface-2">
+                            <div
+                              className="h-full rounded-full bg-accent transition-[width]"
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                        ) : null}
+                      </div>
+                    </Link>
+                    <EpisodeTicker
+                      variant="compact"
+                      entryId={entry.id}
+                      progressEpisodes={entry.progress_episodes}
+                      totalEpisodes={total}
+                      title={title}
                     />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium text-ink transition-colors group-hover:text-accent">
-                        {title}
-                      </p>
-                      <p className="mt-0.5 text-xs text-muted">
-                        {entry.progress_episodes}
-                        {total ? ` / ${total} eps` : " eps"}
-                      </p>
-                      {total ? (
-                        <div className="mt-2 h-1 overflow-hidden rounded-full bg-surface-2">
-                          <div
-                            className="h-full rounded-full bg-accent transition-[width]"
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
-                      ) : null}
-                    </div>
-                  </Link>
+                  </div>
                 </li>
               );
             })}
