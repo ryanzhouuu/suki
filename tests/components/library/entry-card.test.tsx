@@ -66,6 +66,11 @@ describe("EntryCard", () => {
   it("shows progress and an 'Edit' action when onEdit is provided", () => {
     render(<EntryCard entry={makeEntry()} onEdit={() => {}} />);
     screen.getByText("EP 5");
+    screen.getByRole("button", { name: "+ Episode" });
+    assert.equal(
+      screen.queryByRole("button", { name: "set episodes watched" }),
+      null,
+    );
     screen.getByRole("button", { name: "Edit" });
   });
 
@@ -90,25 +95,32 @@ describe("EntryCard", () => {
     screen.getByRole("button", { name: "Done" });
   });
 
-  it("increments progress and refreshes the router on '+1 ep'", async () => {
+  it("increments progress and refreshes the router on '+ Episode'", async () => {
     let refreshed = false;
     router.refresh = () => {
       refreshed = true;
     };
     render(<EntryCard entry={makeEntry({ progress_episodes: 5 })} />);
-    fireEvent.click(screen.getByRole("button", { name: "+1 ep" }));
+    fireEvent.click(screen.getByRole("button", { name: "+ Episode" }));
     await waitFor(() => assert.equal(refreshed, true));
     assert.deepEqual(updateCalls, [
       { id: "entry-1", patch: { progressEpisodes: 6 } },
     ]);
   });
 
+  it("reverts the optimistic count and offers a retry when the update fails", async () => {
+    updateResult = { error: "failed" };
+    render(<EntryCard entry={makeEntry({ progress_episodes: 5 })} />);
+    fireEvent.click(screen.getByRole("button", { name: "+ Episode" }));
+    await waitFor(() => screen.getByText("Couldn’t save"));
+    screen.getByText("EP 5");
+  });
+
   it("marks completed and reverts the optimistic status on error", async () => {
     updateResult = { error: "failed" };
     render(<EntryCard entry={makeEntry({ status: "watching" })} />);
     fireEvent.click(screen.getByRole("button", { name: "Completed" }));
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    screen.getByText("Watching");
+    await waitFor(() => screen.getByText("Watching"));
   });
 
   it("does not remove the entry when the confirm dialog is declined", () => {
