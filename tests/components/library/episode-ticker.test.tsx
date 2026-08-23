@@ -55,7 +55,7 @@ function makeProps(overrides: Record<string, unknown> = {}) {
 }
 
 
-describe("EpisodeTicker (full)", () => {
+describe("EpisodeTicker (library)", () => {
   afterEach(() => {
     cleanup();
     updateCalls.length = 0;
@@ -63,27 +63,16 @@ describe("EpisodeTicker (full)", () => {
     router.refresh = () => {};
   });
 
-  it("renders the count, strip, step-back, and log controls", () => {
+  it("renders the count, full-width strip, and log control", () => {
     render(<EpisodeTicker {...makeProps()} />);
     screen.getByText("EP 5");
     screen.getByRole("progressbar", { name: "5 of 24 episodes watched" });
     screen.getByRole("button", { name: "+ Episode" });
+    assert.equal(screen.queryByRole("button", { name: /step back/ }), null);
     assert.equal(
-      (
-        screen.getByRole("button", {
-          name: "step back one episode",
-        }) as HTMLButtonElement
-      ).disabled,
-      false,
+      screen.queryByRole("button", { name: "set episodes watched" }),
+      null,
     );
-  });
-
-  it("disables step-back at zero progress", () => {
-    render(<EpisodeTicker {...makeProps({ progressEpisodes: 0 })} />);
-    const stepBack = screen.getByRole("button", {
-      name: "step back one episode",
-    }) as HTMLButtonElement;
-    assert.equal(stepBack.disabled, true);
   });
 
   it("logs the next episode optimistically and refreshes on success", async () => {
@@ -142,55 +131,6 @@ describe("EpisodeTicker (full)", () => {
     screen.getByText("EP 5");
   });
 
-  it("sets an exact count via the jump editor", async () => {
-    render(<EpisodeTicker {...makeProps()} />);
-    fireEvent.click(screen.getByRole("button", { name: "set episodes watched" }));
-    const input = screen.getByLabelText("episode count");
-    fireEvent.change(input, { target: { value: "13" } });
-    fireEvent.click(screen.getByRole("button", { name: "Set" }));
-    await waitFor(() => assert.equal(updateCalls.length, 1));
-    await settle();
-    assert.deepEqual(updateCalls[0].patch, { progressEpisodes: 13 });
-    screen.getByText("EP 13");
-    assert.equal(screen.queryByLabelText("episode count"), null);
-  });
-
-  it("clamps editor values above the total before saving", async () => {
-    render(<EpisodeTicker {...makeProps()} />);
-    fireEvent.click(screen.getByRole("button", { name: "set episodes watched" }));
-    fireEvent.change(screen.getByLabelText("episode count"), {
-      target: { value: "99" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Set" }));
-    await waitFor(() => assert.equal(updateCalls.length, 1));
-    await settle();
-    assert.deepEqual(updateCalls[0].patch, { progressEpisodes: 24 });
-  });
-
-  it("jumps to the total via the Finish chip and resets via Reset", async () => {
-    render(<EpisodeTicker {...makeProps()} />);
-    fireEvent.click(screen.getByRole("button", { name: "set episodes watched" }));
-    fireEvent.click(screen.getByRole("button", { name: "Finish (24)" }));
-    await waitFor(() => assert.equal(updateCalls.length, 1));
-    await settle();
-    assert.deepEqual(updateCalls[0].patch, { progressEpisodes: 24 });
-
-    fireEvent.click(screen.getByRole("button", { name: "set episodes watched" }));
-    fireEvent.click(screen.getByRole("button", { name: "Reset" }));
-    await waitFor(() => assert.equal(updateCalls.length, 2));
-    await settle();
-    assert.deepEqual(updateCalls[1].patch, { progressEpisodes: 0 });
-    screen.getByText("EP 0");
-  });
-
-  it("closes the editor on Escape without saving", () => {
-    render(<EpisodeTicker {...makeProps()} />);
-    fireEvent.click(screen.getByRole("button", { name: "set episodes watched" }));
-    fireEvent.keyDown(screen.getByLabelText("episode count"), { key: "Escape" });
-    assert.equal(screen.queryByLabelText("episode count"), null);
-    assert.equal(updateCalls.length, 0);
-  });
-
   it("swaps the log button for a disabled Done state at the total", () => {
     render(<EpisodeTicker {...makeProps({ progressEpisodes: 24 })} />);
     const done = screen.getByRole("button", { name: "Done" }) as HTMLButtonElement;
@@ -205,12 +145,7 @@ describe("EpisodeTicker (full)", () => {
     render(<EpisodeTicker {...makeProps({ totalEpisodes: null })} />);
     assert.equal(screen.queryByRole("progressbar"), null);
     screen.getByText("EP 5");
-    fireEvent.click(screen.getByRole("button", { name: "set episodes watched" }));
     assert.equal(screen.queryByRole("button", { name: /Finish/ }), null);
-    assert.equal(
-      (screen.getByLabelText("episode count") as HTMLInputElement).max,
-      "",
-    );
   });
 });
 
