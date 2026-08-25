@@ -133,7 +133,10 @@ describe("LibraryPanel", () => {
 
   it("opens and closes an entry's edit dialog", () => {
     render(<LibraryPanel entries={[makeEntry({ id: "1" })]} />);
-    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "More actions for Naruto 1" }),
+    );
+    fireEvent.click(screen.getByRole("menuitem", { name: "Edit" }));
     screen.getByRole("dialog");
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
     assert.equal(screen.queryByRole("dialog"), null);

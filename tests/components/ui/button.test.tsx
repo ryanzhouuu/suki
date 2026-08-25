@@ -21,6 +21,7 @@ describe("Button", () => {
     );
     const button = screen.getByRole("button", { name: "Delete" });
     assert.match(button.className, /text-danger/);
+    assert.match(button.className, /border-danger/);
     assert.match(button.className, /text-xs/);
     cleanup();
   });
