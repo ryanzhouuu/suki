@@ -150,7 +150,7 @@ describe("SeriesGroupDetailsDialog", () => {
     screen.getByRole("link", { name: "View Naruto 2" });
   });
 
-  it("increments an entry's progress via '+1 ep' and refreshes", async () => {
+  it("logs an entry's progress via the ticker and refreshes", async () => {
     let refreshed = false;
     router.refresh = () => {
       refreshed = true;
@@ -162,14 +162,16 @@ describe("SeriesGroupDetailsDialog", () => {
         onClose={() => {}}
       />,
     );
-    fireEvent.click(screen.getByRole("button", { name: "+1 ep" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Naruto 1: log next episode watched" }),
+    );
     await waitFor(() => assert.equal(refreshed, true));
     assert.deepEqual(updateCalls, [
       { id: "1", patch: { progressEpisodes: 11 } },
     ]);
   });
 
-  it("does not show a '+1 ep' button for non-watching entries", () => {
+  it("does not show the ticker for non-watching entries", () => {
     render(
       <SeriesGroupDetailsDialog
         group={makeGroup([makeEntry({ id: "1", status: "completed" })])}
@@ -177,7 +179,10 @@ describe("SeriesGroupDetailsDialog", () => {
         onClose={() => {}}
       />,
     );
-    assert.equal(screen.queryByRole("button", { name: "+1 ep" }), null);
+    assert.equal(
+      screen.queryByRole("button", { name: /log next episode watched/ }),
+      null,
+    );
   });
 
   it("opens an entry's edit panel and closes it via Cancel", () => {
