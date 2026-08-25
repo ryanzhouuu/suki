@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useState } from "react";
 
+import { AnimeEpisodeTicker } from "@/components/anime/anime-episode-ticker";
 import { EntryEditPanel } from "@/components/library/entry-edit-panel";
+import { EpisodeProgressReadout } from "@/components/library/episode-ticker";
 import { StatusPicker } from "@/components/anime/status-picker";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import {
-  STATUS_LABELS,
   WATCHLIST_PRIORITY_LABELS,
   type AnimeEntryStatus,
 } from "@/lib/constants";
@@ -74,31 +75,26 @@ export function AnimeLibrarySection({
             <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <dt className="text-xs font-semibold uppercase tracking-wide text-faint">
-                  Status
+                  Score
                 </dt>
                 <dd className="mt-0.5 text-ink">
-                  {STATUS_LABELS[libraryEntry.status]}
+                  {libraryEntry.personal_score != null
+                    ? `${Number(libraryEntry.personal_score)}/10`
+                    : "Not scored"}
                 </dd>
               </div>
-              <div>
+              <div className="sm:col-span-2">
                 <dt className="text-xs font-semibold uppercase tracking-wide text-faint">
-                  Progress
+                  Notes
                 </dt>
-                <dd className="mt-0.5 text-ink">
-                  {libraryEntry.progress_episodes}
-                  {anime.episodes ? ` / ${anime.episodes}` : ""} episodes
+                <dd
+                  className={`mt-0.5 whitespace-pre-wrap ${
+                    libraryEntry.notes ? "text-ink" : "text-muted"
+                  }`}
+                >
+                  {libraryEntry.notes || "No notes yet"}
                 </dd>
               </div>
-              {libraryEntry.personal_score != null ? (
-                <div>
-                  <dt className="text-xs font-semibold uppercase tracking-wide text-faint">
-                    Score
-                  </dt>
-                  <dd className="mt-0.5 text-ink">
-                    {Number(libraryEntry.personal_score)}/10
-                  </dd>
-                </div>
-              ) : null}
               {libraryEntry.priority ? (
                 <div>
                   <dt className="text-xs font-semibold uppercase tracking-wide text-faint">
@@ -144,14 +140,36 @@ export function AnimeLibrarySection({
                 </div>
               ) : null}
             </dl>
-            {libraryEntry.notes ? (
-              <p className="mt-3 border-t border-line pt-3 text-muted">
-                <span className="font-medium text-ink">Notes:</span>
-                <br />
-                {libraryEntry.notes}
-              </p>
-            ) : null}
           </div>
+
+          {libraryEntry.status === "watching" ||
+          libraryEntry.status === "paused" ? (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-faint">
+                Progress
+              </p>
+              <AnimeEpisodeTicker
+                entryId={libraryEntry.id}
+                progressEpisodes={libraryEntry.progress_episodes}
+                totalEpisodes={anime.episodes ?? null}
+                title={title}
+                className="mt-2"
+              />
+            </div>
+          ) : libraryEntry.status === "completed" ||
+            libraryEntry.progress_episodes > 0 ? (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-faint">
+                Progress
+              </p>
+              <EpisodeProgressReadout
+                done={libraryEntry.status === "completed"}
+                progressEpisodes={libraryEntry.progress_episodes}
+                totalEpisodes={anime.episodes ?? null}
+                className="mt-2"
+              />
+            </div>
+          ) : null}
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
             <Button
