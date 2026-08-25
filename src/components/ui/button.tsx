@@ -6,7 +6,7 @@ const variants = {
   secondary:
     "border border-line-strong bg-surface text-ink hover:border-accent hover:text-accent",
   ghost: "text-muted hover:bg-surface-2 hover:text-ink",
-  danger: "border border-line-strong bg-surface text-danger hover:bg-accent-soft",
+  danger: "border border-danger bg-surface text-danger hover:bg-accent-soft",
 } as const;
 
 const sizes = {

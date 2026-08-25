@@ -63,7 +63,7 @@ describe("EntryCard", () => {
     delete window.confirm;
   });
 
-  it("shows progress and an 'Edit' action when onEdit is provided", () => {
+  it("shows progress, status, and edit/delete actions in the card menu", () => {
     render(<EntryCard entry={makeEntry()} onEdit={() => {}} />);
     screen.getByText("EP 5");
     screen.getByRole("button", { name: "+ Episode" });
@@ -71,12 +71,54 @@ describe("EntryCard", () => {
       screen.queryByRole("button", { name: "set episodes watched" }),
       null,
     );
-    screen.getByRole("button", { name: "Edit" });
+    screen.getByText("Watching");
+    fireEvent.click(
+      screen.getByRole("button", { name: "More actions for Naruto" }),
+    );
+    screen.getByRole("menu", { name: "Actions for Naruto" });
+    screen.getByRole("menuitem", { name: "Edit" });
+    screen.getByRole("menuitem", { name: "Delete" });
+    assert.equal(screen.queryByRole("button", { name: "Remove" }), null);
+    assert.equal(screen.queryByRole("button", { name: "Completed" }), null);
   });
 
   it("does not render an Edit button when onEdit is omitted", () => {
     render(<EntryCard entry={makeEntry()} />);
-    assert.equal(screen.queryByRole("button", { name: "Edit" }), null);
+    fireEvent.click(
+      screen.getByRole("button", { name: "More actions for Naruto" }),
+    );
+    assert.equal(screen.queryByRole("menuitem", { name: "Edit" }), null);
+    screen.getByRole("menuitem", { name: "Delete" });
+  });
+
+  it("calls onEdit and closes the menu when Edit is selected", () => {
+    let edited = false;
+    render(
+      <EntryCard
+        entry={makeEntry()}
+        onEdit={() => {
+          edited = true;
+        }}
+      />,
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "More actions for Naruto" }),
+    );
+    fireEvent.click(screen.getByRole("menuitem", { name: "Edit" }));
+    assert.equal(edited, true);
+    assert.equal(screen.queryByRole("menu"), null);
+  });
+
+  it("closes the menu on Escape and returns focus to the trigger", () => {
+    render(<EntryCard entry={makeEntry()} />);
+    const trigger = screen.getByRole("button", {
+      name: "More actions for Naruto",
+    });
+    fireEvent.click(trigger);
+    screen.getByRole("menu");
+    fireEvent.keyDown(document, { key: "Escape" });
+    assert.equal(screen.queryByRole("menu"), null);
+    assert.equal(document.activeElement, trigger);
   });
 
   it("shows an in-progress meta line for non-watching entries with progress", () => {
@@ -116,17 +158,13 @@ describe("EntryCard", () => {
     screen.getByText("EP 5");
   });
 
-  it("marks completed and reverts the optimistic status on error", async () => {
-    updateResult = { error: "failed" };
-    render(<EntryCard entry={makeEntry({ status: "watching" })} />);
-    fireEvent.click(screen.getByRole("button", { name: "Completed" }));
-    await waitFor(() => screen.getByText("Watching"));
-  });
-
   it("does not remove the entry when the confirm dialog is declined", () => {
     window.confirm = () => false;
     render(<EntryCard entry={makeEntry()} />);
-    fireEvent.click(screen.getByRole("button", { name: "Remove" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "More actions for Naruto" }),
+    );
+    fireEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
     assert.deepEqual(removeCalls, []);
   });
 
@@ -137,7 +175,10 @@ describe("EntryCard", () => {
       refreshed = true;
     };
     render(<EntryCard entry={makeEntry()} />);
-    fireEvent.click(screen.getByRole("button", { name: "Remove" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "More actions for Naruto" }),
+    );
+    fireEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
     await waitFor(() => assert.equal(refreshed, true));
     assert.deepEqual(removeCalls, ["entry-1"]);
   });
