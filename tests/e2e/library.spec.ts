@@ -1,5 +1,12 @@
+import type { Locator } from "@playwright/test";
+
 import { authStatePath, expect, test } from "./support/test";
 import { resetScenario } from "../support/local-supabase/scenario-builder";
+
+async function openEntryEdit(card: Locator) {
+  await card.getByRole("button", { name: /More actions for / }).click();
+  await card.getByRole("menuitem", { name: "Edit" }).click();
+}
 
 test.describe("library persistence", () => {
   test.use({ storageState: authStatePath("library") });
@@ -15,7 +22,7 @@ test.describe("library persistence", () => {
       .filter({ hasText: "Moonlit Couriers" })
       .first();
     await expect(card).toContainText("Watching");
-    await card.getByRole("button", { name: "Edit" }).click();
+    await openEntryEdit(card);
 
     const dialog = page.getByRole("dialog", { name: "Moonlit Couriers" });
     await expect(dialog).toBeVisible();
@@ -32,7 +39,7 @@ test.describe("library persistence", () => {
       .filter({ hasText: "Moonlit Couriers" })
       .first();
     await expect(reloadedCard).toContainText("Paused");
-    await reloadedCard.getByRole("button", { name: "Edit" }).click();
+    await openEntryEdit(reloadedCard);
 
     const reloadedDialog = page.getByRole("dialog", { name: "Moonlit Couriers" });
     await expect(reloadedDialog.getByLabel("Status")).toHaveValue("paused");
