@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 
-import { updateAnimeEntry } from "@/actions/library";
 import { AnimePoster } from "@/components/anime/anime-poster";
+import { EpisodeTicker } from "@/components/library/episode-ticker";
 import { EntryEditPanel } from "@/components/library/entry-edit-panel";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
@@ -76,25 +75,12 @@ function SeriesEntryRow({
   entry: LibraryEntry;
   onEdit: () => void;
 }) {
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
   const title = libraryEntryTitle(entry);
   const meta = formatEntryMeta(entry);
   const libraryMeta = formatLibraryMeta(entry);
   const total = entry.anime.episodes;
   const hasTotal = total != null && total > 0;
   const canIncrement = entry.status === "watching";
-
-  function incrementProgress() {
-    startTransition(async () => {
-      await updateAnimeEntry(entry.id, {
-        progressEpisodes: hasTotal
-          ? Math.min(entry.progress_episodes + 1, total)
-          : entry.progress_episodes + 1,
-      });
-      router.refresh();
-    });
-  }
 
   return (
     <li className="grid min-w-0 grid-cols-[44px_minmax(0,1fr)] gap-3 rounded-lg border border-line bg-surface p-2.5 sm:grid-cols-[48px_minmax(0,1fr)_auto] sm:items-center">
@@ -136,16 +122,13 @@ function SeriesEntryRow({
 
       <div className="col-span-2 flex flex-wrap justify-end gap-1.5 sm:col-span-1 sm:flex-nowrap">
         {canIncrement ? (
-          <Button
-            type="button"
-            size="sm"
-            variant="secondary"
-            disabled={pending}
-            className="min-h-8 px-2 text-[11px]"
-            onClick={incrementProgress}
-          >
-            +1 ep
-          </Button>
+          <EpisodeTicker
+            variant="compact"
+            entryId={entry.id}
+            progressEpisodes={entry.progress_episodes}
+            totalEpisodes={hasTotal ? total : null}
+            title={title}
+          />
         ) : null}
         <Link
           href={`/anime/${entry.anime.anilist_id}`}
