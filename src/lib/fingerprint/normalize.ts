@@ -5,7 +5,6 @@ import { compareStrings } from "./normalize-metadata";
 import { normalizeRankings } from "./normalize-rankings";
 import type {
   NormalizedFingerprintInput,
-  NormalizedFranchise,
 } from "./normalize-types";
 import type { FingerprintBuildInput, FingerprintEntry } from "./types";
 
@@ -60,8 +59,4 @@ export function normalizeFingerprintInput(
       ),
     rankingCount: rankings.length,
   };
-}
-
-export function safeDisplayTitle(franchise: NormalizedFranchise): string {
-  return franchise.title || "Untitled anime";
 }

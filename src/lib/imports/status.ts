@@ -10,7 +10,3 @@ export const PENDING_WORK_STATUSES: ImportJobStatus[] = [
 export function isPendingWorkStatus(status: ImportJobStatus): boolean {
   return PENDING_WORK_STATUSES.includes(status);
 }
-
-export function isTerminalStatus(status: ImportJobStatus): boolean {
-  return status === "done" || status === "failed" || status === "canceled";
-}

@@ -87,16 +87,6 @@ export async function getUserRecommendations(
   }));
 }
 
-export async function getEmbeddingCatalogCount(): Promise<number> {
-  const supabase = await createClient();
-  const { count, error } = await supabase
-    .from("anime_embeddings")
-    .select("*", { count: "exact", head: true });
-
-  if (error) return 0;
-  return count ?? 0;
-}
-
 export async function getCollaborativeRecommendations(
   viewerId: string,
   friendUserId: string,
