@@ -9,11 +9,10 @@ import { genreFilterKey } from "./genre";
 
 export function useGenreFromUrl(): string[] {
   const searchParams = useSearchParams();
-  const genreKey = searchParams.getAll("genre").join("\0");
 
   return useMemo(
     () => normalizeGenreParams(searchParams.getAll("genre")),
-    [genreKey],
+    [searchParams],
   );
 }
 

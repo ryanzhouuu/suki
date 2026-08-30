@@ -1,6 +1,5 @@
 import type { FingerprintFacts } from "./facts";
 import {
-  CURATED_THEME_CLUSTERS,
   FINGERPRINT_RULEBOOK_VERSION,
   POPULARITY_BANDS,
   RULE_THRESHOLDS,
@@ -42,8 +41,4 @@ export function evaluateFingerprintRules(
     }
   }
   return candidates;
-}
-
-export function getCuratedThemeClusters() {
-  return CURATED_THEME_CLUSTERS;
 }

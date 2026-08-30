@@ -1,4 +1,4 @@
-import type { CountSignal, FingerprintFacts } from "./fact-types";
+import type { FingerprintFacts } from "./fact-types";
 import {
   compareFranchises,
   countSignals,
@@ -195,15 +195,4 @@ export function deriveFingerprintFacts(
         ? highPopularityCount / knownPopularityFavorites.length
         : 0,
   };
-}
-
-export function signalFor(
-  signals: readonly CountSignal[],
-  key: string,
-): CountSignal | undefined {
-  return signals.find((signal) => signal.key === key);
-}
-
-export function hasMeaningfulShare(value: number, denominator: number): boolean {
-  return Number.isFinite(denominator) && denominator > 0 && value > 0;
 }

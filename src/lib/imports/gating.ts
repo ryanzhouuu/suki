@@ -38,7 +38,3 @@ export async function getPreparingImportJob(
     error: job.error,
   };
 }
-
-export async function isRankingPreparing(userId: string): Promise<boolean> {
-  return (await getPreparingImportJob(userId)) !== null;
-}

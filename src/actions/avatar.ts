@@ -120,5 +120,7 @@ export async function removeAvatarFromForm(
   _prev: ProfileActionState,
   _formData: FormData,
 ): Promise<ProfileActionState> {
+  void _prev;
+  void _formData;
   return removeAvatar();
 }
