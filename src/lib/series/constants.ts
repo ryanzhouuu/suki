@@ -17,3 +17,11 @@ export const FRANCHISE_RELATION_TYPES: ReadonlySet<string> = new Set([
 
 export const SERIES_GRAPH_MAX_DEPTH = 4;
 export const SERIES_GRAPH_MAX_NODES = 64;
+
+/**
+ * Sequel pairs that share a title token (e.g. "Naruto" inside "Boruto: Naruto
+ * Next Generations") but should stay separate series. Compared by lead token
+ * of each title, in either direction.
+ */
+export const FRANCHISE_IDENTITY_SPLITS: ReadonlyArray<readonly [string, string]> =
+  [["naruto", "boruto"]];

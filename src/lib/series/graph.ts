@@ -8,6 +8,7 @@ import type {
 } from "@/lib/anilist/types";
 
 import {
+  FRANCHISE_IDENTITY_SPLITS,
   FRANCHISE_RELATION_TYPES,
   SERIES_GRAPH_MAX_DEPTH,
   SERIES_GRAPH_MAX_NODES,
@@ -54,6 +55,22 @@ const TOKEN_STOPWORDS: ReadonlySet<string> = new Set([
   "festival", "anniversary", "th", "nd", "rd", "st",
 ]);
 
+/** Distinctive tokens of one title string, in left-to-right order. */
+function tokensInOrder(raw: string): string[] {
+  const normalized = raw
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[̀-ͯ]/g, "");
+  const tokens: string[] = [];
+  for (const part of normalized.split(/[^a-z0-9]+/)) {
+    if (part.length < 2) continue; // drops lone letters/digits ("z", "2")
+    if (/^\d+$/.test(part)) continue; // drops pure numbers
+    if (TOKEN_STOPWORDS.has(part)) continue;
+    tokens.push(part);
+  }
+  return tokens;
+}
+
 /**
  * Distinctive lowercase tokens across a title's languages, used to keep the
  * franchise crawl from drifting into a different franchise via crossovers.
@@ -62,24 +79,51 @@ export function franchiseTitleTokens(title: AniListMediaTitle): Set<string> {
   const tokens = new Set<string>();
   for (const raw of [title.english, title.romaji, title.native]) {
     if (!raw) continue;
-    const normalized = raw
-      .toLowerCase()
-      .normalize("NFKD")
-      .replace(/[̀-ͯ]/g, "");
-    for (const part of normalized.split(/[^a-z0-9]+/)) {
-      if (part.length < 2) continue; // drops lone letters/digits ("z", "2")
-      if (/^\d+$/.test(part)) continue; // drops pure numbers
-      if (TOKEN_STOPWORDS.has(part)) continue;
-      tokens.add(part);
-    }
+    for (const part of tokensInOrder(raw)) tokens.add(part);
   }
   return tokens;
+}
+
+/**
+ * First distinctive token of the preferred title language (english, then
+ * romaji, then native). Used to tell "Boruto: Naruto Next Generations" from
+ * "Naruto" even though they share a later token.
+ */
+export function leadFranchiseToken(title: AniListMediaTitle): string | null {
+  for (const raw of [title.english, title.romaji, title.native]) {
+    if (!raw) continue;
+    const lead = tokensInOrder(raw)[0];
+    if (lead) return lead;
+  }
+  return null;
 }
 
 /** True when two titles share at least one distinctive franchise token. */
 export function sharesFranchiseToken(a: Set<string>, b: Set<string>): boolean {
   for (const token of a) {
     if (b.has(token)) return true;
+  }
+  return false;
+}
+
+/**
+ * True when AniList would link these titles but they are a known split
+ * (currently Naruto vs Boruto). Symmetric.
+ */
+export function areSplitFranchises(
+  a: AniListMediaTitle,
+  b: AniListMediaTitle,
+): boolean {
+  const left = leadFranchiseToken(a);
+  const right = leadFranchiseToken(b);
+  if (!left || !right || left === right) return false;
+  for (const [one, two] of FRANCHISE_IDENTITY_SPLITS) {
+    if (
+      (left === one && right === two) ||
+      (left === two && right === one)
+    ) {
+      return true;
+    }
   }
   return false;
 }
@@ -119,6 +163,7 @@ export async function fetchFranchiseCluster(
   // a crossover/festival edge into another franchise can't drag it in even if a
   // loose relation type slips through.
   let seedTokens: Set<string> | null = null;
+  let seedTitle: AniListMediaTitle | null = null;
 
   while (queue.length > 0 && visited.size < SERIES_GRAPH_MAX_NODES) {
     const current = queue.shift();
@@ -134,6 +179,7 @@ export async function fetchFranchiseCluster(
 
     visited.set(media.id, mediaToNode(media));
     seedTokens ??= franchiseTitleTokens(media.title);
+    seedTitle ??= media.title;
 
     if (current.depth >= SERIES_GRAPH_MAX_DEPTH) continue;
 
@@ -143,6 +189,9 @@ export async function fetchFranchiseCluster(
         seedTokens &&
         !sharesFranchiseToken(seedTokens, franchiseTitleTokens(next.title))
       ) {
+        continue;
+      }
+      if (seedTitle && areSplitFranchises(seedTitle, next.title)) {
         continue;
       }
       queue.push({ id: next.id, depth: current.depth + 1 });
