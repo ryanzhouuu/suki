@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
+  areSplitFranchises,
   franchiseTitleTokens,
   pickPrimaryMedia,
   sharesFranchiseToken,
@@ -96,6 +97,53 @@ describe("sharesFranchiseToken", () => {
       sharesFranchiseToken(
         tok("One Piece Film: Gold", "One Piece Film: Gold"),
         tok("Dragon Ball: Annecy Festival 60th Anniversary", null),
+      ),
+      false,
+    );
+  });
+});
+
+function title(english: string | null, romaji: string | null = english) {
+  return { english, romaji, native: null };
+}
+
+describe("areSplitFranchises", () => {
+  it("splits Naruto from Boruto even though Boruto's title contains Naruto", () => {
+    assert.equal(
+      areSplitFranchises(
+        title("Naruto", "NARUTO"),
+        title("Boruto: Naruto Next Generations", "BORUTO: NARUTO NEXT GENERATIONS"),
+      ),
+      true,
+    );
+    assert.equal(
+      areSplitFranchises(
+        title("Boruto: Naruto Next Generations"),
+        title("Naruto", "NARUTO"),
+      ),
+      true,
+    );
+  });
+
+  it("keeps Naruto Shippuden and Naruto movies with Naruto", () => {
+    assert.equal(
+      areSplitFranchises(title("Naruto", "NARUTO"), title("Naruto: Shippuden")),
+      false,
+    );
+    assert.equal(
+      areSplitFranchises(
+        title("Naruto", "NARUTO"),
+        title("The Last: Naruto the Movie"),
+      ),
+      false,
+    );
+  });
+
+  it("keeps Boruto movies with Boruto", () => {
+    assert.equal(
+      areSplitFranchises(
+        title("Boruto: Naruto Next Generations"),
+        title("Boruto: Naruto the Movie"),
       ),
       false,
     );
