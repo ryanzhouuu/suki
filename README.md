@@ -41,7 +41,7 @@ A private weekly digest recaps episodes watched, titles started and completed, r
 - **Activity feed.** A lightweight, ambient feed of what friends have completed, ranked, or added — high-signal only, with privacy controls.
 
 ### Share your taste
-Profile and ranking links unfurl into a generated **taste card** (avatar, top-ranked covers, top genres) in Discord, Twitter, and iMessage — plus an in-app share button.
+Profile and ranking links unfurl into a generated **taste card** (avatar, top-ranked covers, top genres) in Discord, Twitter, and iMessage — plus an in-app share button. On the Ranking page, **Share** also lets you copy your complete numbered ranking or download it as a `.txt` file, regardless of the current genre filter or list/tier view.
 
 ### Bring your list with you
 Import an existing list so you don't start from an empty library:
