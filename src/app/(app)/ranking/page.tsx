@@ -1,10 +1,11 @@
+/** Loads the owner's full ranking for comparison, filtered views, and text export. */
 import Link from "next/link";
 import { Suspense } from "react";
 
 import { RankingPanel } from "@/components/ranking/ranking-panel";
 import { ImportPreparingPanel } from "@/components/imports/import-preparing-panel";
 import { WidePageFrame } from "@/components/layout/page-frame";
-import { ShareButton } from "@/components/share/share-button";
+import { RankingShareButton } from "@/components/share/ranking-share-button";
 import { AsyncSectionUnavailable } from "@/components/ui/async-section";
 import { requireProfile } from "@/lib/auth/session";
 import { env } from "@/lib/env";
@@ -16,6 +17,7 @@ import {
   getUserLibraryEntries,
 } from "@/lib/library/queries";
 import { getNextComparisonPair } from "@/lib/ranking/prompt";
+import { buildRankingTextExport } from "@/lib/ranking/export";
 import { getCompletedSeriesForUser } from "@/lib/series/queries";
 import { createClient } from "@/lib/supabase/server";
 
@@ -25,6 +27,7 @@ type RankingPageProps = {
   searchParams: Promise<{ view?: string }>;
 };
 
+/** Keeps export data independent of the client panel's genre and presentation filters. */
 export default async function RankingPage({ searchParams }: RankingPageProps) {
   const { user, profile } = await requireProfile();
   const { view } = await searchParams;
@@ -88,7 +91,14 @@ export default async function RankingPage({ searchParams }: RankingPageProps) {
           <p className="eyebrow">Express your taste</p>
           <h1 className="mt-1.5 text-3xl font-semibold sm:text-4xl">Ranking</h1>
         </div>
-        <ShareButton url={shareUrl} title="My anime rankings on Suki" />
+        <RankingShareButton
+          url={shareUrl}
+          rankingExport={buildRankingTextExport({
+            rankings,
+            username: profile.username,
+            url: shareUrl,
+          })}
+        />
       </div>
 
       {genresResult.status === "unavailable" ? (
