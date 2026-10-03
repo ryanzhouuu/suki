@@ -119,5 +119,5 @@ jobs:
           node-version-file: ".nvmrc"
           cache: npm
       - run: npm ci
-      # Gated at high, not moderate: the known moderate Next/PostCSS advisory (GHSA-qx2v-qp2m-jg93) has no patched stable Next release yet (npm audit fix --force would downgrade to Next 9 — never run it), so this blocks new high/critical advisories while that one is tracked separately.
+      # Block high and critical vulnerabilities in production dependencies.
       - run: npm audit --omit=dev --audit-level=high
