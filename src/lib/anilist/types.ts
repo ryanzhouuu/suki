@@ -136,13 +136,18 @@ export type AniListSearchResult = {
   } | null;
 };
 
+export type AniListDiscoverMedia = AniListMediaSummary & {
+  bannerImage?: string | null;
+  studios?: { nodes: Array<{ name: string } | null> | null } | null;
+};
+
 export type AniListDiscoverResult = {
   Page: {
     pageInfo?: {
       hasNextPage: boolean;
       lastPage: number;
     } | null;
-    media: AniListMediaSummary[] | null;
+    media: AniListDiscoverMedia[] | null;
   } | null;
 };
 

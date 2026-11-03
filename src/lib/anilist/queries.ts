@@ -25,6 +25,12 @@ export const ANIME_DISCOVER_QUERY = `
         coverImage {
           large
         }
+        bannerImage
+        studios(isMain: true) {
+          nodes {
+            name
+          }
+        }
         format
         seasonYear
       }
