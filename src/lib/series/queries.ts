@@ -1,5 +1,6 @@
 import { cache } from "react";
 
+import { pickSeriesBanner, type SeriesMemberArt } from "@/lib/series/banner";
 import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/types/database";
 
@@ -96,4 +97,45 @@ export async function userHasCompletedSeries(
   );
 
   return seriesIds.every((id) => coveredSeries.has(id));
+}
+
+/** Banner art per series id (falling back to the series cover), for wide artwork. */
+export async function getSeriesBanners(
+  series: Array<Pick<Tables<"series">, "id" | "anilist_primary_id" | "cover_image_url">>,
+): Promise<Map<string, string | null>> {
+  if (series.length === 0) return new Map();
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("anime_series_map")
+    .select("series_id, anime(anilist_id, banner_image_url)")
+    .in(
+      "series_id",
+      series.map((s) => s.id),
+    );
+
+  if (error) throw new Error(error.message);
+
+  const membersBySeries = new Map<string, SeriesMemberArt[]>();
+  for (const row of data ?? []) {
+    const anime = row.anime as Pick<
+      Tables<"anime">,
+      "anilist_id" | "banner_image_url"
+    > | null;
+    if (!anime) continue;
+    const members = membersBySeries.get(row.series_id) ?? [];
+    members.push({ anilistId: anime.anilist_id, bannerUrl: anime.banner_image_url });
+    membersBySeries.set(row.series_id, members);
+  }
+
+  return new Map(
+    series.map((s) => [
+      s.id,
+      pickSeriesBanner(
+        s.anilist_primary_id,
+        membersBySeries.get(s.id) ?? [],
+        s.cover_image_url,
+      ),
+    ]),
+  );
 }

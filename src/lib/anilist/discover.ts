@@ -3,27 +3,49 @@ import { cache } from "react";
 import { anilistQuery } from "./client";
 import { getAniListDisplayTitle } from "./display";
 import { ANIME_DISCOVER_QUERY } from "./queries";
-import type { AniListDiscoverResult, AniListMediaSummary } from "./types";
+import type { AniListDiscoverMedia, AniListDiscoverResult } from "./types";
 
 const DISCOVER_CACHE_SECONDS = 60 * 60;
 const DISCOVER_PER_PAGE = 24;
+const TRENDING_FEATURE_TIMEOUT_MS = 2500;
 
 export type DiscoverAnimeItem = {
   anilistId: number;
   title: string;
   coverUrl: string | null;
+  bannerUrl?: string | null;
+  studio?: string | null;
   format: string | null;
   seasonYear: number | null;
 };
 
-function toDiscoverItem(media: AniListMediaSummary): DiscoverAnimeItem {
+/** A discover item guaranteed to have banner art, for a full-bleed hero. */
+export type TrendingFeature = DiscoverAnimeItem & {
+  bannerUrl: string;
+  /** 1-based position on AniList's trending list. */
+  rank: number;
+};
+
+export function toDiscoverItem(media: AniListDiscoverMedia): DiscoverAnimeItem {
   return {
     anilistId: media.id,
     title: getAniListDisplayTitle(media.title),
     coverUrl: media.coverImage?.large ?? null,
+    bannerUrl: media.bannerImage ?? null,
+    studio: media.studios?.nodes?.find((node) => node?.name)?.name ?? null,
     format: media.format,
     seasonYear: media.seasonYear,
   };
+}
+
+/** The highest-trending item that has banner art, or null if none do. */
+export function pickTrendingFeature(
+  items: DiscoverAnimeItem[],
+): TrendingFeature | null {
+  const index = items.findIndex((item) => item.bannerUrl);
+  if (index === -1) return null;
+  const item = items[index];
+  return { ...item, bannerUrl: item.bannerUrl as string, rank: index + 1 };
 }
 
 async function fetchDiscover(
@@ -111,3 +133,24 @@ export const getPopularAnime = cache(async (): Promise<DiscoverAnimeItem[]> => {
 export const getTrendingAnime = cache(async (): Promise<DiscoverAnimeItem[]> => {
   return fetchDiscover(["TRENDING_DESC"]);
 });
+
+/**
+ * AniList's top trending show with banner art, for hero artwork. Resolves to
+ * null on failure or after `timeoutMs`, so a slow AniList never blocks a hero.
+ */
+export async function getTrendingFeature(
+  timeoutMs = TRENDING_FEATURE_TIMEOUT_MS,
+): Promise<TrendingFeature | null> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<null>((resolve) => {
+    timer = setTimeout(() => resolve(null), timeoutMs);
+  });
+  // Catch here so a late AniList failure is not an unhandled rejection after
+  // the timeout already resolved the race.
+  const feature = getTrendingAnime().then(pickTrendingFeature).catch(() => null);
+  try {
+    return await Promise.race([feature, timeout]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
