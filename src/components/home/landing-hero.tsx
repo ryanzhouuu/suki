@@ -1,47 +1,55 @@
 import Link from "next/link";
 
-import { BrandMark } from "@/components/brand/brand-mark";
-import { HeroBackground } from "@/components/home/hero-background";
-import { APP_NAME } from "@/lib/constants";
+import { CreditLine } from "@/components/home/credit-line";
+import { heroGhostClass, heroPrimaryClass, HeroFrame } from "@/components/home/hero-frame";
+import type { TrendingFeature } from "@/lib/anilist/discover";
+import { titleCredit } from "@/lib/home/featured";
 
-type LandingHeroProps = {
-  bgSrc: string;
-};
+const SUPPORTING =
+  "Log episodes as you go, settle your favorites with quick head-to-head picks, and find what to watch next.";
 
-export function LandingHero({ bgSrc }: LandingHeroProps) {
+/** Signed-out hero. Without a trending feature it stays text-only on the dark ground. */
+export function LandingHero({ feature }: { feature: TrendingFeature | null }) {
   return (
-    <section className="home-hero home-hero--splash animate-rise overflow-hidden">
-      <HeroBackground src={bgSrc} variant="splash" />
-
-      <BrandMark className="home-hero__mark" />
-
-      <div className="relative z-10 px-4 pb-12 pt-28 sm:px-10 sm:pb-20 sm:pt-32">
-        <p className="eyebrow">Track anime with less friction</p>
-        <h1 className="mt-2 max-w-xl text-balance text-[1.75rem] font-semibold leading-[1.08] text-[#f1e9da] sm:text-4xl sm:leading-[1.02] lg:text-[3.25rem]">
-          Keep track, rank clearly, and{" "}
-          <span className="italic text-accent">find what is next</span>
-          <span className="text-accent">.</span>
+    <HeroFrame src={feature?.bannerUrl ?? null} edge="page">
+      <div className="max-w-2xl">
+        <CreditLine
+          onArt
+          parts={[
+            { text: "Track", tone: "accent" },
+            { text: "Rank", tone: "accent" },
+            { text: "Discover", tone: "accent" },
+          ]}
+        />
+        <h1 className="mt-3 max-w-3xl text-balance font-display text-4xl font-medium leading-[1.05] text-white sm:text-6xl lg:text-[4.5rem]">
+          Every show you watch, <em className="italic text-accent">in order.</em>
         </h1>
-        <p className="mt-4 max-w-md text-[0.95rem] leading-relaxed text-[rgba(241,233,218,0.72)]">
-          {APP_NAME} gives you one place to manage your watchlist, record
-          episode progress, and build rankings through quick head-to-head picks.
+        <p className="mt-4 max-w-xl text-base leading-relaxed text-white/75 sm:text-lg">
+          {SUPPORTING}
         </p>
-
         <div className="mt-7 flex flex-wrap gap-2.5">
-          <Link
-            href="/auth/login?mode=signup"
-            className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-on-accent shadow-sm transition-all hover:bg-accent-strong hover:shadow-md active:translate-y-px"
-          >
-            Create account
+          <Link href="/auth/login?mode=signup" className={heroPrimaryClass}>
+            Create free account
           </Link>
-          <Link
-            href="/auth/login"
-            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-medium text-white/90 backdrop-blur-sm transition-colors hover:bg-white/18 hover:text-white"
-          >
+          <Link href="/auth/login" className={heroGhostClass}>
             Sign in
           </Link>
         </div>
       </div>
-    </section>
+      {feature ? (
+        <div className="lg:max-w-sm lg:shrink-0 lg:text-right">
+          <CreditLine
+            onArt
+            parts={[
+              { text: "Now trending" },
+              { text: `#${feature.rank} this week`, tone: "strong" },
+            ]}
+          />
+          <div className="mt-2">
+            <CreditLine onArt parts={titleCredit(feature)} />
+          </div>
+        </div>
+      ) : null}
+    </HeroFrame>
   );
 }

@@ -135,7 +135,9 @@ export function WatchlistShuffle({
     <section className="rounded-card border border-line bg-surface p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="eyebrow">Can&apos;t decide?</p>
+          <p className={compact ? "credit-line" : "eyebrow"}>
+            {compact ? "Watchlist" : "Can't decide?"}
+          </p>
           <h2 className="mt-1 font-display text-xl font-semibold sm:text-2xl">
             What should I watch?
           </h2>
@@ -180,7 +182,7 @@ export function WatchlistShuffle({
       ) : null}
 
       {error ? (
-        <p className="mt-4 rounded-card border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <p className="mt-4 rounded-card border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
           {error}
         </p>
       ) : null}

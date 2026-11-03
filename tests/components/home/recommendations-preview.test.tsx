@@ -67,7 +67,7 @@ describe("RecommendationsPreview", () => {
     recommendations = ["1", "2", "3", "4", "5"].map((id) => makeRow(id, `Anime ${id}`));
     const element = await RecommendationsPreview({ userId: "u1" });
     render(element);
-    screen.getByText("Recommended next");
+    screen.getByText("Picked for you");
     assert.equal(screen.getAllByText(/Anime \d/).length, 4);
     const link = screen.getByRole("link", { name: /See all/ });
     assert.equal(link.getAttribute("href"), "/recommendations");
