@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import {
   buildAiringRows,
+  formatAiringCredit,
   formatTimeUntil,
   type AiringRow,
 } from "@/lib/anime/airing";
@@ -110,6 +111,53 @@ describe("buildAiringRows", () => {
       mapOf(media({ id: 1, episode: 2, airingAt: 100, episodes: null })),
     );
     assert.equal(rows[0].totalEpisodes, 12);
+  });
+});
+
+describe("formatAiringCredit", () => {
+  const zone = "UTC";
+  const now = Date.parse("2026-11-02T12:00:00Z");
+
+  function at(iso: string) {
+    return Math.floor(Date.parse(iso) / 1000);
+  }
+
+  it("says Out now once the episode has aired", () => {
+    assert.deepEqual(formatAiringCredit(at("2026-11-02T11:00:00Z"), now, zone), {
+      day: "Out now",
+      time: null,
+      soon: true,
+    });
+  });
+
+  it("says Tonight from 5 PM and Today earlier the same day", () => {
+    const tonight = formatAiringCredit(at("2026-11-02T22:30:00Z"), now, zone);
+    assert.equal(tonight.day, "Tonight");
+    assert.equal(tonight.soon, true);
+    assert.match(tonight.time ?? "", /10:30\s*PM/);
+
+    const afternoon = formatAiringCredit(at("2026-11-02T14:00:00Z"), now, zone);
+    assert.equal(afternoon.day, "Today");
+    assert.equal(afternoon.soon, true);
+    assert.match(afternoon.time ?? "", /2:00\s*PM/);
+  });
+
+  it("converts the instant into the given timezone", () => {
+    const denver = formatAiringCredit(at("2026-11-04T02:30:00Z"), now, "America/Denver");
+    assert.equal(denver.day, "Tue");
+    assert.match(denver.time ?? "", /7:30\s*PM/);
+  });
+
+  it("uses a weekday inside the next week and a date after that", () => {
+    const wednesday = formatAiringCredit(at("2026-11-04T09:00:00Z"), now, zone);
+    assert.equal(wednesday.day, "Wed");
+    assert.equal(wednesday.soon, false);
+    assert.match(wednesday.time ?? "", /9:00\s*AM/);
+
+    const later = formatAiringCredit(at("2026-11-14T15:00:00Z"), now, zone);
+    assert.equal(later.day, "Nov 14");
+    assert.equal(later.time, null);
+    assert.equal(later.soon, false);
   });
 });
 

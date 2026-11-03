@@ -56,6 +56,85 @@ export function buildAiringRows(
   return rows;
 }
 
+/** When the next episode airs, as a credit line: `Tonight · 10:30 PM`, `Wed · 9:00 AM`, `Nov 14`. */
+export type AiringCredit = {
+  day: string;
+  time: string | null;
+  /** Airing today (or already out): the day reads in the accent color. */
+  soon: boolean;
+};
+
+const EVENING_HOUR = 17;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function zonedParts(date: Date, timeZone: string | undefined) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    hourCycle: "h23",
+  }).formatToParts(date);
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((part) => part.type === type)?.value ?? 0);
+  return {
+    dayStamp: Date.UTC(get("year"), get("month") - 1, get("day")),
+    hour: get("hour"),
+  };
+}
+
+function validTimeZone(timeZone: string | null | undefined): string | undefined {
+  if (!timeZone) return undefined;
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone });
+    return timeZone;
+  } catch {
+    return undefined;
+  }
+}
+
+function formatInZone(
+  date: Date,
+  timeZone: string | undefined,
+  options: Intl.DateTimeFormatOptions,
+): string {
+  return new Intl.DateTimeFormat("en-US", { ...options, timeZone })
+    .format(date)
+    .replace(/\s/g, " ");
+}
+
+/**
+ * Credit-line airing time in the viewer's timezone. Today reads "Tonight" from
+ * 5 PM ("Today" before), the next six days by weekday, anything later by date.
+ */
+export function formatAiringCredit(
+  airingAt: number,
+  nowMs: number,
+  timeZone?: string | null,
+): AiringCredit {
+  if (airingAt * 1000 <= nowMs) return { day: "Out now", time: null, soon: true };
+
+  const zone = validTimeZone(timeZone);
+  const airDate = new Date(airingAt * 1000);
+  const air = zonedParts(airDate, zone);
+  const now = zonedParts(new Date(nowMs), zone);
+  const dayDiff = Math.round((air.dayStamp - now.dayStamp) / DAY_MS);
+  const time = formatInZone(airDate, zone, { hour: "numeric", minute: "2-digit" });
+
+  if (dayDiff <= 0) {
+    return { day: air.hour >= EVENING_HOUR ? "Tonight" : "Today", time, soon: true };
+  }
+  if (dayDiff < 7) {
+    return { day: formatInZone(airDate, zone, { weekday: "short" }), time, soon: false };
+  }
+  return {
+    day: formatInZone(airDate, zone, { month: "short", day: "numeric" }),
+    time: null,
+    soon: false,
+  };
+}
+
 /** Format seconds-until-airing as a compact countdown, e.g. "2d 4h", "5h 12m", "8m". */
 export function formatTimeUntil(secondsUntil: number): string {
   if (secondsUntil <= 0) return "now";

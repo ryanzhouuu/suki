@@ -1,14 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { AnimePoster } from "@/components/anime/anime-poster";
 import { EpisodeTicker } from "@/components/library/episode-ticker";
-import { formatTimeUntil, type AiringRow } from "@/lib/anime/airing";
+import { formatAiringCredit, formatTimeUntil, type AiringRow } from "@/lib/anime/airing";
+
+function subscribeToNothing() {
+  return () => {};
+}
+
+/**
+ * The browser's IANA timezone after hydration, or null during SSR.
+ * Absolute air times are formatted only with this zone so they match the
+ * viewer's clock and don't mismatch the server render.
+ */
+function useLocalTimeZone() {
+  return useSyncExternalStore(
+    subscribeToNothing,
+    () => Intl.DateTimeFormat().resolvedOptions().timeZone,
+    () => null,
+  );
+}
 
 export function AiringRowItem({ row }: { row: AiringRow }) {
   const [now, setNow] = useState(() => Date.now());
+  const timeZone = useLocalTimeZone();
+  const credit = timeZone ? formatAiringCredit(row.airingAt, now, timeZone) : null;
 
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 60_000);
@@ -29,9 +48,15 @@ export function AiringRowItem({ row }: { row: AiringRow }) {
       </Link>
 
       <div className="min-w-0 flex-1">
+        {credit ? (
+          <p className="credit-line">
+            <span className={credit.soon ? "text-accent" : undefined}>{credit.day}</span>
+            {credit.time ? <span className="credit-line__dot"> · {credit.time}</span> : null}
+          </p>
+        ) : null}
         <Link
           href={`/anime/${row.anilistId}`}
-          className="block truncate font-medium text-ink transition-colors group-hover:text-accent"
+          className="mt-0.5 block truncate font-medium text-ink transition-colors group-hover:text-accent"
         >
           {row.title}
         </Link>
