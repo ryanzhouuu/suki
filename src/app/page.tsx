@@ -15,6 +15,7 @@ import {
   getTrendingFeature,
 } from "@/lib/anilist/discover";
 import { getAuthUser } from "@/lib/auth/session";
+import { withTmdbHeroArtwork } from "@/lib/tmdb/resolve";
 import { APP_NAME } from "@/lib/constants";
 
 const FEATURES = [
@@ -40,7 +41,9 @@ const FEATURES = [
 
 async function LandingHeroSection() {
   const feature = await getTrendingFeature();
-  return <LandingHero feature={feature} />;
+  if (!feature) return <LandingHero feature={null} />;
+  const [featured] = await withTmdbHeroArtwork([feature]);
+  return <LandingHero feature={featured ?? feature} />;
 }
 
 async function LandingDiscoverSection() {
