@@ -20,6 +20,17 @@ function makeItem(overrides: Partial<DiscoverAnimeItem> = {}): DiscoverAnimeItem
 describe("DiscoverRow", () => {
   afterEach(() => cleanup());
 
+  it("paints outlined rank numerals when ranked", () => {
+    render(
+      <DiscoverRow
+        title="Trending"
+        ranked
+        items={[makeItem({ anilistId: 1, title: "Naruto" })]}
+      />,
+    );
+    screen.getByText("1");
+  });
+
   it("renders nothing when there are no items", () => {
     const { container } = render(
       <DiscoverRow title="Trending" items={[]} />,

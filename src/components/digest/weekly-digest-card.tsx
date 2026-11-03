@@ -26,7 +26,7 @@ export function WeeklyDigestCard({ digest }: { digest: DigestSnapshot }) {
   ].filter((value): value is string => value !== null && !value.startsWith("0 "));
 
   return (
-    <aside className="animate-rise relative overflow-hidden border-y-2 border-ink bg-surface px-5 py-5 shadow-[0_18px_55px_-42px_rgb(var(--shadow-color)/0.55)] sm:px-7 sm:py-6">
+    <aside className="animate-rise relative overflow-hidden rounded-card border border-line bg-surface px-5 py-5 shadow-[0_18px_55px_-42px_rgb(var(--shadow-color)/0.55)] sm:px-7 sm:py-6">
       <div
         aria-hidden
         className="absolute top-0 right-0 h-full w-1/3 bg-[radial-gradient(circle_at_top_right,rgb(var(--accent)/0.14),transparent_70%)]"
@@ -54,7 +54,7 @@ export function WeeklyDigestCard({ digest }: { digest: DigestSnapshot }) {
 
       <div className="relative grid gap-5 pt-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
         <div className="min-w-0">
-          <p className="eyebrow">Week in review</p>
+          <p className="credit-line">Week in review</p>
           <h2 className="mt-2 max-w-xl font-display text-3xl leading-[1.05] font-semibold tracking-[-0.025em] text-ink sm:text-4xl">
             {digest.summary.quiet
               ? "Ready for what’s next?"

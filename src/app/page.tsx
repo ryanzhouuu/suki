@@ -5,32 +5,43 @@ import { redirect } from "next/navigation";
 
 import { BrandLockup } from "@/components/brand/brand-mark";
 import { DiscoverRow } from "@/components/home/discover-row";
+import { heroPrimaryClass } from "@/components/home/hero-frame";
 import { LandingHero } from "@/components/home/landing-hero";
 import { RouteSkeleton } from "@/components/ui/route-skeleton";
-import { getLatestAnime, getPopularAnime, getTrendingAnime } from "@/lib/anilist/discover";
+import {
+  getLatestAnime,
+  getPopularAnime,
+  getTrendingAnime,
+  getTrendingFeature,
+} from "@/lib/anilist/discover";
 import { getAuthUser } from "@/lib/auth/session";
-import { getRandomBackground } from "@/lib/home/background";
 import { APP_NAME } from "@/lib/constants";
 
 const FEATURES = [
   {
-    eyebrow: "Track",
-    title: "Keep your watchlist current",
-    body: "Update episode progress, mark completions, and manage watching states in one workflow.",
+    num: "01",
+    label: "Track",
+    title: "Your watchlist, current",
+    body: "Log episodes in a tap and keep every show’s status in one place.",
   },
   {
-    eyebrow: "Rank",
-    title: "Build rankings with confidence",
-    body: "Use quick pairwise comparisons to sort series without relying on broad, hard-to-compare scores.",
+    num: "02",
+    label: "Rank",
+    title: "Rankings you trust",
+    body: "Quick head-to-head picks sort your favorites. No agonizing over 7 vs 8.",
   },
   {
-    eyebrow: "Discover",
-    title: "Get better recommendations",
-    body: "Discovery and taste comparisons improve as your watch history and rankings become more complete.",
+    num: "03",
+    label: "Discover",
+    title: "Better next picks",
+    body: "Recommendations sharpen as your history and rankings grow.",
   },
 ] as const;
 
-// ——— Streaming section ———
+async function LandingHeroSection() {
+  const feature = await getTrendingFeature();
+  return <LandingHero feature={feature} />;
+}
 
 async function LandingDiscoverSection() {
   const [trending, latest, popular] = await Promise.all([
@@ -40,21 +51,9 @@ async function LandingDiscoverSection() {
   ]);
   return (
     <>
-      {trending.length > 0 ? (
-        <div className="animate-rise [animation-delay:240ms]">
-          <DiscoverRow eyebrow="Browse" title="Trending now" items={trending} />
-        </div>
-      ) : null}
-      {latest.length > 0 ? (
-        <div className="animate-rise [animation-delay:300ms]">
-          <DiscoverRow eyebrow="Browse" title="Latest anime" items={latest} />
-        </div>
-      ) : null}
-      {popular.length > 0 ? (
-        <div className="animate-rise [animation-delay:360ms]">
-          <DiscoverRow eyebrow="Browse" title="Popular now" items={popular} />
-        </div>
-      ) : null}
+      {trending.length > 0 ? <DiscoverRow title="Trending" items={trending} ranked /> : null}
+      {latest.length > 0 ? <DiscoverRow title="Latest" items={latest} /> : null}
+      {popular.length > 0 ? <DiscoverRow title="Popular" items={popular} /> : null}
     </>
   );
 }
@@ -65,8 +64,7 @@ function LandingDiscoverSkeleton() {
       {[0, 1, 2].map((i) => (
         <div key={i}>
           <div className="mb-4">
-            <div className="skeleton h-3 w-14 rounded" />
-            <div className="skeleton mt-1 h-7 w-32 rounded" />
+            <div className="skeleton h-7 w-32 rounded" />
           </div>
           <div className="-mx-4 flex gap-3 overflow-hidden px-4">
             {Array.from({ length: 8 }).map((_, j) => (
@@ -82,24 +80,15 @@ function LandingDiscoverSkeleton() {
   );
 }
 
-// ——— Page ———
-
 export default async function PublicLandingPage() {
   const user = await getAuthUser();
   if (user) redirect("/home");
 
-  const bg = getRandomBackground();
-
   return (
-    <div className="relative flex min-h-full flex-col">
-      {/* Header floats transparently over the full-screen hero photo */}
+    <div className="cinematic relative flex min-h-svh flex-col">
       <header className="absolute top-0 right-0 left-0 z-30 pt-[env(safe-area-inset-top)]">
-        <div className="mx-auto flex h-14 max-w-5xl min-w-0 items-center justify-between gap-2 px-4 sm:h-16 sm:gap-4">
-          <Link
-            href="/"
-            aria-label={`${APP_NAME} home`}
-            className="group min-w-0"
-          >
+        <div className="mx-auto flex h-14 max-w-7xl min-w-0 items-center justify-between gap-2 px-4 sm:h-16 sm:gap-4 sm:px-6 lg:px-8">
+          <Link href="/" aria-label={`${APP_NAME} home`} className="group min-w-0">
             <BrandLockup
               inverted
               markClassName="h-8 w-8 sm:h-9 sm:w-9"
@@ -123,54 +112,62 @@ export default async function PublicLandingPage() {
         </div>
       </header>
 
-      {/* Full-screen hero — edge-to-edge, no container constraint */}
-      <LandingHero bgSrc={bg} />
+      <Suspense fallback={<LandingHero feature={null} />}>
+        <LandingHeroSection />
+      </Suspense>
 
-      <main className="mx-auto w-full max-w-5xl min-w-0 flex-1 space-y-10 px-4 py-6 pb-12 sm:space-y-14 sm:py-10 sm:pb-16">
-        <section className="grid gap-4 sm:grid-cols-3">
+      <main className="mx-auto w-full max-w-7xl min-w-0 flex-1 space-y-12 px-4 py-10 sm:space-y-16 sm:px-6 sm:py-14 lg:px-8">
+        <section className="grid border-t border-white/10 sm:grid-cols-3 sm:border-t-0">
           {FEATURES.map((feature, index) => (
             <article
-              key={feature.eyebrow}
-              className="animate-rise rounded-card border border-line bg-surface p-6 shadow-[0_12px_40px_-28px_rgb(var(--shadow-color)/0.35)]"
-              style={{ animationDelay: `${60 + index * 60}ms` }}
+              key={feature.num}
+              className={`border-b border-white/10 py-6 sm:border-b-0 sm:px-6 sm:py-2 ${
+                index > 0 ? "sm:border-l" : "sm:pl-0"
+              } ${index === FEATURES.length - 1 ? "sm:pr-0" : ""}`}
             >
-              <p className="eyebrow">{feature.eyebrow}</p>
-              <h2 className="mt-2 text-lg font-semibold leading-snug text-ink">
-                {feature.title}
-              </h2>
-              <p className="mt-2 text-sm leading-relaxed text-muted">
-                {feature.body}
+              <p className="credit-line">
+                <span className="text-accent">{feature.num}</span>
+                <span className="credit-line__dot"> · </span>
+                {feature.label}
               </p>
+              <h2 className="mt-3 font-display text-2xl font-medium text-ink">{feature.title}</h2>
+              <p className="mt-2 text-sm leading-relaxed text-muted">{feature.body}</p>
             </article>
           ))}
         </section>
 
-        <Suspense fallback={<LandingDiscoverSkeleton />}>
-          <LandingDiscoverSection />
-        </Suspense>
+        <div className="space-y-10">
+          <p className="credit-line">Across AniList</p>
+          <Suspense fallback={<LandingDiscoverSkeleton />}>
+            <LandingDiscoverSection />
+          </Suspense>
+        </div>
 
-        <section className="animate-rise rounded-card border border-accent/35 bg-linear-to-br from-accent-soft via-surface to-surface p-6 text-center sm:p-10 [animation-delay:360ms]">
-          <p className="eyebrow">Get started in minutes</p>
-          <h2 className="mt-2 text-balance font-display text-xl font-medium text-ink sm:text-3xl">
-            Create your account and start tracking
-          </h2>
-          <p className="mx-auto mt-3 max-w-md text-sm text-muted">
-            Join for free, import your first shows, and start building a
-            ranking that reflects your actual preferences.
-          </p>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
-            <Link
-              href="/auth/login?mode=signup"
-              className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-on-accent shadow-sm transition-colors hover:bg-accent-strong"
-            >
-              Create account
-            </Link>
-            <Link
-              href="/auth/login"
-              className="inline-flex items-center gap-2 rounded-full border border-line-strong bg-paper/85 px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:border-accent hover:text-accent"
-            >
-              Sign in
-            </Link>
+        <section className="relative overflow-hidden rounded-card border border-line bg-surface px-6 py-12 text-center sm:px-10">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[radial-gradient(ellipse_at_top,rgb(255_106_74/0.28),transparent_70%)]"
+          />
+          <div className="relative">
+            <p className="credit-line">
+              <span className="text-accent">Free</span>
+              <span className="credit-line__dot"> · </span>
+              Takes two minutes
+            </p>
+            <h2 className="mt-3 font-display text-3xl font-medium text-ink sm:text-4xl">
+              Start your list tonight
+            </h2>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
+              <Link href="/auth/login?mode=signup" className={heroPrimaryClass}>
+                Create account
+              </Link>
+              <Link
+                href="/auth/login"
+                className="inline-flex min-h-11 items-center justify-center rounded-full border border-line-strong px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:border-accent hover:text-accent"
+              >
+                Sign in
+              </Link>
+            </div>
           </div>
         </section>
       </main>

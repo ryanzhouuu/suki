@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { AiringRowItem } from "@/components/home/airing-row";
+import { SectionHeading } from "@/components/home/credit-line";
 import { getAiringForWatching } from "@/lib/anime/airing-fetch";
 
 export async function AiringTracker({ userId }: { userId: string }) {
@@ -8,10 +9,7 @@ export async function AiringTracker({ userId }: { userId: string }) {
 
   return (
     <section className="animate-rise">
-      <div className="mb-4">
-        <p className="eyebrow">Now airing</p>
-        <h2 className="mt-1 text-2xl font-semibold">Airing this week</h2>
-      </div>
+      <SectionHeading label="Airing" title="Your Release Radar" />
 
       {rows.length === 0 ? (
         <div className="rounded-card border border-dashed border-line-strong bg-surface/40 p-8 text-center">
@@ -42,10 +40,7 @@ export function AiringTrackerSkeleton() {
     <section className="animate-rise" role="status">
       <span className="sr-only">Loading airing schedule</span>
       <div aria-hidden="true">
-        <div className="mb-4">
-          <p className="eyebrow">Now airing</p>
-          <h2 className="mt-1 text-2xl font-semibold">Airing this week</h2>
-        </div>
+        <SectionHeading label="Airing" title="Your Release Radar" />
         <ul className="grid min-w-0 gap-3 sm:grid-cols-2">
           {[0, 1].map((i) => (
             <li

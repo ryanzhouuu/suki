@@ -109,7 +109,7 @@ export function InactivityReviewCard({
     <>
       <section className="rounded-card border border-line bg-surface p-5 shadow-sm sm:flex sm:items-center sm:justify-between sm:gap-5">
         <div>
-          <p className="eyebrow">Library check-in</p>
+          <p className="credit-line">Library check-in</p>
           <h2 className="mt-1 font-display text-xl font-semibold text-ink">
             {prompts.length === 1
               ? "One paused anime needs your attention"

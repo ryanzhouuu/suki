@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { AnimePoster } from "@/components/anime/anime-poster";
+import { SectionHeading } from "@/components/home/credit-line";
 import { isEmbeddingConfigured } from "@/lib/recommendations/embedding-provider";
 import { getUserRecommendations } from "@/lib/recommendations/queries";
 
@@ -19,18 +20,11 @@ export async function RecommendationsPreview({
 
   return (
     <section className="animate-rise [animation-delay:200ms]">
-      <div className="mb-4 flex items-baseline justify-between gap-4">
-        <div>
-          <p className="eyebrow">For you</p>
-          <h2 className="mt-1 text-2xl font-semibold">Recommended next</h2>
-        </div>
-        <Link
-          href="/recommendations"
-          className="shrink-0 text-sm font-medium text-muted transition-colors hover:text-accent"
-        >
-          See all →
-        </Link>
-      </div>
+      <SectionHeading
+        label="Based on your ranking"
+        title="Picked for you"
+        href="/recommendations"
+      />
       <ul className="grid gap-3 sm:grid-cols-2">
         {preview.map((row) => {
           const title =

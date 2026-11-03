@@ -10,6 +10,8 @@ type DiscoverRowProps = {
   title: string;
   eyebrow?: string;
   items: DiscoverAnimeItem[];
+  /** Outlined rank numerals over the posters. Trending rows only. */
+  ranked?: boolean;
 };
 
 function Chevron({ direction }: { direction: "prev" | "next" }) {
@@ -30,7 +32,7 @@ function Chevron({ direction }: { direction: "prev" | "next" }) {
   );
 }
 
-export function DiscoverRow({ title, eyebrow, items }: DiscoverRowProps) {
+export function DiscoverRow({ title, eyebrow, items, ranked = false }: DiscoverRowProps) {
   const scrollerRef = useRef<HTMLUListElement>(null);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
@@ -114,18 +116,26 @@ export function DiscoverRow({ title, eyebrow, items }: DiscoverRowProps) {
           ref={scrollerRef}
           className="-mx-4 flex gap-3 overflow-x-auto overscroll-x-contain px-4 pb-1 snap-x snap-mandatory [scrollbar-width:none] [touch-action:pan-x] [&::-webkit-scrollbar]:hidden"
         >
-          {items.map((item) => (
+          {items.map((item, index) => (
             <li
               key={item.anilistId}
               className="w-[7.25rem] shrink-0 snap-start sm:w-32"
             >
               <Link href={`/anime/${item.anilistId}`} className="group block">
-                <AnimePoster
-                  src={item.coverUrl}
-                  alt={item.title}
-                  fill
-                  className="rounded-lg transition-transform duration-300 group-hover:scale-[1.02]"
-                />
+                <div className="relative">
+                  <AnimePoster
+                    src={item.coverUrl}
+                    alt={item.title}
+                    fill
+                    className="rounded-lg transition-transform duration-300 group-hover:scale-[1.02]"
+                  />
+                  {ranked ? (
+                    <span aria-hidden="true" className="rank-numeral">
+                      {index + 1}
+                    </span>
+                  ) : null}
+                </div>
+                {ranked ? <span className="sr-only">Rank {index + 1}. </span> : null}
                 <p className="mt-2 line-clamp-2 text-xs font-medium leading-snug text-ink transition-colors group-hover:text-accent">
                   {item.title}
                 </p>

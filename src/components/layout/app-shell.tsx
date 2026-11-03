@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { BrandLockup } from "@/components/brand/brand-mark";
 import { AccountMenu } from "@/components/layout/account-menu";
+import { AppHeader, AppMain, CinematicFrame } from "@/components/layout/cinematic-frame";
 import { DesktopNav, MobileNav } from "@/components/layout/main-nav";
 import { TimezoneSync } from "@/components/layout/timezone-sync";
 import { APP_NAME } from "@/lib/constants";
@@ -24,9 +25,9 @@ export async function AppShell({ children, profile, isSeriesAdmin }: AppShellPro
   const navBadges = { "/friends": unreadRecommendations };
 
   return (
-    <div className="flex min-h-full flex-col">
+    <CinematicFrame>
       <TimezoneSync current={profile.timezone} />
-      <header className="sticky top-0 z-30 border-b border-line bg-paper/80 pt-[env(safe-area-inset-top)] backdrop-blur-md">
+      <AppHeader>
         <div className="mx-auto flex h-14 max-w-7xl min-w-0 items-center justify-between gap-2 px-4 sm:h-16 sm:gap-4">
           <Link
             href="/home"
@@ -48,13 +49,11 @@ export async function AppShell({ children, profile, isSeriesAdmin }: AppShellPro
             isSeriesAdmin={isSeriesAdmin}
           />
         </div>
-      </header>
+      </AppHeader>
 
-      <main className="app-main mx-auto w-full max-w-5xl min-w-0 flex-1 px-4 py-6 sm:py-10">
-        {children}
-      </main>
+      <AppMain>{children}</AppMain>
 
       <MobileNav badges={navBadges} />
-    </div>
+    </CinematicFrame>
   );
 }

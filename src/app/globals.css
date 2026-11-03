@@ -139,6 +139,16 @@ body > * {
   z-index: 1;
 }
 
+/* Home and landing opt out of the paper grain and warm bloom. */
+body:has(.cinematic) {
+  background-color: #0b0a0c;
+  background-image: none;
+}
+
+body:has(.cinematic)::before {
+  display: none;
+}
+
 @keyframes skeleton-shimmer {
   from {
     background-position: 200% 0;
@@ -439,146 +449,163 @@ select {
   }
 }
 
-/* —— Home hero: cinematic photo background —— */
+/* —— Cinematic home and landing —— */
 
-@keyframes hero-sheen {
-  0% {
-    background-position: -100% 0;
-    opacity: 0.55;
-  }
-  50% {
-    opacity: 0.9;
-  }
-  100% {
-    background-position: 220% 0;
-    opacity: 0.55;
-  }
+.cinematic {
+  --paper: #0b0a0c;
+  --surface: #141216;
+  --surface-2: #1e1b22;
+  --ink: #f4f1ec;
+  --muted: rgb(255 255 255 / 0.62);
+  --faint: rgb(255 255 255 / 0.42);
+  --line: rgb(255 255 255 / 0.08);
+  --line-strong: rgb(255 255 255 / 0.16);
+  --accent: #ff6a4a;
+  --accent-strong: #ff8568;
+  --accent-soft: rgb(255 106 74 / 0.16);
+  --on-accent: #1a0f08;
+  --success: #4cae80;
+  --danger: #e8705f;
+  --ring: rgb(255 106 74 / 0.5);
+  --shadow-color: 0 0 0;
+  --skeleton: #2a2630;
+  --skeleton-highlight: #3c3644;
+  color: var(--ink);
+  background-color: var(--paper);
+  min-height: 100%;
 }
 
-@keyframes hero-reveal {
-  from {
-    opacity: 0;
-    filter: blur(10px);
-  }
-  to {
-    opacity: 1;
-    filter: blur(0);
-  }
+.cinematic-header {
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease,
+    backdrop-filter 200ms ease;
 }
 
-.home-hero {
+.credit-line {
+  margin: 0;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  line-height: 1.7;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.credit-line--on-art {
+  color: rgb(255 255 255 / 0.62);
+}
+
+.artwork-hero {
   position: relative;
   isolation: isolate;
-}
-
-/* Full-screen splash variant (logged-out landing) */
-.home-hero--splash {
-  min-height: 100svh;
   display: flex;
+  min-height: 100svh;
   flex-direction: column;
   justify-content: flex-end;
-  border-radius: 0;
-  border: none;
-  background: none;
-  box-shadow: none;
-  backdrop-filter: none;
+  overflow: hidden;
+  background: #0b0a0c;
 }
 
-.home-hero__mark {
-  position: absolute;
-  right: -1.2rem;
-  bottom: -1.5rem;
-  width: clamp(8rem, 22vw, 15rem);
-  height: auto;
-  transform: rotate(-3deg);
-  color: color-mix(in srgb, var(--accent) 22%, rgba(255 255 255 / 0.06));
-  user-select: none;
-  pointer-events: none;
+.artwork-hero__copy {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding-top: 6.5rem;
+  padding-bottom: calc(7.5rem + env(safe-area-inset-bottom, 0px));
 }
 
-@media (width >= 640px) {
-  .home-hero__mark {
-    right: 0.2rem;
-    bottom: -2.4rem;
-    width: clamp(12rem, 24vw, 18rem);
-  }
+.artwork-hero--page .artwork-hero__copy {
+  padding-bottom: 3.25rem;
 }
 
-/* —— HeroBackground component layers —— */
-
-.hero-bg {
+.artwork-field {
   position: absolute;
   inset: 0;
   overflow: hidden;
+  background: #0b0a0c;
   pointer-events: none;
 }
 
-/* Photo wrapper: -16px inset gives parallax room (JS translates within these bounds) */
-.hero-bg__photo-wrap {
+.artwork-field__image {
   position: absolute;
-  inset: -20px;
-  animation: hero-reveal 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: 80ms;
-  will-change: transform;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: center center;
+  animation: artwork-in 800ms ease both;
 }
 
-/* Brand-tinted scrim: warm ink gradients tuned for dark anime scenery photos */
-.hero-bg__scrim {
+.artwork-field__shade {
   position: absolute;
   inset: 0;
   background:
-    /* Strong left-side gradient where headline text sits */
     linear-gradient(
-      105deg,
-      rgba(28, 22, 14, 0.84) 0%,
-      rgba(28, 22, 14, 0.60) 38%,
-      rgba(28, 22, 14, 0.26) 66%,
-      rgba(28, 22, 14, 0.06) 100%
+      90deg,
+      rgb(11 10 12 / 0.92) 0%,
+      rgb(11 10 12 / 0.62) 38%,
+      rgb(11 10 12 / 0.28) 68%,
+      rgb(11 10 12 / 0.12) 100%
     ),
-    /* Bottom vignette */
     linear-gradient(
-      to top,
-      rgba(28, 22, 14, 0.70) 0%,
-      rgba(28, 22, 14, 0.22) 45%,
-      transparent 72%
+      180deg,
+      rgb(11 10 12 / 0.55) 0%,
+      transparent 18%,
+      transparent 58%,
+      #0b0a0c 100%
     ),
-    /* Base tint to darken any bright patch */
-    rgba(12, 9, 6, 0.28);
+    radial-gradient(130% 90% at 70% 40%, transparent 36%, rgb(11 10 12 / 0.55) 100%);
 }
 
-/* Atmospheric overlay: slow diagonal luster sweep */
-.hero-bg__overlay {
+.artwork-field__glow {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    110deg,
-    transparent 15%,
-    color-mix(in srgb, var(--accent) 5%, rgba(255 255 255 / 0.07)) 50%,
-    transparent 85%
-  );
-  background-size: 200% 100%;
-  animation: hero-sheen 22s ease-in-out infinite;
+  background:
+    radial-gradient(55% 45% at 18% 78%, rgb(255 106 74 / 0.28), transparent 70%),
+    #0b0a0c;
+}
+
+.rank-numeral {
+  position: absolute;
+  z-index: 2;
+  left: 0.15rem;
+  bottom: -0.05rem;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: clamp(2.6rem, 5vw, 3.7rem);
+  font-style: italic;
+  font-weight: 500;
+  line-height: 0.8;
+  letter-spacing: -0.04em;
+  color: transparent;
+  -webkit-text-stroke: 1.25px rgb(255 255 255 / 0.9);
   pointer-events: none;
 }
 
-/* Static film-grain noise over the luster */
-.hero-bg__overlay::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 256px;
-  opacity: 0.04;
-  mix-blend-mode: overlay;
+@keyframes artwork-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (width >= 640px) {
+  .artwork-hero__copy,
+  .artwork-hero--page .artwork-hero__copy {
+    padding-top: 7rem;
+    padding-bottom: 4.5rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-bg__photo-wrap {
+  .artwork-field__image,
+  .cinematic .animate-rise,
+  .cinematic-header {
     animation: none;
-  }
-
-  .hero-bg__overlay {
-    animation: none;
+    transition: none;
   }
 }
 
