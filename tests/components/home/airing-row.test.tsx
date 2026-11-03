@@ -3,7 +3,7 @@ import { afterEach, before, describe, it, mock } from "node:test";
 
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { AiringRowItem as AiringRowItemType } from "@/components/home/airing-row";
-import type { AiringRow } from "@/lib/anime/airing";
+import { formatAiringCredit, type AiringRow } from "@/lib/anime/airing";
 
 import { installRouterMock } from "../../helpers/mock-router";
 
@@ -22,6 +22,10 @@ mock.module("@/actions/library", {
 });
 
 let AiringRowItem: typeof AiringRowItemType;
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
 before(async () => {
   ({ AiringRowItem } = await import("@/components/home/airing-row"));
@@ -48,6 +52,28 @@ describe("AiringRowItem", () => {
     updateCalls.length = 0;
     updateResult = {};
     router.refresh = () => {};
+  });
+
+  it("formats the air time in the browser timezone, not a saved profile zone", () => {
+    const airingAt = Math.floor(Date.parse("2026-11-04T02:30:00Z") / 1000);
+    const local = formatAiringCredit(airingAt, Date.now());
+    const saved = formatAiringCredit(airingAt, Date.now(), "Pacific/Kiritimati");
+    assert.notEqual(local.time, saved.time);
+
+    render(<AiringRowItem row={makeRow({ airingAt })} />);
+
+    const credit = screen.getByText(local.day).closest("p");
+    assert.match(credit?.textContent ?? "", new RegExp(escapeRegExp(local.time ?? "")));
+    assert.equal(credit?.textContent?.includes(saved.time ?? "___"), false);
+  });
+
+  it("leads with an airing credit once the clock is known", async () => {
+    render(
+      <AiringRowItem
+        row={makeRow({ airingAt: Math.floor(Date.now() / 1000) - 60 })}
+      />,
+    );
+    await screen.findByText("Out now");
   });
 
   it("shows the title and time until the next episode", () => {
