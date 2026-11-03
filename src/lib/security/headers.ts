@@ -1,5 +1,6 @@
 import { formatSupabaseOrigin, type SupabaseOrigin } from "./supabase-origin";
 
+/** Response headers for every page, including the image hosts the heroes load. */
 export function buildSecurityHeaders(options: {
   isDev: boolean;
   supabaseOrigin: SupabaseOrigin;
@@ -11,7 +12,7 @@ export function buildSecurityHeaders(options: {
     // Next.js App Router requires inline scripts without a nonce setup; dev needs eval.
     `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://va.vercel-scripts.com`,
     "style-src 'self' 'unsafe-inline'",
-    `img-src 'self' data: blob: ${supabaseSource} https://s4.anilist.co https://img1.ak.crunchyroll.com https://img.youtube.com https://i.ytimg.com`,
+    `img-src 'self' data: blob: ${supabaseSource} https://s4.anilist.co https://img1.ak.crunchyroll.com https://img.youtube.com https://i.ytimg.com https://image.tmdb.org`,
     "frame-src https://www.youtube-nocookie.com",
     "font-src 'self' data:",
     `connect-src 'self' ${supabaseSource} https://va.vercel-scripts.com https://vitals.vercel-insights.com`,

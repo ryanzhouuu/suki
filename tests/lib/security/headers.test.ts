@@ -104,6 +104,7 @@ describe("buildSecurityHeaders", () => {
     assert.match(imgSrc!, /https:\/\/img1\.ak\.crunchyroll\.com/);
     assert.match(imgSrc!, /https:\/\/img\.youtube\.com/);
     assert.match(imgSrc!, /https:\/\/i\.ytimg\.com/);
+    assert.match(imgSrc!, /https:\/\/image\.tmdb\.org/);
   });
 
   it("allows the privacy-enhanced YouTube embed in frame-src", () => {

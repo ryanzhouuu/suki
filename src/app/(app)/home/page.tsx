@@ -22,6 +22,7 @@ import {
   getOrCreateLatestDigest,
 } from "@/lib/digest/snapshot";
 import { selectHeroShows } from "@/lib/home/featured";
+import { withTmdbHeroArtwork } from "@/lib/tmdb/resolve";
 import { getDueInactivityPrompts } from "@/lib/inactivity/queries";
 import { getUserLibraryEntries } from "@/lib/library/queries";
 import { runResilientOperation } from "@/lib/resilience";
@@ -87,7 +88,9 @@ function DiscoverRowSkeleton() {
 
 async function HomeTrendingHero() {
   const trending = await getTrendingFeature();
-  return <HomeHero shows={[]} trending={trending} />;
+  if (!trending) return <HomeHero shows={[]} trending={null} />;
+  const [featured] = await withTmdbHeroArtwork([trending]);
+  return <HomeHero shows={[]} trending={featured ?? trending} />;
 }
 
 async function WatchlistSection({ userId }: { userId: string }) {
@@ -156,7 +159,7 @@ async function InactivityReviewSection({ userId }: { userId: string }) {
 export default async function HomePage() {
   const { user, profile } = await requireProfile();
   const watching = await getUserLibraryEntries(user.id, "watching");
-  const shows = selectHeroShows(watching);
+  const shows = await withTmdbHeroArtwork(selectHeroShows(watching));
 
   return (
     <div>
