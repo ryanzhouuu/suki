@@ -31,7 +31,7 @@ function StatCell({
 }) {
   return (
     <div
-      className={`flex min-w-0 items-baseline justify-between gap-2 rounded-lg border px-2.5 py-2 transition-colors sm:block sm:rounded-card sm:px-3 sm:py-2.5 ${
+      className={`min-w-0 rounded-lg border px-2.5 py-2 transition-colors sm:rounded-card sm:px-3 sm:py-2.5 ${
         active
           ? "border-accent/45 bg-accent-soft/60"
           : "border-line bg-surface"
@@ -44,7 +44,7 @@ function StatCell({
       >
         {value}
       </p>
-      <p className="truncate text-[10px] font-medium uppercase tracking-wide text-muted sm:mt-1.5 sm:text-[11px]">
+      <p className="truncate mt-1.5 text-[10px] font-medium uppercase tracking-wide text-muted sm:text-[11px]">
         {label}
       </p>
     </div>

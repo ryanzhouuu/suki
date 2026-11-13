@@ -19,7 +19,7 @@ export function CinematicFrame({ children }: { children: ReactNode }) {
 
 /**
  * Transparent over the home hero, then a dark blur once the page scrolls.
- * Every other route keeps the paper header.
+ * Every other route keeps the dark blurred header pinned from the start.
  */
 export function AppHeader({ children }: { children: ReactNode }) {
   const home = useCinematicHome();
@@ -42,7 +42,7 @@ export function AppHeader({ children }: { children: ReactNode }) {
                 ? "border-b border-line bg-paper/85 backdrop-blur-md"
                 : "border-b border-transparent bg-transparent"
             }`
-          : "sticky top-0 z-30 border-b border-line bg-paper/80 pt-[env(safe-area-inset-top)] backdrop-blur-md"
+          : "sticky top-0 z-30 border-b border-line bg-paper/85 pt-[env(safe-area-inset-top)] backdrop-blur-md"
       }
     >
       {children}

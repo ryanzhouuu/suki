@@ -70,7 +70,7 @@ export function Dialog({
       // this overlay is portaled to <body>, dropping it into normal flow at the
       // bottom of the page. Inline styles win over that unlayered rule.
       style={{ position: "fixed", inset: 0, zIndex: 50 }}
-      className="flex items-end justify-center bg-ink/40 p-0 backdrop-blur-sm animate-fade sm:items-center sm:p-4"
+      className="flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm animate-fade sm:items-center sm:p-4"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}

@@ -121,7 +121,7 @@ export default async function AnimeDetailPage({ params }: AnimeDetailPageProps) 
     <div>
       {/* ── CINEMATIC HERO ──────────────────────────────── */}
       <section className="relative flex min-h-[44svh] flex-col justify-end overflow-hidden sm:min-h-[50svh]">
-        {/* Background: banner → blurred cover → solid ink */}
+        {/* Background: banner → blurred cover → solid canvas */}
         {anime.banner_image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -137,14 +137,14 @@ export default async function AnimeDetailPage({ params }: AnimeDetailPageProps) 
             className="absolute inset-0 h-full w-full scale-125 object-cover blur-3xl brightness-50 saturate-150"
           />
         ) : (
-          <div className="absolute inset-0 bg-ink" />
+          <div className="absolute inset-0 bg-paper" />
         )}
 
         {/* Double scrim: bottom-up for text, left-right for wide titles */}
-        <div className="absolute inset-0 bg-gradient-to-t from-ink/95 via-ink/55 to-ink/15" />
-        <div className="absolute inset-0 bg-gradient-to-r from-ink/65 via-ink/25 to-transparent sm:from-ink/50 sm:via-ink/10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-paper/95 via-paper/55 to-paper/15" />
+        <div className="absolute inset-0 bg-gradient-to-r from-paper/65 via-paper/25 to-transparent sm:from-paper/50 sm:via-paper/10" />
 
-        {/* Paper dissolve at the bottom edge — blends hero into page */}
+        {/* Canvas dissolve at the bottom edge — blends hero into page */}
         <div className="absolute inset-x-0 bottom-0 h-16 bg-linear-to-t from-paper to-transparent" />
 
         {/* Back button */}
@@ -167,7 +167,7 @@ export default async function AnimeDetailPage({ params }: AnimeDetailPageProps) 
         </div>
 
         {/* Title block — right padding keeps text clear of the poster at all sizes */}
-        <div className="relative z-10 mx-auto w-full max-w-8xl px-4 pb-14 pr-28 sm:pb-20 sm:pr-40 lg:pr-44">
+        <div className="relative z-10 mx-auto w-full max-w-8xl px-4 pt-20 pb-14 pr-28 sm:pt-24 sm:pb-20 sm:pr-40 lg:pr-44">
           {heroMeta.length > 0 ? (
             <p className="mb-3 text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-white/50">
               {heroMeta.join(" · ")}

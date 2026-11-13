@@ -1,53 +1,31 @@
 @import "tailwindcss";
 
 /*
-  Suki — an editorial "anime zine" aesthetic.
-  Warm paper, deep ink, and a single confident vermilion (朱色) accent.
-  Semantic tokens drive light/dark automatically so components stay clean.
+  Suki — a dark cinematic canvas.
+  Near-black stage, warm off-white ink, and a single coral accent.
+  The app is dark-only; semantic tokens keep components theme-agnostic.
 */
 
 :root {
-  --paper: #f6f1e7;
-  --surface: #fffdf8;
-  --surface-2: #efe7d7;
-  --ink: #221d17;
-  --muted: #6d6357;
-  --faint: #9b9181;
-  --line: #e6dccb;
-  --line-strong: #d8ccb6;
-  --accent: #df4a2c;
-  --accent-strong: #c33c20;
-  --accent-soft: #fae6df;
-  --on-accent: #fff7f1;
-  --success: #2f7d57;
-  --danger: #c0392b;
-  --ring: rgba(223, 74, 44, 0.45);
-  --shadow-color: 28 22 14;
-  --skeleton: #dcc7b7;
-  --skeleton-highlight: #f4ded1;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --paper: #15120d;
-    --surface: #1d1812;
-    --surface-2: #29221a;
-    --ink: #f1e9da;
-    --muted: #a89a86;
-    --faint: #786c5b;
-    --line: #2f271d;
-    --line-strong: #3c3225;
-    --accent: #ff6a4a;
-    --accent-strong: #ff8568;
-    --accent-soft: #2c1a12;
-    --on-accent: #1a0f08;
-    --success: #4cae80;
-    --danger: #e8705f;
-    --ring: rgba(255, 106, 74, 0.5);
-    --shadow-color: 0 0 0;
-    --skeleton: #403126;
-    --skeleton-highlight: #5a3d30;
-  }
+  color-scheme: dark;
+  --paper: #0b0a0c;
+  --surface: #141216;
+  --surface-2: #1e1b22;
+  --ink: #f4f1ec;
+  --muted: rgb(255 255 255 / 0.62);
+  --faint: rgb(255 255 255 / 0.42);
+  --line: rgb(255 255 255 / 0.08);
+  --line-strong: rgb(255 255 255 / 0.16);
+  --accent: #ff6a4a;
+  --accent-strong: #ff8568;
+  --accent-soft: rgb(255 106 74 / 0.16);
+  --on-accent: #1a0f08;
+  --success: #4cae80;
+  --danger: #e8705f;
+  --ring: rgb(255 106 74 / 0.5);
+  --shadow-color: 0 0 0;
+  --skeleton: #2a2630;
+  --skeleton-highlight: #3c3644;
 }
 
 @theme inline {
@@ -100,53 +78,6 @@ body {
   color: var(--ink);
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   overflow-x: clip;
-  /* Layered warm atmosphere: soft vermilion bloom + paper grain. */
-  background-image:
-    radial-gradient(
-      120% 70% at 88% -8%,
-      color-mix(in srgb, var(--accent) 16%, transparent),
-      transparent 60%
-    ),
-    radial-gradient(
-      90% 55% at 0% 0%,
-      color-mix(in srgb, var(--accent) 7%, transparent),
-      transparent 55%
-    );
-  background-attachment: fixed;
-}
-
-/* Fine paper grain overlay. */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.4;
-  mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
-}
-
-@media (prefers-color-scheme: dark) {
-  body::before {
-    mix-blend-mode: screen;
-    opacity: 0.06;
-  }
-}
-
-body > * {
-  position: relative;
-  z-index: 1;
-}
-
-/* Home and landing opt out of the paper grain and warm bloom. */
-body:has(.cinematic) {
-  background-color: #0b0a0c;
-  background-image: none;
-}
-
-body:has(.cinematic)::before {
-  display: none;
 }
 
 @keyframes skeleton-shimmer {
@@ -449,27 +380,9 @@ select {
   }
 }
 
-/* —— Cinematic home and landing —— */
+/* —— Cinematic heroes —— */
 
 .cinematic {
-  --paper: #0b0a0c;
-  --surface: #141216;
-  --surface-2: #1e1b22;
-  --ink: #f4f1ec;
-  --muted: rgb(255 255 255 / 0.62);
-  --faint: rgb(255 255 255 / 0.42);
-  --line: rgb(255 255 255 / 0.08);
-  --line-strong: rgb(255 255 255 / 0.16);
-  --accent: #ff6a4a;
-  --accent-strong: #ff8568;
-  --accent-soft: rgb(255 106 74 / 0.16);
-  --on-accent: #1a0f08;
-  --success: #4cae80;
-  --danger: #e8705f;
-  --ring: rgb(255 106 74 / 0.5);
-  --shadow-color: 0 0 0;
-  --skeleton: #2a2630;
-  --skeleton-highlight: #3c3644;
   color: var(--ink);
   background-color: var(--paper);
   min-height: 100%;
