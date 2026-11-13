@@ -129,7 +129,7 @@ export default async function DigestPage() {
         {!digest.summary.quiet && stats.some((stat) => stat.value > 0) ? (
           <section
             aria-labelledby="your-week-heading"
-            className="animate-rise border-b border-ink py-8 [animation-delay:60ms] sm:py-10"
+            className="animate-rise border-b border-line-strong py-8 [animation-delay:60ms] sm:py-10"
           >
             <div className="mb-6 flex items-end justify-between gap-4">
               <div>
@@ -178,7 +178,7 @@ export default async function DigestPage() {
         {highlights.length > 0 ? (
           <section
             aria-labelledby="highlights-heading"
-            className="animate-rise border-b border-ink py-8 [animation-delay:120ms] sm:py-12"
+            className="animate-rise border-b border-line-strong py-8 [animation-delay:120ms] sm:py-12"
           >
             <div className="mb-6 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
               <div>
@@ -259,7 +259,7 @@ export default async function DigestPage() {
           </section>
         ) : null}
 
-        <div className="grid border-b border-ink lg:grid-cols-[minmax(0,1.25fr)_minmax(19rem,0.75fr)]">
+        <div className="grid border-b border-line-strong lg:grid-cols-[minmax(0,1.25fr)_minmax(19rem,0.75fr)]">
           <div className="space-y-10 py-9 lg:border-r lg:border-line lg:pr-10">
             {friendHighlights.length > 0 ? (
               <section aria-labelledby="friends-week-heading">
@@ -329,16 +329,16 @@ export default async function DigestPage() {
 
           <section
             aria-labelledby="next-up-heading"
-            className="relative overflow-hidden bg-ink px-6 py-9 text-paper sm:px-8 lg:px-9 lg:py-12"
+            className="relative overflow-hidden bg-surface-2 px-6 py-9 text-ink sm:px-8 lg:px-9 lg:py-12"
           >
             <div
               aria-hidden
-              className="absolute -right-12 -bottom-20 font-display text-[16rem] leading-none text-paper/5"
+              className="absolute -right-12 -bottom-20 font-display text-[16rem] leading-none text-ink/5"
             >
               →
             </div>
             <div className="relative flex h-full min-h-72 flex-col">
-              <p className="text-[0.65rem] font-semibold tracking-[0.22em] text-paper/60 uppercase">
+              <p className="text-[0.65rem] font-semibold tracking-[0.22em] text-muted uppercase">
                 Editor’s pick · Next up
               </p>
               <h2
@@ -347,7 +347,7 @@ export default async function DigestPage() {
               >
                 {nextAction.title}
               </h2>
-              <p className="mt-4 max-w-md text-sm leading-6 text-paper/65">
+              <p className="mt-4 max-w-md text-sm leading-6 text-muted">
                 {nextAction.description}
               </p>
               <DigestActionLink
@@ -355,7 +355,7 @@ export default async function DigestPage() {
                 section="next_up"
                 actionKind={nextAction.kind}
                 href={nextAction.href}
-                className="group mt-auto flex w-fit items-center gap-3 border-b-2 border-accent pt-10 pb-1 text-sm font-semibold text-paper"
+                className="group mt-auto flex w-fit items-center gap-3 border-b-2 border-accent pt-10 pb-1 text-sm font-semibold text-ink"
               >
                 Follow this story
                 <span

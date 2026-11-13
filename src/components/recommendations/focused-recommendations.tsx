@@ -140,26 +140,6 @@ export function FocusedRecommendations({
           }
         >
           <div className="relative">
-            {canScroll ? (
-              <>
-                <div className="absolute left-2 top-1/2 z-30 -translate-y-1/2 sm:hidden">
-                  <CarouselArrow
-                    direction="prev"
-                    label="Previous recommendation"
-                    disabled={!canScroll}
-                    onClick={goPrev}
-                  />
-                </div>
-                <div className="absolute right-2 top-1/2 z-30 -translate-y-1/2 sm:hidden">
-                  <CarouselArrow
-                    direction="next"
-                    label="Next recommendation"
-                    disabled={!canScroll}
-                    onClick={goNext}
-                  />
-                </div>
-              </>
-            ) : null}
             <FocusedRecommendationCard
               key={current.id}
               row={current}
@@ -170,6 +150,26 @@ export function FocusedRecommendations({
               whyLabel={whyLabel}
               backdrop={false}
             />
+            {/* Phones get the arrows under the card so they never cover its copy. */}
+            {canScroll ? (
+              <div className="mt-3 flex items-center justify-between sm:hidden">
+                <CarouselArrow
+                  direction="prev"
+                  label="Previous recommendation"
+                  disabled={!canScroll}
+                  onClick={goPrev}
+                />
+                <p className="text-xs font-medium tracking-[0.18em] text-muted uppercase tabular-nums">
+                  {safeIndex + 1} / {visibleItems.length}
+                </p>
+                <CarouselArrow
+                  direction="next"
+                  label="Next recommendation"
+                  disabled={!canScroll}
+                  onClick={goNext}
+                />
+              </div>
+            ) : null}
           </div>
         </RecommendationsStage>
 

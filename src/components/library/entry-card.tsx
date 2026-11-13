@@ -132,7 +132,7 @@ export function EntryCard({ entry, onEdit, isEditing = false }: EntryCardProps) 
             aria-controls={`entry-actions-${entry.id}`}
             disabled={pending}
             onClick={() => setMenuOpen((open) => !open)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-paper/45 bg-ink/80 text-on-accent shadow-[0_5px_16px_rgb(var(--shadow-color)/0.35)] backdrop-blur-sm transition-all duration-150 hover:scale-105 hover:bg-ink focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-black/70 text-white shadow-[0_5px_16px_rgb(var(--shadow-color)/0.35)] backdrop-blur-sm transition-all duration-150 hover:scale-105 hover:bg-black focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

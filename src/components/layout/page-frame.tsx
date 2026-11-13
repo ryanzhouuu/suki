@@ -64,7 +64,7 @@ export function ControlRail({
 /**
  * Reusable full-bleed faded artwork layer for cinematic moments. Place inside a
  * `relative isolate` wrapper as the first child; content sits above with
- * `relative z-10`. Heavy fades keep foreground text readable in light and dark.
+ * `relative z-10`. Heavy fades keep foreground text readable over any artwork.
  */
 export function CinematicBackdrop({
   imageUrl,
@@ -91,7 +91,7 @@ export function CinematicBackdrop({
       ) : (
         <div className="h-full w-full bg-linear-to-br from-accent-soft via-surface-2 to-surface" />
       )}
-      {/* Blend only the edges into the paper theme; keep the center vivid. The
+      {/* Blend only the edges into the page canvas; keep the center vivid. The
           bottom stays solid where the foreground card meets the artwork. */}
       <div className="absolute inset-0 bg-linear-to-r from-paper via-transparent to-paper" />
       <div className="absolute inset-0 bg-linear-to-b from-paper/40 via-transparent to-paper" />
