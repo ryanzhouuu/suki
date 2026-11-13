@@ -55,7 +55,8 @@ describe("AiringRowItem", () => {
   });
 
   it("formats the air time in the browser timezone, not a saved profile zone", () => {
-    const airingAt = Math.floor(Date.parse("2026-11-04T02:30:00Z") / 1000);
+    // Two days out keeps a clock time in the credit in every zone; a fixed date would expire.
+    const airingAt = Math.floor(Date.now() / 1000) + 2 * 24 * 3600;
     const local = formatAiringCredit(airingAt, Date.now());
     const saved = formatAiringCredit(airingAt, Date.now(), "Pacific/Kiritimati");
     assert.notEqual(local.time, saved.time);
