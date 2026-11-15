@@ -7,13 +7,19 @@ type ShareButtonProps = {
   title?: string;
   text?: string;
   label?: string;
+  /** Replaces the default pill styling, e.g. for buttons sitting on artwork. */
+  className?: string;
 };
+
+const DEFAULT_CLASS =
+  "inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-2 px-3 py-1.5 text-sm font-medium text-muted transition-all hover:-translate-y-0.5 hover:border-accent hover:text-ink";
 
 export function ShareButton({
   url,
   title,
   text,
   label = "Share",
+  className = DEFAULT_CLASS,
 }: ShareButtonProps) {
   const [copied, setCopied] = useState(false);
 
@@ -43,7 +49,7 @@ export function ShareButton({
       type="button"
       onClick={handleShare}
       aria-label={`Share profile link${title ? `: ${title}` : ""}`}
-      className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-2 px-3 py-1.5 text-sm font-medium text-muted transition-all hover:-translate-y-0.5 hover:border-accent hover:text-ink"
+      className={className}
     >
       <svg
         aria-hidden

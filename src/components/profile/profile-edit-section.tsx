@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { updateProfile } from "@/actions/profile";
+import { heroGhostClass } from "@/components/home/hero-frame";
 import { ProfileEditForm } from "@/components/profile/profile-edit-form";
 import { Button } from "@/components/ui/button";
 import type { Tables } from "@/types/database";
@@ -35,10 +36,8 @@ export function ProfileEditSection({ profile, editing }: ProfileEditSectionProps
   }
 
   return (
-    <Link href={`${profilePath}?edit=1`}>
-      <Button type="button" size="sm" variant="secondary">
-        Edit profile
-      </Button>
+    <Link href={`${profilePath}?edit=1`} className={heroGhostClass}>
+      Edit profile
     </Link>
   );
 }
