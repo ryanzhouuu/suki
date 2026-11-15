@@ -72,14 +72,15 @@ describe("ProfileAnimeSection", () => {
     cleanup();
   });
 
-  it("collapses to 10 entries with a 'Show all' toggle when collapsible", () => {
-    const entries = Array.from({ length: 12 }, (_, i) => makeEntry({ id: String(i) }));
+  it("collapses to 14 entries (two full poster rows) with a 'Show all' toggle when collapsible", () => {
+    const entries = Array.from({ length: 16 }, (_, i) => makeEntry({ id: String(i) }));
     render(<ProfileAnimeSection title="All" entries={entries} collapsible />);
-    assert.equal(screen.queryByText("Anime 11"), null);
-    fireEvent.click(screen.getByRole("button", { name: "Show all 12" }));
-    screen.getByText("Anime 11");
+    screen.getByText("Anime 13");
+    assert.equal(screen.queryByText("Anime 14"), null);
+    fireEvent.click(screen.getByRole("button", { name: "Show all 16" }));
+    screen.getByText("Anime 15");
     fireEvent.click(screen.getByRole("button", { name: "Show less" }));
-    assert.equal(screen.queryByText("Anime 11"), null);
+    assert.equal(screen.queryByText("Anime 14"), null);
     cleanup();
   });
 

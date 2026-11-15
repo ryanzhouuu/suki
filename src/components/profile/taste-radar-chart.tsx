@@ -37,32 +37,16 @@ function strengthPoints(traits: FingerprintTrait[]) {
 export function TasteRadarChart({ traits }: TasteRadarChartProps) {
   if (traits.length < 3) {
     return (
-      <div className="flex min-h-64 items-center justify-center rounded-xl border border-dashed border-line-strong bg-surface/55 p-6 text-center">
-        <div>
-          <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-accent">
-            Signal map locked
-          </p>
-          <p className="mt-2 max-w-52 text-sm leading-relaxed text-muted">
-            Three discovered traits are needed to draw this readout.
-          </p>
-        </div>
+      <div className="flex min-h-48 items-center justify-center text-center">
+        <p className="max-w-56 text-sm leading-relaxed text-muted">
+          The trait radar appears once three traits are discovered.
+        </p>
       </div>
     );
   }
 
   return (
-    <figure className="relative flex min-h-72 flex-col overflow-hidden rounded-xl border border-line bg-surface/70 p-4 sm:p-5">
-      <figcaption className="flex items-center justify-between gap-3">
-        <div>
-          <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-accent">
-            Signal map
-          </p>
-          <p className="mt-1 text-sm text-muted">Trait strength by loadout slot</p>
-        </div>
-        <span className="rounded border border-line-strong bg-surface-2 px-2 py-1 font-mono text-[0.6rem] uppercase tracking-[0.16em] text-muted">
-          Live data
-        </span>
-      </figcaption>
+    <figure className="flex flex-col items-center">
 
       <svg
         role="img"
@@ -123,14 +107,17 @@ export function TasteRadarChart({ traits }: TasteRadarChartProps) {
                 dominantBaseline="middle"
                 textAnchor="middle"
                 fill="var(--ink)"
-                className="font-mono text-[10px] font-semibold"
+                className="text-[11px] font-semibold"
               >
-                {String(index + 1).padStart(2, "0")}
+                {index + 1}
               </text>
             </g>
           );
         })}
       </svg>
+      <figcaption className="mt-2 text-center text-sm text-muted">
+        Trait strength, numbered strongest first
+      </figcaption>
     </figure>
   );
 }

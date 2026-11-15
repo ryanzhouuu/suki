@@ -134,12 +134,12 @@ describe("TasteFingerprintSection", () => {
     assert.equal(meters.length, 5);
     assert.equal(meters[0].getAttribute("aria-valuenow"), "94");
     screen.getByText("Primary trait");
-    screen.getByText("Loadout 02");
+    screen.getByText("No. 2");
     fireEvent.click(disclosures[0].querySelector("summary")!);
     screen.getByText("12 franchises are in your ranking.");
   });
 
-  it("renders one qualifying trait without filling the loadout", () => {
+  it("renders one qualifying trait without drawing the radar", () => {
     const fingerprint = makeFingerprint();
     render(
       <TasteFingerprintSection
@@ -150,7 +150,7 @@ describe("TasteFingerprintSection", () => {
 
     assert.equal(screen.getAllByRole("heading", { level: 3 }).length, 1);
     screen.getByRole("heading", { name: "Battle-Tested Favorites" });
-    screen.getByText("Signal map locked");
+    screen.getByText("The trait radar appears once three traits are discovered.");
     assert.equal(screen.queryByRole("img", { name: /strength radar/i }), null);
   });
 
