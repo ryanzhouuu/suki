@@ -261,7 +261,8 @@ function AlsoTracking({
           { text: String(shows.length), tone: "strong" },
         ]}
       />
-      <ul className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {/* The scroller clips on both axes; the inset padding leaves room for the active ring. */}
+      <ul className="-mx-1 mt-2 flex gap-2 overflow-x-auto p-1 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {shows.map((show) => {
           const active = show.entryId === activeId;
           return (
