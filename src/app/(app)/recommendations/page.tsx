@@ -12,6 +12,7 @@ import {
   FOCUSED_RECOMMENDATION_LIMIT,
   STORED_RECOMMENDATION_LIMIT,
 } from "@/lib/recommendations/constants";
+import { tmdbBackdropsById } from "@/lib/tmdb/resolve";
 
 import {
   loadRecommendationPoolStats,
@@ -41,6 +42,8 @@ export default async function RecommendationsPage() {
   }
 
   const { items } = await loadRecommendationsForUser(user.id);
+  const focused = items.slice(0, FOCUSED_RECOMMENDATION_LIMIT);
+  const artwork = await tmdbBackdropsById(focused.map((row) => row.anime.anilist_id));
 
   after(() => {
     void logRecommendationViewed();
@@ -115,9 +118,7 @@ export default async function RecommendationsPage() {
             </p>
           </div>
         ) : (
-          <FocusedRecommendations
-            items={items.slice(0, FOCUSED_RECOMMENDATION_LIMIT)}
-          />
+          <FocusedRecommendations items={focused} artwork={artwork} />
         )}
       </ControlRail>
     </WidePageFrame>

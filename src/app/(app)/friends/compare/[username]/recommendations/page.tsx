@@ -16,6 +16,7 @@ import {
 } from "@/lib/recommendations/collaborative-types";
 import { FOCUSED_RECOMMENDATION_LIMIT } from "@/lib/recommendations/constants";
 import { getProfileByUsername } from "@/lib/profiles/queries";
+import { tmdbBackdropsById } from "@/lib/tmdb/resolve";
 
 type CollaborativeRecommendationsPageProps = {
   params: Promise<{ username: string }>;
@@ -48,6 +49,8 @@ export default async function CollaborativeRecommendationsPage({
     friendProfile.user_id,
     mode,
   );
+  const focused = items.slice(0, FOCUSED_RECOMMENDATION_LIMIT);
+  const artwork = await tmdbBackdropsById(focused.map((row) => row.anime.anilist_id));
   const friendDisplayName = friendProfile.display_name || friendProfile.username;
   const viewerDisplayName = viewerProfile.display_name || viewerProfile.username;
 
@@ -98,9 +101,7 @@ export default async function CollaborativeRecommendationsPage({
           </div>
         </RecommendationsStage>
       ) : (
-        <CollaborativeFocusedRecommendations
-          items={items.slice(0, FOCUSED_RECOMMENDATION_LIMIT)}
-        />
+        <CollaborativeFocusedRecommendations items={focused} artwork={artwork} />
       )}
     </WidePageFrame>
   );

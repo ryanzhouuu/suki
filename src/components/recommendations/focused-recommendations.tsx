@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from "react";
 
-import { AnimePoster } from "@/components/anime/anime-poster";
-import { CinematicBackdrop } from "@/components/layout/page-frame";
-import { FocusedRecommendationCard } from "@/components/recommendations/focused-recommendation-card";
+import {
+  FocusedRecommendationCard,
+  recommendationArtwork,
+} from "@/components/recommendations/focused-recommendation-card";
 import { RecommendationsStage } from "@/components/recommendations/recommendations-stage";
 import { nextIndexAfterDismiss } from "@/lib/recommendations/carousel";
 import type { RecommendationRow } from "@/lib/recommendations/types";
@@ -13,6 +14,8 @@ type FocusedRecommendationsProps = {
   items: RecommendationRow[];
   contextLabel?: string;
   whyLabel?: string;
+  /** TMDB backdrops keyed by AniList id; picks without one use AniList art. */
+  artwork?: Record<number, string>;
 };
 
 function CarouselChevron({ direction }: { direction: "prev" | "next" }) {
@@ -63,6 +66,7 @@ export function FocusedRecommendations({
   items,
   contextLabel,
   whyLabel,
+  artwork = {},
 }: FocusedRecommendationsProps) {
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
   const [activeIndex, setActiveIndex] = useState(0);
@@ -107,16 +111,13 @@ export function FocusedRecommendations({
     setActiveIndex((index) => nextIndexAfterDismiss(index, visibleItems.length));
   }
 
+  const currentArt =
+    recommendationArtwork(current, artwork[current.anime.anilist_id]) ??
+    current.anime.cover_image_url;
+
   return (
     <div className="relative isolate">
-      <CinematicBackdrop
-        key={current.id}
-        imageUrl={current.anime.banner_image_url ?? current.anime.cover_image_url}
-        positionClassName="top-0 lg:-top-10"
-        className="animate-fade"
-      />
-
-      <div className="relative z-10 space-y-4 pt-3 sm:space-y-5 sm:pt-8">
+      <div className="relative z-10 space-y-5 sm:space-y-6">
         <RecommendationsStage
           leading={
             <span className="hidden sm:inline-flex">
@@ -140,16 +141,28 @@ export function FocusedRecommendations({
           }
         >
           <div className="relative">
-            <FocusedRecommendationCard
-              key={current.id}
-              row={current}
-              index={safeIndex}
-              total={visibleItems.length}
-              onDismissed={handleDismissed}
-              contextLabel={contextLabel}
-              whyLabel={whyLabel}
-              backdrop={false}
-            />
+            {/* Light spilling off the screen onto the page, keyed to the current pick. */}
+            {currentArt ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={`glow-${current.id}`}
+                src={currentArt}
+                alt=""
+                aria-hidden
+                className="pointer-events-none absolute inset-x-[6%] top-[12%] -z-10 h-[80%] w-[88%] animate-fade object-cover opacity-40 blur-3xl saturate-150"
+              />
+            ) : null}
+            <div key={current.id} className="animate-fade">
+              <FocusedRecommendationCard
+                row={current}
+                index={safeIndex}
+                total={visibleItems.length}
+                onDismissed={handleDismissed}
+                contextLabel={contextLabel}
+                whyLabel={whyLabel}
+                artworkUrl={artwork[current.anime.anilist_id]}
+              />
+            </div>
             {/* Phones get the arrows under the card so they never cover its copy. */}
             {canScroll ? (
               <div className="mt-3 flex items-center justify-between sm:hidden">
@@ -159,7 +172,7 @@ export function FocusedRecommendations({
                   disabled={!canScroll}
                   onClick={goPrev}
                 />
-                <p className="text-xs font-medium tracking-[0.18em] text-muted uppercase tabular-nums">
+                <p className="text-xs font-medium text-muted tabular-nums">
                   {safeIndex + 1} / {visibleItems.length}
                 </p>
                 <CarouselArrow
@@ -176,12 +189,16 @@ export function FocusedRecommendations({
         {canScroll ? (
           <RecommendationsStage>
             <div>
-              <p className="eyebrow mb-2">Up next</p>
-              <ul className="scrollbar-none flex gap-3 overflow-x-auto px-1 pt-1 pb-2">
+              <p className="credit-line">Up next</p>
+              {/* The scroller clips on both axes; the inset padding leaves room for the active ring. */}
+              <ul className="-mx-1 mt-2 flex gap-2.5 overflow-x-auto p-1 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {visibleItems.map((row, index) => {
                   const active = index === safeIndex;
                   const title =
                     row.anime.english_title || row.anime.romaji_title || "Pick";
+                  const thumb =
+                    recommendationArtwork(row, artwork[row.anime.anilist_id]) ??
+                    row.anime.cover_image_url;
                   return (
                     <li key={row.id} className="shrink-0">
                       <button
@@ -189,18 +206,16 @@ export function FocusedRecommendations({
                         aria-label={`Go to ${title}`}
                         aria-current={active ? "true" : undefined}
                         onClick={() => setActiveIndex(index)}
-                        className={`block rounded-lg transition-all ${
+                        className={`block aspect-video w-32 overflow-hidden rounded-md bg-surface-2 transition-opacity sm:w-40 ${
                           active
                             ? "ring-2 ring-accent ring-offset-2 ring-offset-paper"
-                            : "opacity-65 hover:opacity-100"
+                            : "opacity-60 hover:opacity-100"
                         }`}
                       >
-                        <AnimePoster
-                          src={row.anime.cover_image_url}
-                          alt={title}
-                          size="sm"
-                          className="rounded-lg"
-                        />
+                        {thumb ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={thumb} alt="" className="h-full w-full object-cover" />
+                        ) : null}
                       </button>
                     </li>
                   );
