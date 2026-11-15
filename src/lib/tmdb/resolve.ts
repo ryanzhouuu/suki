@@ -70,3 +70,20 @@ export async function withTmdbHeroArtwork<T extends { anilistId: number; bannerU
     return withTimeout(fetchTmdbBackdrop(target, apiKey), BACKDROP_TIMEOUT_MS, null);
   });
 }
+
+/**
+ * TMDB backdrops keyed by AniList id, for the titles that have one. Titles
+ * without a mapped backdrop are left out so callers fall back to AniList art.
+ */
+export async function tmdbBackdropsById(
+  anilistIds: number[],
+): Promise<Record<number, string>> {
+  const resolved = await withTmdbHeroArtwork(
+    anilistIds.map((anilistId) => ({ anilistId, bannerUrl: null as string | null })),
+  );
+  const backdrops: Record<number, string> = {};
+  for (const item of resolved) {
+    if (item.bannerUrl) backdrops[item.anilistId] = item.bannerUrl;
+  }
+  return backdrops;
+}

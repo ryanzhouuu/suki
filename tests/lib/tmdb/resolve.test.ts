@@ -46,3 +46,22 @@ describe("withTmdbHeroArtwork", () => {
     assert.equal(result[1]?.bannerUrl, "https://anilist.example/two.jpg");
   });
 });
+
+describe("tmdbBackdropsById", () => {
+  it("returns only the titles that resolved to a TMDB backdrop", async () => {
+    const { tmdbBackdropsById } = await import("@/lib/tmdb/resolve");
+    process.env.TMDB_API_KEY = "test-key";
+    globalThis.fetch = (async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("anime-list-full.json")) {
+        return Response.json([{ anilist_id: 21, themoviedb_id: { tv: 42 } }]);
+      }
+      if (url.includes("/3/tv/42")) return Response.json({ backdrop_path: "/hero.jpg" });
+      return new Response("missing", { status: 404 });
+    }) as typeof fetch;
+
+    assert.deepEqual(await tmdbBackdropsById([21, 99]), {
+      21: "https://image.tmdb.org/t/p/original/hero.jpg",
+    });
+  });
+});
