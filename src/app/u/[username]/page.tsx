@@ -9,6 +9,7 @@ import { ProfileHeader } from "@/components/profile/profile-header";
 import { ProfileRestrictedCard } from "@/components/profile/profile-restricted-card";
 import { ProfileStatsPanel } from "@/components/profile/profile-stats-panel";
 import { ProfileTabs } from "@/components/profile/profile-tabs";
+import { ProfileTopRanked } from "@/components/profile/profile-top-ranked";
 import { TasteFingerprintSection } from "@/components/profile/taste-fingerprint-section";
 import { TasteFingerprintTracker } from "@/components/profile/taste-fingerprint-tracker";
 import { WidePageFrame } from "@/components/layout/page-frame";
@@ -21,6 +22,10 @@ import { friendshipStatusForViewer } from "@/lib/friends/relationship";
 import { getTasteSimilarity } from "@/lib/friends/taste-similarity";
 import { getShareCardData } from "@/lib/profiles/share-card";
 import { runResilientOperation } from "@/lib/resilience";
+import { getSeriesBanners } from "@/lib/series/queries";
+import { tmdbBackdropsById } from "@/lib/tmdb/resolve";
+
+import type { ProfileHeroArt } from "@/components/profile/profile-header";
 
 import {
   loadBaseProfile,
@@ -165,7 +170,8 @@ export default async function PublicProfilePage({
   const isEditing = isOwnProfile && edit === "1";
 
   const seriesIds = allRankings.map((r) => r.series_id);
-  const [genresResult, fingerprintResult] = await Promise.all([
+  const topSeries = allRankings[0]?.series ?? null;
+  const [genresResult, fingerprintResult, heroArt] = await Promise.all([
     runResilientOperation(
       { route: "/u/[username]", operation: "load_ranking_genres", dependency: "supabase" },
       () => loadGenresBySeriesIds(seriesIds),
@@ -183,6 +189,7 @@ export default async function PublicProfilePage({
         });
       },
     ),
+    profile.banner_url ? Promise.resolve(null) : topSeriesHeroArt(topSeries),
   ]);
   const genresMap = genresResult.status === "loaded" ? genresResult.data : new Map();
   const genresBySeriesId = Object.fromEntries(genresMap);
@@ -221,8 +228,20 @@ export default async function PublicProfilePage({
   const libraryCount = entries.length;
   const hasLibrarySections = libraryCount > 0;
 
+  const topRanked = allRankings
+    .filter((ranking) => ranking.series)
+    .slice(0, 5)
+    .map((ranking) => ({
+      id: ranking.series_id,
+      rank: ranking.rank,
+      title: ranking.series!.canonical_title,
+      anilistId: ranking.series!.anilist_primary_id,
+      coverUrl: ranking.series!.cover_image_url,
+    }));
+
   const overviewContent = (
-    <div className="min-w-0 space-y-4">
+    <div className="min-w-0 space-y-16">
+      <ProfileTopRanked series={topRanked} />
       <TasteFingerprintSection
         fingerprint={fingerprint}
         isOwnProfile={isOwnProfile}
@@ -295,11 +314,14 @@ export default async function PublicProfilePage({
     </section>
   );
 
+  // Signed-out visitors have no app shell, so the page supplies its own phone gutter.
   return (
     <WidePageFrame
-      className={`min-w-0 space-y-6 sm:space-y-8 ${viewer ? "pb-6 sm:pb-0" : "py-10"}`}
+      className={`min-w-0 space-y-8 ${viewer ? "pb-6 sm:pb-0" : "px-4 pb-10 sm:px-0"}`}
     >
       <ProfileHeader
+        className={viewer ? "-mt-6 sm:-mt-10" : ""}
+        fallbackArt={heroArt}
         profile={profile}
         isOwnProfile={isOwnProfile}
         isEditing={isEditing}
@@ -350,4 +372,27 @@ export default async function PublicProfilePage({
       ) : null}
     </WidePageFrame>
   );
+}
+
+/**
+ * Hero art for profiles without an uploaded banner: the top-ranked series'
+ * TMDB backdrop, else its AniList banner. Portrait covers are skipped since
+ * they crop badly across a wide frame.
+ */
+async function topSeriesHeroArt(
+  series: { id: string; anilist_primary_id: number; cover_image_url: string | null; canonical_title: string } | null,
+): Promise<ProfileHeroArt | null> {
+  if (!series) return null;
+  try {
+    const backdrops = await tmdbBackdropsById([series.anilist_primary_id]);
+    const backdrop = backdrops[series.anilist_primary_id];
+    if (backdrop) return { url: backdrop, title: series.canonical_title };
+    const banner = (await getSeriesBanners([series])).get(series.id);
+    if (banner && banner !== series.cover_image_url) {
+      return { url: banner, title: series.canonical_title };
+    }
+  } catch {
+    // Art is decorative; the hero falls back to its glow.
+  }
+  return null;
 }
