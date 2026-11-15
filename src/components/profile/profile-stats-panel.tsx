@@ -14,52 +14,59 @@ type ProfileStatsPanelProps = {
   activitySlot?: React.ReactNode;
 };
 
-function HeadlineMetric({
-  value,
-  label,
-  accent = false,
-}: {
-  value: string | number;
-  label: string;
-  accent?: boolean;
-}) {
-  return (
-    <div className="profile-metric">
-      <p
-        className={`font-display text-3xl font-semibold tabular-nums leading-none sm:text-4xl ${
-          accent ? "text-accent" : "text-ink"
-        }`}
-      >
-        {value}
-      </p>
-      <p className="mt-1.5 text-[0.7rem] font-medium uppercase tracking-[0.16em] text-muted">
-        {label}
-      </p>
-    </div>
-  );
-}
-
-function BentoCard({
-  eyebrow,
+/** A titled block of the stats grid. Whitespace, not a card, separates blocks. */
+export function StatsBlock({
   title,
   className = "",
   children,
 }: {
-  eyebrow: string;
   title: string;
   className?: string;
   children: React.ReactNode;
 }) {
   return (
-    <section
-      className={`flex min-w-0 flex-col rounded-card border border-line bg-surface p-5 shadow-[0_16px_28px_-26px_rgb(var(--shadow-color)/0.5)] sm:p-6 ${className}`}
-    >
-      <p className="eyebrow">{eyebrow}</p>
-      <h3 className="mt-1 text-lg font-semibold">{title}</h3>
-      <div className="mt-4 flex-1">{children}</div>
+    <section className={`min-w-0 ${className}`}>
+      <h3 className="border-b border-line pb-3 font-display text-xl font-medium text-ink">
+        {title}
+      </h3>
+      <div className="mt-4">{children}</div>
     </section>
   );
 }
+
+/** One labelled row with a proportional bar underneath. */
+function BarRow({
+  label,
+  value,
+  pct,
+  barClassName = "bg-accent",
+}: {
+  label: React.ReactNode;
+  value: string | number;
+  pct: number;
+  barClassName?: string;
+}) {
+  return (
+    <li className="text-sm">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="text-ink">{label}</span>
+        <span className="tabular-nums text-muted">{value}</span>
+      </div>
+      <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-white/[0.06]">
+        <div
+          className={`h-full rounded-full ${barClassName}`}
+          style={{ width: `${Math.max(4, Math.min(100, pct))}%` }}
+        />
+      </div>
+    </li>
+  );
+}
+
+const CONFIDENCE_BAR: Record<"high" | "medium" | "low", string> = {
+  high: "bg-success",
+  medium: "bg-accent",
+  low: "bg-faint",
+};
 
 export function ProfileStatsPanel({
   library,
@@ -80,11 +87,12 @@ export function ProfileStatsPanel({
     (level) => ranking.confidence[level] > 0,
   );
 
+  const startedGenres = watchStyle.genreCompletionRates.filter((g) => g.started > 0);
   const hasWatchStyle =
     watchStyle.topFormats.length > 0 ||
     watchStyle.totalEpisodesWatched > 0 ||
     watchStyle.shortSeriesShare !== null ||
-    watchStyle.genreCompletionRates.some((g) => g.started > 0);
+    startedGenres.length > 0;
 
   const hasAnyStats =
     library.total > 0 ||
@@ -94,12 +102,10 @@ export function ProfileStatsPanel({
 
   if (!hasAnyStats) {
     return (
-      <section className="rounded-card border border-dashed border-line-strong bg-surface/50 p-8 text-center">
-        <p className="text-sm text-muted">
-          No library or ranking data yet. Start tracking anime to build a taste
-          profile.
-        </p>
-      </section>
+      <p className="border-y border-line py-10 text-center text-sm text-muted">
+        No library or ranking data yet. Start tracking anime to build a taste
+        profile.
+      </p>
     );
   }
 
@@ -128,175 +134,106 @@ export function ProfileStatsPanel({
       label: "Short series",
     });
 
+  const topGenreCount = Math.max(1, ...taste.topGenres.map((g) => g.count));
+  const topFormatCount = Math.max(1, ...watchStyle.topFormats.map((f) => f.count));
+
   return (
-    <div className="min-w-0 space-y-4">
+    <div className="min-w-0 space-y-12">
       {headlineMetrics.length > 0 ? (
-        <section className="profile-metric-strip">
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-6 border-y border-line py-6 sm:grid-cols-3 lg:grid-cols-5">
           {headlineMetrics.slice(0, 5).map((metric) => (
-            <HeadlineMetric key={metric.label} {...metric} />
+            <div key={metric.label} className="flex min-w-0 flex-col-reverse">
+              <dt className="mt-2 text-sm text-muted">{metric.label}</dt>
+              <dd
+                className={`font-display text-4xl font-medium tabular-nums leading-none sm:text-5xl ${
+                  metric.accent ? "text-accent" : "text-ink"
+                }`}
+              >
+                {metric.value}
+              </dd>
+            </div>
           ))}
-        </section>
+        </dl>
       ) : null}
 
-      <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-6">
+      <div className="grid min-w-0 gap-x-12 gap-y-12 lg:grid-cols-2">
         {taste.topGenres.length > 0 ? (
-          <BentoCard
-            eyebrow="Taste"
-            title="Top genres"
-            className="xl:col-span-3"
-          >
-            <ul className="flex flex-wrap gap-2">
+          <StatsBlock title="Top genres">
+            <ul className="space-y-3">
               {taste.topGenres.map((g) => (
-                <li
+                <BarRow
                   key={g.genre}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-2 px-3 py-1 text-sm text-ink"
-                >
-                  {g.genre}
-                  <span className="text-xs text-muted">{g.count}</span>
-                </li>
+                  label={g.genre}
+                  value={g.count}
+                  pct={(g.count / topGenreCount) * 100}
+                  barClassName="bg-white/55"
+                />
               ))}
             </ul>
-          </BentoCard>
+          </StatsBlock>
         ) : null}
 
         {hasWatchStyle ? (
-          <BentoCard
-            eyebrow="Watch style"
-            title="How they watch"
-            className="xl:col-span-3"
-          >
-            <div className="space-y-3">
+          <StatsBlock title="How they watch">
+            <div className="space-y-6">
               {watchStyle.topFormats.length > 0 ? (
-                <ul className="space-y-1.5">
+                <ul className="space-y-3">
                   {watchStyle.topFormats.map((f) => (
-                    <li
+                    <BarRow
                       key={f.format}
-                      className="flex items-center justify-between rounded-lg bg-surface-2/70 px-2.5 py-1.5 text-sm"
-                    >
-                      <span className="text-ink">{f.format}</span>
-                      <span className="tabular-nums text-muted">{f.count}</span>
-                    </li>
+                      label={f.format}
+                      value={f.count}
+                      pct={(f.count / topFormatCount) * 100}
+                      barClassName="bg-white/30"
+                    />
                   ))}
                 </ul>
               ) : null}
 
-              {watchStyle.genreCompletionRates.some((g) => g.started > 0) ? (
+              {startedGenres.length > 0 ? (
                 <div>
-                  <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">
-                    Completion by genre
-                  </p>
-                  <ul className="space-y-1.5">
-                    {watchStyle.genreCompletionRates
-                      .filter((g) => g.started > 0)
-                      .map((g) => (
-                        <li key={g.genre} className="text-sm">
-                          <div className="flex items-center justify-between">
-                            <span className="text-ink">{g.genre}</span>
-                            <span className="tabular-nums text-muted">
-                              {g.rate}%
-                            </span>
-                          </div>
-                          <div className="mt-1 h-1 overflow-hidden rounded-full bg-surface-2">
-                            <div
-                              className="h-full rounded-full bg-accent"
-                              style={{ width: `${Math.max(8, g.rate)}%` }}
-                            />
-                          </div>
-                        </li>
-                      ))}
+                  <p className="mb-3 text-sm text-muted">Completion by genre</p>
+                  <ul className="space-y-3">
+                    {startedGenres.map((g) => (
+                      <BarRow key={g.genre} label={g.genre} value={`${g.rate}%`} pct={g.rate} />
+                    ))}
                   </ul>
                 </div>
               ) : null}
             </div>
-          </BentoCard>
+          </StatsBlock>
         ) : null}
 
         {libraryStatuses.length > 0 ? (
-          <BentoCard
-            eyebrow="Library"
-            title="Status breakdown"
-            className="xl:col-span-3"
-          >
-            <ul className="space-y-1.5">
-              {libraryStatuses.map((status) => {
-                const pct = Math.round(
-                  (library[status.key] / library.total) * 100,
-                );
-                return (
-                  <li key={status.key} className="text-sm">
-                    <div className="flex items-center justify-between">
-                      <span className="text-ink">{status.label}</span>
-                      <span className="tabular-nums text-muted">
-                        {library[status.key]}
-                      </span>
-                    </div>
-                    <div className="mt-1 h-1 overflow-hidden rounded-full bg-surface-2">
-                      <div
-                        className="h-full rounded-full bg-accent/70"
-                        style={{ width: `${Math.max(6, pct)}%` }}
-                      />
-                    </div>
-                  </li>
-                );
-              })}
+          <StatsBlock title="Status breakdown">
+            <ul className="space-y-3">
+              {libraryStatuses.map((status) => (
+                <BarRow
+                  key={status.key}
+                  label={status.label}
+                  value={library[status.key]}
+                  pct={(library[status.key] / library.total) * 100}
+                  barClassName="bg-white/40"
+                />
+              ))}
             </ul>
-          </BentoCard>
+          </StatsBlock>
         ) : null}
 
         {ranking.totalRanked > 0 && confidenceEntries.length > 0 ? (
-          <BentoCard
-            eyebrow="Ranking"
-            title="Confidence"
-            className="xl:col-span-3"
-          >
-            <ul className="space-y-2">
+          <StatsBlock title="Confidence">
+            <ul className="space-y-3">
               {confidenceEntries.map((level) => (
-                <li
+                <BarRow
                   key={level}
-                  className="rounded-lg bg-surface-2/70 px-2.5 py-1.5 text-sm"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="flex items-center gap-2 text-ink">
-                      <span
-                        aria-hidden
-                        className={`h-1.5 w-1.5 rounded-full ${
-                          level === "high"
-                            ? "bg-success"
-                            : level === "medium"
-                              ? "bg-accent"
-                              : "bg-faint"
-                        }`}
-                      />
-                      {CONFIDENCE_LABELS[level]}
-                    </span>
-                    <span className="tabular-nums text-muted">
-                      {ranking.confidence[level]}
-                    </span>
-                  </div>
-                  <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-surface">
-                    <div
-                      className={`h-full rounded-full ${
-                        level === "high"
-                          ? "bg-success"
-                          : level === "medium"
-                            ? "bg-accent"
-                            : "bg-faint"
-                      }`}
-                      style={{
-                        width: `${Math.max(
-                          12,
-                          Math.round(
-                            (ranking.confidence[level] / ranking.totalRanked) *
-                              100,
-                          ),
-                        )}%`,
-                      }}
-                    />
-                  </div>
-                </li>
+                  label={CONFIDENCE_LABELS[level]}
+                  value={ranking.confidence[level]}
+                  pct={(ranking.confidence[level] / ranking.totalRanked) * 100}
+                  barClassName={CONFIDENCE_BAR[level]}
+                />
               ))}
             </ul>
-          </BentoCard>
+          </StatsBlock>
         ) : null}
 
         {activitySlot}

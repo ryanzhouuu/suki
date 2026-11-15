@@ -246,7 +246,7 @@ export default async function PublicProfilePage({
           <ProfileActivityPanel
             activity={stats.activity}
             isOwnProfile={isOwnProfile}
-            className="xl:col-span-6"
+            className="lg:col-span-2"
           />
         }
       />
@@ -254,7 +254,7 @@ export default async function PublicProfilePage({
   );
 
   const libraryContent = hasLibrarySections ? (
-    <div className="min-w-0 space-y-4">
+    <div className="min-w-0 space-y-12">
       {librarySections.map((section) => (
         <ProfileAnimeSection
           key={section.status}
@@ -271,15 +271,16 @@ export default async function PublicProfilePage({
       ))}
     </div>
   ) : (
-    <section className="rounded-card border border-dashed border-line-strong bg-surface/50 p-8 text-center">
-      <p className="text-sm text-muted">No public library entries yet.</p>
-    </section>
+    <p className="border-y border-line py-10 text-center text-sm text-muted">
+      No public library entries yet.
+    </p>
   );
 
   const rankingContent = (
-    <section className="rounded-card border border-line bg-surface p-5 sm:p-6">
-      <p className="eyebrow">Full ranking</p>
-      <h2 className="mb-4 mt-1 text-2xl font-semibold">Favorites</h2>
+    <section className="min-w-0">
+      <h2 className="mb-6 font-display text-3xl font-medium text-ink sm:text-4xl">
+        Full ranking
+      </h2>
       <RankedList
         rankings={allRankings}
         genresBySeriesId={genresBySeriesId}

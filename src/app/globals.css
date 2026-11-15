@@ -318,68 +318,6 @@ select {
   }
 }
 
-/* Headline metric strip — the at-a-glance numbers above the bento. */
-.profile-metric-strip {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
-  min-width: 0;
-  border-radius: var(--radius-card);
-  border: 1px solid var(--line);
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--accent) 7%, transparent),
-      transparent 55%
-    ),
-    var(--surface);
-  padding: 1.25rem;
-  box-shadow: 0 16px 28px -26px rgb(var(--shadow-color) / 0.5);
-}
-
-.profile-metric {
-  position: relative;
-  min-width: 0;
-  padding-left: 0.9rem;
-}
-
-@media (width < 640px) {
-  .profile-metric-strip {
-    padding: 0.85rem;
-  }
-
-  .profile-metric {
-    display: flex;
-    align-items: baseline;
-    gap: 0.55rem;
-    padding-left: 0.65rem;
-  }
-}
-
-.profile-metric::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0.15rem;
-  bottom: 0.15rem;
-  width: 2px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 45%, transparent);
-}
-
-@media (width >= 640px) {
-  .profile-metric-strip {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    padding: 1.5rem 1.75rem;
-  }
-}
-
-@media (width >= 1024px) {
-  .profile-metric-strip {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-}
-
 /* —— Cinematic heroes —— */
 
 .cinematic {
