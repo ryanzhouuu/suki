@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 
@@ -10,9 +9,10 @@ import {
   logRecommendationClicked,
 } from "@/actions/recommendations";
 import { addAnimeEntry } from "@/actions/library";
-import { RecommendationBannerBackdrop } from "@/components/recommendations/recommendation-banner-backdrop";
-import { Button } from "@/components/ui/button";
+import { CreditLine } from "@/components/home/credit-line";
+import { ArtworkField, heroGhostClass, heroPrimaryClass } from "@/components/home/hero-frame";
 import { STATUS_LABELS } from "@/lib/constants";
+import type { CreditPart } from "@/lib/home/featured";
 import type { RecommendationExplanationBadge, RecommendationRow } from "@/lib/recommendations/types";
 
 const BADGE_LABELS: Record<RecommendationExplanationBadge, string> = {
@@ -32,10 +32,22 @@ type FocusedRecommendationCardProps = {
   onDismissed: () => void;
   contextLabel?: string;
   whyLabel?: string;
-  /** Render the contained banner halo. Off when a page-level backdrop is present. */
-  backdrop?: boolean;
+  /** Landscape backdrop (TMDB) that wins over the AniList banner. */
+  artworkUrl?: string | null;
 };
 
+/** Best wide image for a pick: TMDB backdrop, then the AniList banner. */
+export function recommendationArtwork(
+  row: RecommendationRow,
+  artworkUrl?: string | null,
+): string | null {
+  return artworkUrl ?? row.anime.banner_image_url ?? null;
+}
+
+/**
+ * One recommendation as a fixed-size screen: the artwork fills the frame and
+ * the copy sits on a left-weighted shade, so every pick lands at the same size.
+ */
 export function FocusedRecommendationCard({
   row,
   index,
@@ -43,7 +55,7 @@ export function FocusedRecommendationCard({
   onDismissed,
   contextLabel = "Recommendation",
   whyLabel = "Why this pick",
-  backdrop = true,
+  artworkUrl,
 }: FocusedRecommendationCardProps) {
   const [pending, startTransition] = useTransition();
   const [libraryStatus, setLibraryStatus] = useState(row.libraryEntry?.status ?? null);
@@ -53,10 +65,15 @@ export function FocusedRecommendationCard({
   const explanation = details?.primaryReason ?? row.explanation;
   const secondarySignals = details?.secondarySignals ?? [];
   const badges = details?.badges ?? [];
+  const wideArt = recommendationArtwork(row, artworkUrl);
 
-  const meta = [anime.format, anime.season_year, anime.episodes ? `${anime.episodes} eps` : null]
-    .filter(Boolean)
-    .map(String);
+  const credit: CreditPart[] = [
+    { text: `${contextLabel} ${index + 1} of ${total}`, tone: "strong" },
+    ...[anime.format, anime.season_year, anime.episodes ? `${anime.episodes} eps` : null]
+      .filter(Boolean)
+      .map((text) => ({ text: String(text) })),
+    ...(anime.average_score ? [{ text: `★ ${anime.average_score}`, tone: "accent" as const }] : []),
+  ];
 
   function addStatus(status: "plan_to_watch" | "watching") {
     startTransition(async () => {
@@ -74,145 +91,126 @@ export function FocusedRecommendationCard({
   }
 
   return (
-    <div className="relative isolate animate-rise pt-2">
-      {backdrop ? (
-        <RecommendationBannerBackdrop
-          bannerUrl={anime.banner_image_url}
-          coverUrl={anime.cover_image_url}
-        />
+    <article className="relative isolate h-[38rem] overflow-hidden rounded-card bg-paper ring-1 ring-white/10 sm:h-[32rem] lg:h-[36rem]">
+      {wideArt ? (
+        <ArtworkField src={wideArt} />
+      ) : (
+        <PosterOnlyArt coverUrl={anime.cover_image_url} />
+      )}
+
+      {libraryStatus ? (
+        <p className="absolute top-4 right-4 z-10 rounded-full border border-white/20 bg-black/45 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm sm:top-6 sm:right-6">
+          In library: {STATUS_LABELS[libraryStatus]}
+        </p>
       ) : null}
 
-      <article className="relative z-10 overflow-hidden rounded-card border border-line/80 bg-surface/95 shadow-[0_18px_50px_-30px_rgb(var(--shadow-color)/0.45)] backdrop-blur-sm">
-        <div className="grid grid-cols-[6.25rem_minmax(0,1fr)] gap-0 sm:grid-cols-[9rem_minmax(0,1fr)] lg:grid-cols-[minmax(200px,260px)_1fr]">
-          <div className="relative min-h-50 bg-surface-2 sm:min-h-70 lg:min-h-95">
-            {anime.cover_image_url ? (
-              <Image
-                src={anime.cover_image_url}
-                alt={title}
-                fill
-                sizes="(max-width: 640px) 100px, (max-width: 1024px) 144px, 260px"
-                className="object-cover"
-                unoptimized
-              />
-            ) : null}
-          </div>
+      <div className="relative z-10 flex h-full max-w-2xl flex-col justify-end p-5 sm:p-8 lg:p-10">
+        {!wideArt && anime.cover_image_url ? (
+          // Poster-only titles keep their key art visible above the copy.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={anime.cover_image_url}
+            alt=""
+            className="mb-5 aspect-[2/3] w-20 rounded-md object-cover shadow-[0_20px_40px_-16px_rgb(0_0_0/0.8)] ring-1 ring-white/15 sm:w-24"
+          />
+        ) : null}
+        <CreditLine parts={credit} onArt />
+        <h2 className="mt-2 line-clamp-2 text-balance font-display text-3xl font-medium leading-[1.05] text-white sm:text-4xl lg:text-5xl">
+          {title}
+        </h2>
 
-          <div className="flex min-w-0 flex-col p-3 sm:p-5 lg:p-7">
-            <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted sm:mb-4 sm:text-xs">
-              <span>
-                {contextLabel} {index + 1} of {total}
-              </span>
-              {libraryStatus ? (
-                <span className="rounded-full bg-accent-soft px-2 py-0.5 font-medium text-accent sm:px-2.5 sm:py-1">
-                  In library: {STATUS_LABELS[libraryStatus]}
-                </span>
-              ) : null}
-            </div>
+        {anime.genres.length > 0 ? (
+          <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-sm text-white/70" aria-label="Genres">
+            {anime.genres.slice(0, 5).map((genre) => (
+              <li key={genre}>{genre}</li>
+            ))}
+          </ul>
+        ) : null}
 
-          <h2 className="line-clamp-2 text-lg font-semibold leading-tight sm:text-2xl lg:text-3xl">
-            {title}
-          </h2>
-
-          {meta.length > 0 ? (
-            <div className="mt-2 flex flex-wrap gap-1 sm:mt-3 sm:gap-1.5">
-              {meta.map((item) => (
-                <span
-                  key={item}
-                  className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted sm:px-2.5 sm:py-1 sm:text-xs"
-                >
-                  {item}
-                </span>
+        <div className="mt-5 border-l-2 border-accent pl-4">
+          <p className="text-xs font-medium text-white/60">{whyLabel}</p>
+          <p className="mt-1 line-clamp-3 text-[0.95rem] leading-relaxed text-white/90">
+            {explanation}
+          </p>
+          {secondarySignals.length > 0 ? (
+            <ul className="mt-2 hidden space-y-0.5 text-sm text-white/60 sm:block">
+              {secondarySignals.slice(0, 2).map((signal) => (
+                <li key={signal} className="line-clamp-1">
+                  {signal}
+                </li>
               ))}
-              {anime.average_score ? (
-                <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[10px] font-semibold text-accent sm:px-2.5 sm:py-1 sm:text-xs">
-                  ★ {anime.average_score}
-                </span>
-              ) : null}
-            </div>
+            </ul>
           ) : null}
-
-          {anime.genres.length > 0 ? (
-            <div className="mt-2 flex flex-wrap gap-1 sm:mt-3 sm:gap-1.5">
-              {anime.genres.slice(0, 6).map((genre) => (
-                <span
-                  key={genre}
-                  className="rounded-full border border-line-strong px-2 py-0.5 text-[10px] font-medium text-muted sm:px-2.5 sm:py-1 sm:text-xs"
-                >
-                  {genre}
-                </span>
-              ))}
-            </div>
-          ) : null}
-
-          <div className="mt-3 space-y-2 sm:mt-5 sm:space-y-3">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted sm:text-xs">
-                {whyLabel}
-              </p>
-              <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-ink sm:mt-1.5 sm:line-clamp-none sm:text-sm">{explanation}</p>
-            </div>
-
-            {badges.length > 0 ? (
-              <div className="flex flex-wrap gap-1.5">
-                {badges.map((badge) => (
-                  <span
-                    key={badge}
-                    className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px] font-medium text-ink sm:px-2.5 sm:py-1 sm:text-xs"
-                  >
-                    {BADGE_LABELS[badge]}
-                  </span>
-                ))}
-              </div>
-            ) : null}
-
-            {secondarySignals.length > 0 ? (
-              <ul className="hidden space-y-1.5 text-sm text-muted sm:block">
-                {secondarySignals.map((signal) => (
-                  <li key={signal} className="flex gap-2">
-                    <span aria-hidden className="text-accent">
-                      •
-                    </span>
-                    <span>{signal}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </div>
-
-          <div className="mt-auto flex flex-wrap gap-1.5 pt-3 sm:gap-2 sm:pt-6">
-            <Button
-              type="button"
-              disabled={pending || libraryStatus != null}
-              size="sm"
-              onClick={() => addStatus("plan_to_watch")}
-            >
-              Plan to watch
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              disabled={pending || libraryStatus === "watching"}
-              onClick={() => addStatus("watching")}
-            >
-              Start watching
-            </Button>
-            <Button type="button" variant="ghost" size="sm" disabled={pending} onClick={dismiss}>
-              Not interested
-            </Button>
-            <Link
-              href={`/anime/${anime.anilist_id}`}
-              onClick={() => {
-                void logRecommendationClicked(anime.id);
-              }}
-              className="inline-flex min-h-10 items-center px-2 text-xs font-medium text-accent hover:underline sm:px-3 sm:text-sm"
-            >
-              Open details →
-            </Link>
-          </div>
-          </div>
         </div>
-      </article>
+
+        {badges.length > 0 ? (
+          <ul className="mt-3 flex flex-wrap gap-1.5">
+            {badges.map((badge) => (
+              <li
+                key={badge}
+                className="rounded-full border border-white/20 bg-white/10 px-2.5 py-0.5 text-xs font-medium text-white/85 backdrop-blur-sm"
+              >
+                {BADGE_LABELS[badge]}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
+        <div className="mt-6 flex flex-wrap items-center gap-2.5">
+          <button
+            type="button"
+            className={`${heroPrimaryClass} disabled:opacity-50`}
+            disabled={pending || libraryStatus != null}
+            onClick={() => addStatus("plan_to_watch")}
+          >
+            Plan to watch
+          </button>
+          <button
+            type="button"
+            className={`${heroGhostClass} disabled:opacity-50`}
+            disabled={pending || libraryStatus === "watching"}
+            onClick={() => addStatus("watching")}
+          >
+            Start watching
+          </button>
+          <button
+            type="button"
+            className="inline-flex min-h-11 items-center px-3 text-sm font-medium text-white/65 transition-colors hover:text-white disabled:opacity-50"
+            disabled={pending}
+            onClick={dismiss}
+          >
+            Not interested
+          </button>
+          <Link
+            href={`/anime/${anime.anilist_id}`}
+            onClick={() => {
+              void logRecommendationClicked(anime.id);
+            }}
+            className="inline-flex min-h-11 items-center px-3 text-sm font-medium text-white/65 underline-offset-4 transition-colors hover:text-white hover:underline"
+          >
+            Open details
+          </Link>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+/** Fallback when a title has no landscape art: the cover blurred into a wash. */
+function PosterOnlyArt({ coverUrl }: { coverUrl: string | null }) {
+  return (
+    <div className="artwork-field" aria-hidden="true">
+      {coverUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={coverUrl}
+          alt=""
+          className="absolute inset-0 h-full w-full scale-125 object-cover opacity-45 blur-2xl saturate-150"
+        />
+      ) : (
+        <div className="artwork-field__glow" />
+      )}
+      <div className="artwork-field__shade" />
     </div>
   );
 }
